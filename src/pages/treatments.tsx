@@ -75,7 +75,7 @@ export const TreatmentsListPage = () => {
                   <i class="fas fa-tooth"></i>
                 </div>
                 <div>
-                  <div style="font-family:var(--font-display); font-style:italic; font-size:0.85rem; color:var(--brand-600);">{t.nameEn}</div>
+                  <div style="font-family:inherit; font-size:0.85rem; color:var(--brand-600);">{t.nameEn}</div>
                   <div style="font-size:1.4rem; font-weight:600; margin-top:2px;">{t.name}</div>
                   <div style="color:var(--ink-500); margin-top:4px;">{t.tagline}</div>
                 </div>
@@ -143,7 +143,7 @@ export const TreatmentDetailPage = ({ slug }: { slug: string }) => {
           </div>
           <h1 data-reveal data-reveal-delay="1" style="font-size:clamp(2.8rem, 7vw, 6rem);">
             {t.name}
-            <span style="display:block; font-family:var(--font-display); font-style:italic; font-size:0.35em; color:var(--brand-300); font-weight:300; margin-top:16px;">
+            <span style="display:block; font-family:inherit; font-size:0.35em; color:var(--brand-300); font-weight:300; margin-top:16px;">
               {t.tagline}
             </span>
           </h1>
@@ -314,13 +314,13 @@ export const TreatmentDetailPage = ({ slug }: { slug: string }) => {
                 style="background:white; border:1px solid var(--ink-100); border-radius:var(--radius); padding:4px;">
                 <summary style="padding:20px 24px; cursor:pointer; font-weight:600; display:flex; justify-content:space-between; align-items:center; gap:16px; list-style:none;">
                   <span style="flex:1;">
-                    <span style="color:var(--brand-600); font-family:var(--font-display); font-style:italic; margin-right:12px;">Q{i + 1}.</span>
+                    <span style="color:var(--brand-600); font-family:inherit; margin-right:12px;">Q{i + 1}.</span>
                     {f.q}
                   </span>
                   <i class="fas fa-plus" style="color:var(--brand-500); transition:transform 0.2s;"></i>
                 </summary>
                 <div style="padding:0 24px 20px 24px; color:var(--ink-600); line-height:1.9;">
-                  <span style="color:var(--brand-600); font-family:var(--font-display); font-style:italic; font-weight:600;">A.</span> {f.a}
+                  <span style="color:var(--brand-600); font-family:inherit; font-weight:600;">A.</span> {f.a}
                 </div>
               </details>
             ))}
@@ -356,7 +356,7 @@ export const TreatmentDetailPage = ({ slug }: { slug: string }) => {
       <section class="section">
         <div class="container">
           <div class="cta-block" data-reveal>
-            <h2>{t.name} 상담을 <em style="color:var(--brand-300); font-style:italic;">시작하세요.</em></h2>
+            <h2>{t.name} 상담을 <em style="color:var(--brand-300); ">시작하세요.</em></h2>
             <p>CBCT 3D 진단 포함 상담은 무료입니다. 정직한 플랜과 비용을 안내드립니다.</p>
             <div class="btns">
               <a href={`tel:${CLINIC.phone}`} class="btn btn-primary"><i class="fas fa-phone"></i> {CLINIC.phone}</a>

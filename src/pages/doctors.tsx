@@ -117,7 +117,7 @@ export const DoctorDetailPage = ({ slug }: { slug: string }) => {
               </div>
               <h1 data-reveal data-reveal-delay="1" style="font-size:clamp(2.4rem, 6vw, 5rem);">
                 {d.name}
-                <span style="display:block; font-family:var(--font-display); font-style:italic; color:var(--brand-300); font-size:0.5em; font-weight:300; margin-top:12px;">
+                <span style="display:block; font-family:inherit; color:var(--brand-300); font-size:0.5em; font-weight:300; margin-top:12px;">
                   {d.title}
                 </span>
               </h1>
@@ -126,7 +126,7 @@ export const DoctorDetailPage = ({ slug }: { slug: string }) => {
               </p>
               {d.quote && (
                 <div data-reveal data-reveal-delay="3" style="margin-top:32px; padding:24px 28px; border-left:3px solid var(--brand-400); background:rgba(10,186,181,0.06);">
-                  <p style="font-family:var(--font-display); font-style:italic; font-size:1.05rem; color:rgba(255,255,255,0.9); line-height:1.6;">{d.quote}</p>
+                  <p style="font-family:inherit; font-size:1.05rem; color:rgba(255,255,255,0.9); line-height:1.6;">{d.quote}</p>
                 </div>
               )}
             </div>
@@ -230,7 +230,7 @@ export const DoctorDetailPage = ({ slug }: { slug: string }) => {
       <section class="section">
         <div class="container">
           <div class="cta-block" data-reveal>
-            <h2>{d.name} 원장님과 <em style="color:var(--brand-300); font-style:italic;">상담</em>하세요.</h2>
+            <h2>{d.name} 원장님과 <em style="color:var(--brand-300); ">상담</em>하세요.</h2>
             <p>상담은 언제나 무료입니다. 진료 가능 여부와 치료 플랜을 정직하게 안내드립니다.</p>
             <div class="btns">
               <a href={`tel:${CLINIC.phone}`} class="btn btn-primary"><i class="fas fa-phone"></i> {CLINIC.phone}</a>

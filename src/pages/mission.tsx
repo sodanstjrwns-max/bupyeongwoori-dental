@@ -136,7 +136,7 @@ export const MissionPage = () => {
               <div data-reveal data-reveal-delay={String(i + 1)}
                 style="padding:32px 36px; border-radius:var(--radius-lg); background:white; border:1px solid var(--ink-100); display:grid; grid-template-columns:auto 1fr; gap:32px; align-items:center;">
                 <div style="text-align:center;">
-                  <div style="font-family:var(--font-display); font-style:italic; font-size:0.85rem; color:var(--brand-600); letter-spacing:0.1em;">{v.en}</div>
+                  <div style="font-family:inherit; font-size:0.85rem; color:var(--brand-600); letter-spacing:0.1em;">{v.en}</div>
                   <div style="font-family:var(--font-display); font-weight:400; font-size:2.2rem; margin-top:4px; color:var(--ink-900);">{v.title}</div>
                 </div>
                 <p style="color:var(--ink-600); line-height:1.8; font-size:1.02rem;">{v.desc}</p>
@@ -150,7 +150,7 @@ export const MissionPage = () => {
       <section class="section section-soft" style="padding-top:40px;">
         <div class="container" style="max-width:720px; text-align:center;">
           <div data-reveal style="padding:64px 40px; border-top:1px solid var(--ink-200); border-bottom:1px solid var(--ink-200);">
-            <div style="font-family:var(--font-display); font-style:italic; font-size:1.8rem; color:var(--ink-700); line-height:1.5;">
+            <div style="font-family:inherit; font-size:1.8rem; color:var(--ink-700); line-height:1.5;">
               “높은 퀄리티의 진료 경험을,<br />
               변하지 않고, 항상성 있게.”
             </div>

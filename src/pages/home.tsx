@@ -18,11 +18,10 @@ export const HomePage = () => {
           <div class="hero-top">
             <div>
               <span class="dot" aria-hidden="true"></span>
-              <span>Since {CLINIC.since} · Bupyeong, Incheon</span>
+              <span>Since {CLINIC.since} · 부평역 1번지</span>
             </div>
             <div class="hero-meta-right">
-              <div>Premium Dental Care</div>
-              <div style="margin-top:4px;">N 37.489 · E 126.724</div>
+              <span>부평우리치과</span>
             </div>
           </div>
 
@@ -30,8 +29,8 @@ export const HomePage = () => {
           <div>
             <h1 id="hero-title" class="hero-title">
               <span class="hero-title-row"><span>같은 퀄리티,</span></span>
-              <span class="hero-title-row"><span>같은 무드<em>,</em></span></span>
-              <span class="hero-title-row"><span><em>변하지 않는 진료.</em></span></span>
+              <span class="hero-title-row"><span>같은 무드,</span></span>
+              <span class="hero-title-row"><span>변하지 않는 <em>진료</em>.</span></span>
             </h1>
 
             <p class="hero-sub">
@@ -55,16 +54,16 @@ export const HomePage = () => {
           <div class="hero-bottom">
             <div class="hero-stats">
               <div class="stat">
-                <div class="num"><span data-count="14">14</span></div>
-                <div class="label">Years in place</div>
+                <div class="num"><span data-count="14">14</span><span style="font-size:.5em; font-weight:700; color:rgba(255,255,255,.5); margin-left:4px;">년</span></div>
+                <div class="label">한 자리 진료</div>
               </div>
               <div class="stat">
-                <div class="num"><span data-count="6">6</span></div>
-                <div class="label">Doctors</div>
+                <div class="num"><span data-count="6">6</span><span style="font-size:.5em; font-weight:700; color:rgba(255,255,255,.5); margin-left:4px;">인</span></div>
+                <div class="label">전문의 협진</div>
               </div>
               <div class="stat">
                 <div class="num"><span data-count="160">160</span></div>
-                <div class="label">Handpieces</div>
+                <div class="label">1인 1핸드피스</div>
               </div>
               <div class="stat">
                 <div class="num"><span data-count="2">2</span></div>
@@ -72,20 +71,18 @@ export const HomePage = () => {
               </div>
             </div>
             <div class="hero-signature">
-              <strong>Jaein Kim, DDS, Ph.D.</strong>
-              대표원장 서명
+              <strong>김재인 대표원장</strong>
+              고려대 구강외과 의학박사
             </div>
           </div>
         </div>
 
-        <div class="hero-scroll" aria-hidden="true">
-          <span>Scroll</span>
-        </div>
+        <div class="hero-scroll" aria-hidden="true"></div>
       </section>
 
       {/* =============== MARQUEE — Trust statements =============== */}
-      <section class="section-dark" style="padding:0; border-top:1px solid rgba(255,255,255,.08); border-bottom:1px solid rgba(255,255,255,.08); background:var(--ink-900);">
-        <div class="marquee" style="border:0; padding:28px 0; margin:0;">
+      <section class="section-dark" style="padding:0; background:var(--ink-900);">
+        <div class="marquee" style="margin:0;">
           <div class="marquee-track">
             {[
               { n: '14', t: 'Years · 한 자리에서', accent: false },
@@ -115,12 +112,11 @@ export const HomePage = () => {
         <div class="container">
           <div class="section-split">
             <div class="section-label">
-              <span class="chapter">Ch. 01</span>
+              <span class="chapter">01</span>
               Our Philosophy
             </div>
             <div>
-              <span class="quote-mark" style="font-style:italic; font-weight:900; font-size:clamp(3rem,4vw,4.5rem); line-height:.8; color:var(--brand); display:block; margin-bottom:-8px;">“</span>
-              <h2 data-reveal style="font-size:var(--h-2); margin-bottom:40px; max-width:900px; word-break:keep-all;">
+              <h2 data-reveal style="margin-bottom:40px; max-width:900px; word-break:keep-all;">
                 정직하게 최선을 다하여,<br />
                 받을 수 있는 <em>최고의 진료</em>를<br />
                 변하지 않고 제공하는 것.
@@ -152,7 +148,7 @@ export const HomePage = () => {
         <div class="container">
           <div class="section-split" style="margin-bottom: clamp(48px, 6vw, 80px);">
             <div class="section-label">
-              <span class="chapter">Ch. 02</span>
+              <span class="chapter">02</span>
               Core Treatments
             </div>
             <div>
@@ -199,7 +195,7 @@ export const HomePage = () => {
           <div class="section-eyebrow" style="margin-bottom:32px; display:flex; justify-content:center;" data-reveal>
             Credentials · 자격·인증
           </div>
-          <h2 data-reveal data-reveal-delay="1" style="font-size:var(--h-2); text-align:center; max-width:900px; margin:0 auto 64px;">
+          <h2 data-reveal data-reveal-delay="1" style="text-align:center; max-width:900px; margin:0 auto 64px;">
             말보다 <em>증명</em>으로.
           </h2>
 
@@ -227,12 +223,11 @@ export const HomePage = () => {
         <div class="container">
           <div class="section-split" style="margin-bottom: clamp(48px, 6vw, 80px);">
             <div class="section-label">
-              <span class="chapter">Ch. 03</span>
+              <span class="chapter">03</span>
               Our Doctors
             </div>
             <div>
-              <div class="section-eyebrow" data-reveal>여섯 명의 전문의</div>
-              <h2 data-reveal data-reveal-delay="1" style="font-size:var(--h-2); margin-top:20px; max-width:900px;">
+              <h2 data-reveal data-reveal-delay="1" style="max-width:900px;">
                 전문 분야는 다르지만,<br />
                 <em>원칙은 하나</em>입니다.
               </h2>
@@ -279,12 +274,11 @@ export const HomePage = () => {
         <div class="container">
           <div class="section-split" style="margin-bottom: clamp(48px, 6vw, 80px);">
             <div class="section-label">
-              <span class="chapter">Ch. 04</span>
+              <span class="chapter">04</span>
               Equipment
             </div>
             <div>
-              <div class="section-eyebrow" data-reveal>Equipment</div>
-              <h2 data-reveal data-reveal-delay="1" style="font-size:var(--h-2); margin-top:20px; max-width:900px;">
+              <h2 data-reveal data-reveal-delay="1" style="max-width:900px;">
                 장비가 말하는<br/>
                 <em>진료의 깊이.</em>
               </h2>

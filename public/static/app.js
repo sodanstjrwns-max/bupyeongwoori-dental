@@ -1,106 +1,170 @@
-// ============================================================
-// 부평우리치과 - Client interactions
-// ============================================================
+// =============================================================
+// 부평우리치과 - Frontend scripts
+// =============================================================
 (function () {
-  'use strict'
+  'use strict';
 
-  // 1) Sticky nav scroll state
-  const nav = document.getElementById('site-nav')
-  const updateNav = () => {
-    if (!nav) return
-    if (window.scrollY > 20) nav.classList.add('is-scrolled')
-    else nav.classList.remove('is-scrolled')
-  }
-  updateNav()
-  window.addEventListener('scroll', updateNav, { passive: true })
+  // --------- Nav scroll state ---------
+  const nav = document.getElementById('site-nav');
+  const onScroll = () => {
+    if (!nav) return;
+    if (window.scrollY > 40) nav.classList.add('is-scrolled');
+    else nav.classList.remove('is-scrolled');
+  };
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
 
-  // 2) Mobile menu
-  const burger = document.getElementById('nav-burger')
-  const mobile = document.getElementById('mobile-menu')
+  // --------- Mobile menu ---------
+  const burger = document.getElementById('nav-burger');
+  const mobile = document.getElementById('mobile-menu');
   if (burger && mobile) {
     burger.addEventListener('click', () => {
-      const open = mobile.classList.toggle('is-open')
-      burger.setAttribute('aria-expanded', String(open))
-      document.body.style.overflow = open ? 'hidden' : ''
-    })
-    // close on link click
-    mobile.querySelectorAll('a').forEach((a) => {
-      a.addEventListener('click', () => {
-        mobile.classList.remove('is-open')
-        document.body.style.overflow = ''
-        burger.setAttribute('aria-expanded', 'false')
-      })
-    })
+      const open = mobile.classList.toggle('is-open');
+      burger.setAttribute('aria-expanded', String(open));
+      document.body.style.overflow = open ? 'hidden' : '';
+    });
   }
 
-  // 3) Reveal on scroll
-  const reveal = document.querySelectorAll('[data-reveal]')
-  if ('IntersectionObserver' in window && reveal.length) {
-    const io = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((e) => {
-          if (e.isIntersecting) {
-            e.target.classList.add('is-visible')
-            io.unobserve(e.target)
-          }
-        })
-      },
-      { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
-    )
-    reveal.forEach((el) => io.observe(el))
-  } else {
-    reveal.forEach((el) => el.classList.add('is-visible'))
-  }
-
-  // 4) Counter animation for stats
-  document.querySelectorAll('[data-count]').forEach((el) => {
-    const target = parseFloat(el.getAttribute('data-count') || '0')
-    const suffix = el.getAttribute('data-suffix') || ''
-    const dur = 1800
-    const start = performance.now()
-    const easeOut = (t) => 1 - Math.pow(1 - t, 3)
-    const step = (now) => {
-      const p = Math.min((now - start) / dur, 1)
-      const v = target * easeOut(p)
-      el.textContent = (target % 1 === 0 ? Math.round(v) : v.toFixed(1)) + suffix
-      if (p < 1) requestAnimationFrame(step)
-    }
-    const io2 = new IntersectionObserver((entries) => {
+  // --------- Reveal animations ---------
+  const revealItems = document.querySelectorAll('[data-reveal]');
+  if ('IntersectionObserver' in window && revealItems.length) {
+    const io = new IntersectionObserver((entries) => {
       entries.forEach((e) => {
         if (e.isIntersecting) {
-          requestAnimationFrame(step)
-          io2.unobserve(el)
+          e.target.classList.add('is-visible');
+          io.unobserve(e.target);
         }
-      })
-    })
-    io2.observe(el)
-  })
+      });
+    }, { rootMargin: '0px 0px -80px 0px', threshold: 0.05 });
+    revealItems.forEach((el) => io.observe(el));
+  } else {
+    revealItems.forEach((el) => el.classList.add('is-visible'));
+  }
 
-  // 5) Before/After slider
-  document.querySelectorAll('[data-ba-slider]').forEach((slider) => {
-    const before = slider.querySelector('.ba-before')
-    const after = slider.querySelector('.ba-after')
-    const handle = slider.querySelector('.ba-handle')
-    if (!before || !after || !handle) return
+  // --------- Number counters ---------
+  const counters = document.querySelectorAll('[data-count]');
+  if ('IntersectionObserver' in window && counters.length) {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        const el = entry.target;
+        const target = Number(el.getAttribute('data-count') || '0');
+        const duration = 1600;
+        const start = performance.now();
+        const tick = (now) => {
+          const t = Math.min(1, (now - start) / duration);
+          const eased = 1 - Math.pow(1 - t, 3);
+          el.textContent = Math.floor(target * eased).toLocaleString();
+          if (t < 1) requestAnimationFrame(tick);
+          else el.textContent = target.toLocaleString();
+        };
+        requestAnimationFrame(tick);
+        io.unobserve(el);
+      });
+    }, { threshold: 0.4 });
+    counters.forEach((el) => io.observe(el));
+  }
 
-    let dragging = false
-    const setPos = (pct) => {
-      pct = Math.max(0, Math.min(100, pct))
-      after.style.clipPath = `inset(0 ${100 - pct}% 0 0)`
-      handle.style.left = pct + '%'
+  // =============================================================
+  // Blog Editor (contenteditable + uploads)
+  // =============================================================
+  const editor = document.getElementById('editor');
+  const contentOutput = document.getElementById('content-output');
+  const form = document.getElementById('blog-form');
+  const editorDrop = document.getElementById('editor-drop');
+  const inlineUpload = document.getElementById('editor-upload-inline');
+
+  if (editor && form) {
+    // Toolbar buttons
+    document.querySelectorAll('.editor-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const cmd = btn.getAttribute('data-cmd');
+        editor.focus();
+        switch (cmd) {
+          case 'h2': document.execCommand('formatBlock', false, 'H2'); break;
+          case 'h3': document.execCommand('formatBlock', false, 'H3'); break;
+          case 'p':  document.execCommand('formatBlock', false, 'P'); break;
+          case 'bold': document.execCommand('bold'); break;
+          case 'italic': document.execCommand('italic'); break;
+          case 'ul': document.execCommand('insertUnorderedList'); break;
+          case 'ol': document.execCommand('insertOrderedList'); break;
+          case 'link': {
+            const url = prompt('링크 URL을 입력하세요:', 'https://');
+            if (url) document.execCommand('createLink', false, url);
+            break;
+          }
+          case 'img':
+            if (inlineUpload) inlineUpload.click();
+            break;
+        }
+      });
+    });
+
+    // Upload helper
+    async function uploadFile(file) {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/admin/upload', { method: 'POST', body: fd });
+      if (!res.ok) throw new Error('upload failed');
+      return await res.json();
     }
-    setPos(50)
 
-    const onMove = (clientX) => {
-      const rect = slider.getBoundingClientRect()
-      const pct = ((clientX - rect.left) / rect.width) * 100
-      setPos(pct)
+    // Insert images on file selection
+    if (inlineUpload) {
+      inlineUpload.addEventListener('change', async (e) => {
+        const files = Array.from(e.target.files || []);
+        for (const f of files) {
+          try {
+            const r = await uploadFile(f);
+            if (r.ok) {
+              const img = document.createElement('img');
+              img.src = r.url;
+              img.alt = f.name;
+              editor.appendChild(img);
+              editor.appendChild(document.createElement('p'));
+            }
+          } catch (err) { console.error(err); }
+        }
+        inlineUpload.value = '';
+      });
     }
-    slider.addEventListener('mousedown', (e) => { dragging = true; onMove(e.clientX) })
-    window.addEventListener('mouseup', () => { dragging = false })
-    window.addEventListener('mousemove', (e) => { if (dragging) onMove(e.clientX) })
-    slider.addEventListener('touchstart', (e) => { dragging = true; onMove(e.touches[0].clientX) }, { passive: true })
-    window.addEventListener('touchend', () => { dragging = false })
-    window.addEventListener('touchmove', (e) => { if (dragging) onMove(e.touches[0].clientX) }, { passive: true })
-  })
-})()
+
+    // Drag & drop images
+    if (editorDrop) {
+      ['dragenter', 'dragover'].forEach((ev) => {
+        editorDrop.addEventListener(ev, (e) => {
+          e.preventDefault(); e.stopPropagation();
+          editorDrop.classList.add('drop-active');
+        });
+      });
+      ['dragleave', 'drop'].forEach((ev) => {
+        editorDrop.addEventListener(ev, (e) => {
+          e.preventDefault(); e.stopPropagation();
+          editorDrop.classList.remove('drop-active');
+        });
+      });
+      editorDrop.addEventListener('drop', async (e) => {
+        const dt = e.dataTransfer;
+        if (!dt || !dt.files || !dt.files.length) return;
+        const files = Array.from(dt.files).filter((f) => f.type.startsWith('image/'));
+        for (const f of files) {
+          try {
+            const r = await uploadFile(f);
+            if (r.ok) {
+              const img = document.createElement('img');
+              img.src = r.url;
+              img.alt = f.name;
+              editor.appendChild(img);
+              editor.appendChild(document.createElement('p'));
+            }
+          } catch (err) { console.error(err); }
+        }
+      });
+    }
+
+    // Before submit, copy HTML into hidden textarea
+    form.addEventListener('submit', () => {
+      if (contentOutput) contentOutput.value = editor.innerHTML;
+    });
+  }
+})();

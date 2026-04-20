@@ -4,6 +4,7 @@
 
 export const CLINIC = {
   name: '부평우리치과',
+  fullName: '부평우리치과의원 인천부평본점',
   nameEn: 'Bupyeong Woori Dental Clinic',
   slogan: '정직한 진료, 변하지 않는 퀄리티',
   mission:

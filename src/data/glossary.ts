@@ -1028,47 +1028,7 @@ export const getGlossary = (slug: string) => GLOSSARY.find((g) => g.slug === slu
 export const glossaryByCategory = (cat: GlossaryCategory) => GLOSSARY.filter((g) => g.category === cat)
 export const glossaryCount = GLOSSARY.length
 
-// ============================================================
-// 레거시 호환 API (기존 페이지 코드 호환)
-// ============================================================
-// category 매핑: 신규 schema의 GlossaryCategory 값을 기존 slug 체계로 변환
-const LEGACY_CATEGORY_ICONS: Record<GlossaryCategory, string> = {
-  anatomy: 'fa-tooth',
-  implant: 'fa-screwdriver-wrench',
-  prosthesis: 'fa-crown',
-  orthodontics: 'fa-align-justify',
-  surgery: 'fa-scalpel',
-  endodontics: 'fa-bug',
-  periodontics: 'fa-leaf',
-  prevention: 'fa-shield-halved',
-  pediatric: 'fa-child',
-  esthetic: 'fa-star',
-  material: 'fa-vials',
-  device: 'fa-cube',
-  procedure: 'fa-stethoscope',
-  pathology: 'fa-triangle-exclamation',
-  other: 'fa-circle-info',
-}
-
-export const GLOSSARY_CATEGORIES = CATEGORIES.map((c) => ({
-  slug: c.key,
-  name: c.label,
-  description: c.description,
-  icon: LEGACY_CATEGORY_ICONS[c.key] ?? 'fa-circle-info',
-}))
-
-// 레거시 getGlossaryTerm — 새 getGlossary의 별칭
-export const getGlossaryTerm = getGlossary
-
-// 레거시 getRelatedTerms — relatedTerms slug 배열을 실제 term 객체로 변환
-export const getRelatedTerms = (term: GlossaryTerm): GlossaryTerm[] => {
-  const slugs = term.relatedTerms ?? []
-  return slugs
-    .map((s) => GLOSSARY.find((g) => g.slug === s))
-    .filter((t): t is GlossaryTerm => !!t)
-}
-
-// getGlossaryByCategory 레거시 별칭
+// 레거시 호환: getGlossaryByCategory (alias)
 export const getGlossaryByCategory = glossaryByCategory
 
 // 한글 초성 분류 (ㄱ, ㄴ, ㄷ...)
@@ -1090,10 +1050,30 @@ export { INITIAL_CONSONANTS }
 // ============================================================
 // Aliases for page compatibility
 // ============================================================
+const LEGACY_CATEGORY_ICONS: Record<GlossaryCategory, string> = {
+  anatomy: 'fa-tooth',
+  implant: 'fa-screwdriver-wrench',
+  prosthesis: 'fa-crown',
+  orthodontics: 'fa-align-justify',
+  surgery: 'fa-scissors',
+  endodontics: 'fa-bug',
+  periodontics: 'fa-leaf',
+  prevention: 'fa-shield-halved',
+  pediatric: 'fa-child',
+  esthetic: 'fa-star',
+  material: 'fa-vials',
+  device: 'fa-cube',
+  procedure: 'fa-stethoscope',
+  pathology: 'fa-triangle-exclamation',
+  other: 'fa-circle-info',
+}
+
 export const GLOSSARY_CATEGORIES = CATEGORIES.map((c) => ({
   slug: c.key,
   label: c.label,
+  name: c.label, // alias for pages
   description: c.description,
+  icon: LEGACY_CATEGORY_ICONS[c.key] ?? 'fa-circle-info',
 }))
 
 export const getGlossaryTerm = getGlossary

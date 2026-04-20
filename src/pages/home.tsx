@@ -119,10 +119,11 @@ export const HomePage = () => {
               Our Philosophy
             </div>
             <div>
-              <span class="quote-mark" style="font-family:'Times New Roman',serif; font-style:italic; font-size:clamp(5rem,8vw,9rem); line-height:.7; color:var(--brand); display:block; margin-bottom:-24px;">“</span>
-              <h2 data-reveal style="font-size:var(--h-2); line-height:1.02; margin-bottom:40px; max-width:900px;">
+              <span class="quote-mark" style="font-style:italic; font-weight:900; font-size:clamp(3rem,4vw,4.5rem); line-height:.8; color:var(--brand); display:block; margin-bottom:-8px;">“</span>
+              <h2 data-reveal style="font-size:var(--h-2); margin-bottom:40px; max-width:900px; word-break:keep-all;">
                 정직하게 최선을 다하여,<br />
-                받을 수 있는 최고의 진료를 <em>변하지 않고</em> 제공하는 것.
+                받을 수 있는 <em>최고의 진료</em>를<br />
+                변하지 않고 제공하는 것.
               </h2>
               <div style="display:grid; grid-template-columns:1fr 1fr; gap:40px; max-width:900px;" data-reveal data-reveal-delay="2">
                 <p style="font-size:var(--t-lead); color:var(--ink-600); line-height:1.7;">
@@ -198,7 +199,7 @@ export const HomePage = () => {
           <div class="section-eyebrow" style="margin-bottom:32px; display:flex; justify-content:center;" data-reveal>
             Credentials · 자격·인증
           </div>
-          <h2 data-reveal data-reveal-delay="1" style="font-size:var(--h-2); text-align:center; max-width:900px; margin:0 auto 64px; line-height:1.05; font-weight:900; letter-spacing:-0.04em;">
+          <h2 data-reveal data-reveal-delay="1" style="font-size:var(--h-2); text-align:center; max-width:900px; margin:0 auto 64px;">
             말보다 <em>증명</em>으로.
           </h2>
 

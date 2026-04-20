@@ -19,7 +19,7 @@
 | `/before-after` · `/before-after/:slug` | 비포애프터 (회원 전용, 로그인 필요) |
 | `/blog` · `/blog/:slug` | 블로그 |
 | `/notices` · `/notices/:id` | 공지사항 |
-| `/glossary` · `/glossary/:slug` | 치과 백과사전(500+ 용어, 카테고리/초성 분류) |
+| `/glossary` · `/glossary/:slug` | 치과 백과사전(525+ 용어, 15 카테고리/초성 분류) |
 | `/faq` | 자주 묻는 질문 (진료별 통합) |
 | `/visit` | 내원안내 / 진료시간 / 오시는 길 |
 | `/login` · `/signup` · `/logout` | 회원 인증 |
@@ -40,7 +40,7 @@
 - **Static Data**: `src/data/treatments.ts` (8개 진료 + FAQ 120+), `src/data/doctors.ts`, `src/data/glossary.ts` (500+ 용어)
 
 ## Design System
-- **Font**: Pretendard (서울비디치과 bdbddc.com 스타일, CDN `orioncactus/pretendard`) + Bodoni Moda / Fraunces (럭셔리 디스플레이)
+- **Font**: Pretendard 단독 사용 (서울비디치과 bdbddc.com 동일 스타일, CDN `orioncactus/pretendard`) · font-weight 800~900, letter-spacing -0.03em ~ -0.04em의 두껍고 타이트한 타이포그래피
 - **Palette**: Tiffany Blue (`--brand-*` 50~900), Ink (고명도 그레이), Gold `#bfa36a`
 - **Layout**: 잡지형 히어로, 섹션 레벨링, 장비 마키, 풀 카드, 상세 페이지 FAQ 아코디언, 모바일 details 메뉴
 - **SEO**: JSON-LD (Dentist, WebSite, Breadcrumb, FAQPage, Article, Physician), OG, Twitter, canonical, robots, sitemap

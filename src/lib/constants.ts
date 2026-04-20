@@ -84,10 +84,10 @@ export const OTHER_TREATMENTS = [
 
 // 특수 장비
 export const EQUIPMENTS = [
-  { name: '콘빔 CT', count: 2, desc: '3D 진단으로 정확한 수술 설계' },
-  { name: '칼짜이스 미세현미경 Extaro 300', count: 1, desc: '맨눈으로 볼 수 없는 영역까지 정밀하게' },
-  { name: '멕트론 콤비터치', count: 10, desc: '초음파 기반 정밀 수술·스케일링' },
-  { name: '카보 핸드피스', count: 160, desc: '1인 1핸드피스 원칙의 철저한 감염관리' },
+  { name: '콘빔 CT', nameEn: 'CBCT', count: 2, desc: '3D 진단으로 정확한 수술 설계', purpose: '3D Diagnosis' },
+  { name: '칼짜이스 미세현미경 Extaro 300', nameEn: 'ZEISS EXTARO 300', count: 1, desc: '맨눈으로 볼 수 없는 영역까지 정밀하게', purpose: 'Microscope Precision' },
+  { name: '멕트론 콤비터치', nameEn: 'Mectron Combitouch', count: 10, desc: '초음파 기반 정밀 수술·스케일링', purpose: 'Ultrasonic Surgery' },
+  { name: '카보 핸드피스', nameEn: 'KaVo Handpiece', count: 160, desc: '1인 1핸드피스 원칙의 철저한 감염관리', purpose: '1:1 Infection Control' },
 ] as const
 
 // 주요 지역 키워드 (SEO용)

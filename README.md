@@ -6,7 +6,7 @@
 - **Key Features**: 홈 · 병원미션 · 의료진 · 진료과목(8종 상세) · 비포애프터 갤러리(회원 전용) · 블로그 · 공지사항 · 치과 백과사전(500+ 용어) · FAQ · 내원안내 · 회원가입/로그인 · 관리자 CMS (블로그/비포애프터/공지사항 CRUD + R2 업로드)
 
 ## URLs
-- **Local Preview**: https://3000-ih3i86phhlqz7gw0ibzh8-ea026bf9.sandbox.novita.ai
+- **Local Preview**: https://3000-ih3i86phhlqz7gw0ibzh8-ea026bf9.sandbox.novita.ai (샌드박스 1시간 유효)
 - **Production (예정)**: https://bupyeongwoori.com (Cloudflare Pages 배포 시점에 확정)
 
 ## Main Routes
@@ -19,7 +19,7 @@
 | `/before-after` · `/before-after/:slug` | 비포애프터 (회원 전용, 로그인 필요) |
 | `/blog` · `/blog/:slug` | 블로그 |
 | `/notices` · `/notices/:id` | 공지사항 |
-| `/glossary` · `/glossary/:slug` | 치과 백과사전(525+ 용어, 15 카테고리/초성 분류) |
+| `/glossary` · `/glossary/:slug` | 치과 백과사전(**582 용어**, 15 카테고리/초성 분류) |
 | `/faq` | 자주 묻는 질문 (진료별 통합) |
 | `/visit` | 내원안내 / 진료시간 / 오시는 길 |
 | `/login` · `/signup` · `/logout` | 회원 인증 |
@@ -37,7 +37,7 @@
   - `notices` (title, content, is_major, is_published, views)
   - `glossary_stats` (slug, views) · `contact_logs`
 - **Storage**: Cloudflare D1 (webapp-production, 로컬 개발은 SQLite 자동) + R2 (`webapp-media` 버킷, 이미지 업로드)
-- **Static Data**: `src/data/treatments.ts` (8개 진료 + FAQ 120+), `src/data/doctors.ts`, `src/data/glossary.ts` (500+ 용어)
+- **Static Data**: `src/data/treatments.ts` (8개 진료 + FAQ 120+), `src/data/doctors.ts`, `src/data/glossary.ts` (**582 용어**)
 
 ## Design System
 - **Font**: Pretendard 단독 사용 (서울비디치과 bdbddc.com 동일 스타일, CDN `orioncactus/pretendard`) · font-weight 800~900, letter-spacing -0.03em ~ -0.04em의 두껍고 타이트한 타이포그래피

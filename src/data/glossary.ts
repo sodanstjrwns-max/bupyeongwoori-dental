@@ -62,6 +62,30 @@ export const CATEGORIES: { key: GlossaryCategory; label: string; description: st
 type Seed = Omit<GlossaryTerm, 'slug'> & { slug?: string }
 
 const SEEDS: GlossaryTerm[] = [
+  // ---------- 치아 기초 해부 ----------
+  { slug: 'tooth', term: '치아', termEn: 'Tooth', category: 'anatomy',
+    definition: '음식을 씹고 발음을 돕는 구강 내 경조직 기관. 성인은 사랑니 포함 28~32개를 갖습니다.',
+    body: '<p>치아는 외부의 <strong>법랑질(Enamel)</strong>, 그 아래 <strong>상아질(Dentin)</strong>, 중심부의 <strong>치수(Pulp, 신경·혈관)</strong>, 그리고 뿌리를 감싸는 <strong>백악질(Cementum)</strong>로 구성됩니다. 한 번 손상된 치질은 스스로 재생되지 않으므로 예방과 조기 치료가 중요합니다.</p>',
+    relatedTerms: ['enamel', 'dentin', 'pulp', 'cementum', 'root'],
+    relatedTreatments: ['general-prosthesis', 'prevention'] },
+  { slug: 'enamel', term: '법랑질', termEn: 'Enamel', category: 'anatomy',
+    definition: '치아 가장 바깥층의 인체 최강의 경조직. 한 번 손상되면 재생되지 않습니다.',
+    body: '<p>법랑질은 무기질 함량이 <strong>96% 이상</strong>으로 인체에서 가장 단단한 조직입니다. 충치·마모·산식증 등으로 손상되면 회복되지 않으므로, <a href="/treatments/prevention">정기 검진과 예방 치료</a>가 필수입니다.</p>',
+    relatedTerms: ['tooth', 'dentin', 'caries', 'erosion'] },
+  { slug: 'dentin', term: '상아질', termEn: 'Dentin', category: 'anatomy',
+    definition: '법랑질 아래 치아 본체를 이루는 조직. 손상 시 시린 증상이 나타날 수 있습니다.',
+    relatedTerms: ['tooth', 'enamel', 'pulp', 'sensitivity'] },
+  { slug: 'pulp', term: '치수', termEn: 'Dental Pulp', category: 'anatomy',
+    definition: '치아 내부의 신경·혈관 조직. 염증이 생기면 극심한 통증과 함께 신경치료가 필요합니다.',
+    relatedTerms: ['tooth', 'dentin', 'rct', 'pulpitis'],
+    relatedTreatments: ['general-prosthesis'] },
+  { slug: 'cementum', term: '백악질', termEn: 'Cementum', category: 'anatomy',
+    definition: '치아 뿌리를 감싸는 얇은 경조직으로 치주인대를 매개로 잇몸뼈와 치아를 연결합니다.',
+    relatedTerms: ['tooth', 'root', 'pdl'] },
+  { slug: 'root', term: '치근', termEn: 'Tooth Root', category: 'anatomy',
+    definition: '잇몸뼈 속에 묻혀 있는 치아의 뿌리 부분. 앞니는 1개, 어금니는 2~3개의 치근을 갖습니다.',
+    relatedTerms: ['tooth', 'cementum', 'apex', 'pdl'] },
+
   // ---------- Implant 핵심 ----------
   { slug: 'implant', term: '임플란트', termEn: 'Dental Implant', category: 'implant',
     definition: '치아를 잃은 자리에 인공 치근(픽스쳐)을 식립하고 그 위에 보철물을 올려 자연치와 유사한 기능을 회복하는 치료.',

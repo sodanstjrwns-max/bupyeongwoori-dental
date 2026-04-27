@@ -32,6 +32,8 @@ export const DOCTORS: Doctor[] = [
     name: '김재인',
     title: '대표원장',
     role: 'director',
+    // R2 업로드 후 'doctors/kim-jaein.jpg' 형태로 키 입력하면 자동 표시
+    // photo: 'doctors/kim-jaein.jpg',
     specialties: ['implant', 'esthetic', 'wisdom-tooth', 'general-prosthesis'],
     tagline: '직관적인 설명, 정교한 수술. 14년 한 자리에서.',
     intro: [

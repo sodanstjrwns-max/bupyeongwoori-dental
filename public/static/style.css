@@ -1284,3 +1284,106 @@ th{ font-weight:700; background:var(--ink-50); font-size:.85rem; letter-spacing:
 @media (max-width:480px){
   .creds-grid{ grid-template-columns:1fr; }
 }
+
+/* ============================================================
+   Doctor portrait (R2 photos) — replaces silhouette when present
+   ============================================================ */
+.doctor-card .portrait{
+  aspect-ratio: 4/5;
+  overflow:hidden;
+  background:var(--ink-100);
+  position:relative;
+}
+.doctor-card .portrait img{
+  width:100%; height:100%; object-fit:cover; object-position:center 30%;
+  display:block;
+  transition: transform var(--d-slow) var(--ease), filter var(--d-base) var(--ease);
+  filter: saturate(.92);
+}
+.doctor-card:hover .portrait img{
+  transform:scale(1.04);
+  filter: saturate(1.05);
+}
+.section-dark .doctor-card .portrait{ background:rgba(255,255,255,.04); }
+.section-dark .doctor-card .portrait img{ filter: saturate(.85) brightness(.95); }
+.section-dark .doctor-card:hover .portrait img{ filter: saturate(1) brightness(1); }
+
+/* Doctor detail hero with photo */
+.doctor-hero .doctor-hero-grid{
+  display:grid; grid-template-columns:1fr; gap:48px; align-items:center;
+}
+.doctor-hero .doctor-hero-grid.with-photo{
+  grid-template-columns: 1.1fr .9fr;
+}
+.doctor-hero-photo{
+  aspect-ratio: 4/5;
+  border-radius:var(--r-md);
+  overflow:hidden;
+  background:rgba(255,255,255,.04);
+  box-shadow: 0 30px 60px rgba(0,0,0,.4);
+  position:relative;
+}
+.doctor-hero-photo::after{
+  content:''; position:absolute; inset:0;
+  background: linear-gradient(180deg, transparent 60%, rgba(0,0,0,.35) 100%);
+  pointer-events:none;
+}
+.doctor-hero-photo img{
+  width:100%; height:100%; object-fit:cover; object-position:center 25%;
+  display:block;
+}
+@media (max-width:900px){
+  .doctor-hero .doctor-hero-grid.with-photo{ grid-template-columns:1fr; }
+  .doctor-hero-photo{ max-width:420px; margin:0 auto; }
+}
+
+/* ============================================================
+   Interior gallery (R2 photos: lobby, surgery, air-shower, etc.)
+   ============================================================ */
+.interior-gallery{
+  display:grid;
+  grid-template-columns: repeat(12, 1fr);
+  grid-auto-rows: 180px;
+  gap: 14px;
+  margin-top: 48px;
+}
+.interior-gallery .tile{
+  position:relative;
+  overflow:hidden;
+  border-radius:var(--r-md);
+  background:var(--ink-100);
+  cursor:pointer;
+}
+.interior-gallery .tile img{
+  width:100%; height:100%; object-fit:cover;
+  display:block;
+  transition: transform var(--d-slow) var(--ease);
+}
+.interior-gallery .tile:hover img{ transform:scale(1.06); }
+.interior-gallery .tile .caption{
+  position:absolute; left:18px; bottom:14px;
+  color:#fff;
+  font-size:.78rem; font-weight:600;
+  letter-spacing:.06em; text-transform:uppercase;
+  text-shadow: 0 1px 4px rgba(0,0,0,.5);
+  opacity:.92;
+}
+/* Mosaic spans */
+.interior-gallery .tile.lg{ grid-column: span 8; grid-row: span 2; }
+.interior-gallery .tile.md{ grid-column: span 6; grid-row: span 2; }
+.interior-gallery .tile.sm{ grid-column: span 4; grid-row: span 2; }
+.interior-gallery .tile.xs{ grid-column: span 4; grid-row: span 1; }
+@media (max-width:1024px){
+  .interior-gallery{ grid-template-columns: repeat(6,1fr); grid-auto-rows: 160px; }
+  .interior-gallery .tile.lg{ grid-column: span 6; }
+  .interior-gallery .tile.md{ grid-column: span 6; }
+  .interior-gallery .tile.sm{ grid-column: span 3; }
+  .interior-gallery .tile.xs{ grid-column: span 3; }
+}
+@media (max-width:560px){
+  .interior-gallery{ grid-template-columns: 1fr; grid-auto-rows: 220px; gap:10px; }
+  .interior-gallery .tile.lg, .interior-gallery .tile.md,
+  .interior-gallery .tile.sm, .interior-gallery .tile.xs{
+    grid-column: span 1; grid-row: span 1;
+  }
+}

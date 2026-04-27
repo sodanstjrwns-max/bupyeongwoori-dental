@@ -1,6 +1,6 @@
 import { Layout } from '../components/Layout'
 import { CLINIC, CORE_TREATMENTS, EQUIPMENTS } from '../lib/constants'
-import { DOCTORS } from '../data/doctors'
+import { DOCTORS, doctorPhotoSrc } from '../data/doctors'
 import { dentistSchema, websiteSchema } from '../lib/schema'
 
 export const HomePage = () => {
@@ -238,16 +238,25 @@ export const HomePage = () => {
           </div>
 
           <div class="doctors-grid">
-            {DOCTORS.map((d, i) => (
-              <a href={`/doctors/${d.slug}`} class="doctor-card" data-reveal data-reveal-delay={String(i + 1)}>
-                <div class="silhouette" aria-hidden="true">{d.name.slice(-2)}</div>
-                <div class="meta">
-                  <span class="role">{d.title}</span>
-                  <div class="name">{d.name}</div>
-                  <div class="tagline">{d.tagline}</div>
-                </div>
-              </a>
-            ))}
+            {DOCTORS.map((d, i) => {
+              const src = doctorPhotoSrc(d.photo)
+              return (
+                <a href={`/doctors/${d.slug}`} class="doctor-card" data-reveal data-reveal-delay={String(i + 1)}>
+                  {src ? (
+                    <div class="portrait">
+                      <img src={src} alt={`${d.name} ${d.title}`} loading="lazy" />
+                    </div>
+                  ) : (
+                    <div class="silhouette" aria-hidden="true">{d.name.slice(-2)}</div>
+                  )}
+                  <div class="meta">
+                    <span class="role">{d.title}</span>
+                    <div class="name">{d.name}</div>
+                    <div class="tagline">{d.tagline}</div>
+                  </div>
+                </a>
+              )
+            })}
             {Array.from({ length: Math.max(0, 3 - DOCTORS.length) }).map((_, i) => (
               <div class="doctor-card" data-reveal data-reveal-delay={String(DOCTORS.length + i + 1)} style="opacity:0.5;">
                 <div class="silhouette" aria-hidden="true">…</div>

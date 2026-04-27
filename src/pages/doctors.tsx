@@ -1,6 +1,6 @@
 import { Layout } from '../components/Layout'
 import { CLINIC } from '../lib/constants'
-import { DOCTORS, getDoctor } from '../data/doctors'
+import { DOCTORS, getDoctor, doctorPhotoSrc } from '../data/doctors'
 import { TREATMENT_LIST, getTreatment } from '../data/treatments'
 import { breadcrumbSchema, doctorSchema } from '../lib/schema'
 
@@ -39,16 +39,25 @@ export const DoctorsPage = () => {
       <section class="section">
         <div class="container">
           <div class="doctors-grid">
-            {DOCTORS.map((d, i) => (
-              <a href={`/doctors/${d.slug}`} class="doctor-card" data-reveal data-reveal-delay={String(i + 1)}>
-                <div class="silhouette" aria-hidden="true">{d.name.slice(-2)}</div>
-                <div class="meta">
-                  <span class="role">{d.title}</span>
-                  <div class="name">{d.name}</div>
-                  <div class="tagline">{d.tagline}</div>
-                </div>
-              </a>
-            ))}
+            {DOCTORS.map((d, i) => {
+              const src = doctorPhotoSrc(d.photo)
+              return (
+                <a href={`/doctors/${d.slug}`} class="doctor-card" data-reveal data-reveal-delay={String(i + 1)}>
+                  {src ? (
+                    <div class="portrait">
+                      <img src={src} alt={`${d.name} ${d.title}`} loading="lazy" />
+                    </div>
+                  ) : (
+                    <div class="silhouette" aria-hidden="true">{d.name.slice(-2)}</div>
+                  )}
+                  <div class="meta">
+                    <span class="role">{d.title}</span>
+                    <div class="name">{d.name}</div>
+                    <div class="tagline">{d.tagline}</div>
+                  </div>
+                </a>
+              )
+            })}
             {/* Coming soon slots */}
             {Array.from({ length: Math.max(0, 6 - DOCTORS.length) }).map((_, i) => (
               <div class="doctor-card" style="opacity:0.55;" data-reveal data-reveal-delay={String(DOCTORS.length + i + 1)}>
@@ -106,10 +115,9 @@ export const DoctorDetailPage = ({ slug }: { slug: string }) => {
       ]}
     >
       {/* Hero profile */}
-      <section class="hero" style="min-height:80vh;">
+      <section class="hero doctor-hero" style="min-height:80vh;">
         <div class="container hero-content">
-          <div style="display:grid; grid-template-columns:1fr; gap:48px; align-items:center;"
-            class="doctor-hero-grid">
+          <div class={`doctor-hero-grid ${doctorPhotoSrc(d.photo) ? 'with-photo' : ''}`}>
             <div>
               <div class="hero-eyebrow" data-reveal>
                 <span class="dot"></span>
@@ -130,6 +138,11 @@ export const DoctorDetailPage = ({ slug }: { slug: string }) => {
                 </div>
               )}
             </div>
+            {doctorPhotoSrc(d.photo) && (
+              <div class="doctor-hero-photo" data-reveal data-reveal-delay="2">
+                <img src={doctorPhotoSrc(d.photo)!} alt={`${d.name} ${d.title}`} loading="eager" />
+              </div>
+            )}
           </div>
         </div>
       </section>

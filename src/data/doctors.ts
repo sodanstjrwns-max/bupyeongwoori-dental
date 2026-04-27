@@ -7,7 +7,7 @@ export type Doctor = {
   name: string
   title: string // 직책
   role: 'director' | 'vice' | 'doctor'
-  photo?: string // /static/doctors/xxx.jpg
+  photo?: string // R2 key (e.g., 'doctors/kim-jaein.jpg') OR full URL OR /static/path
   specialties: string[] // 잘하는 진료 slug (CORE/OTHER treatments)
   tagline: string // 한 줄 카피
   intro: string[] // 자기소개 단락
@@ -15,6 +15,15 @@ export type Doctor = {
   careers: string[] // 경력/학회
   certifications: string[] // 자문의/인증의
   quote?: string
+}
+
+// 사진 URL 헬퍼: R2 key든 절대 URL이든 정적 경로든 모두 안전하게 변환
+export const doctorPhotoSrc = (photo?: string): string | null => {
+  if (!photo) return null
+  if (photo.startsWith('http://') || photo.startsWith('https://')) return photo
+  if (photo.startsWith('/')) return photo
+  // R2 key (e.g., 'doctors/kim-jaein.jpg') -> /media/<key>
+  return `/media/${photo}`
 }
 
 export const DOCTORS: Doctor[] = [

@@ -1,6 +1,7 @@
 import { Layout } from '../components/Layout'
 import { CLINIC } from '../lib/constants'
 import { breadcrumbSchema } from '../lib/schema'
+import { PUBLISHED_INTERIOR_PHOTOS, interiorPhotoSrc } from '../data/interior'
 
 export const MissionPage = () => {
   return (
@@ -145,6 +146,33 @@ export const MissionPage = () => {
           </div>
         </div>
       </section>
+
+      {/* Interior Gallery (R2 photos) */}
+      {PUBLISHED_INTERIOR_PHOTOS.length > 0 && (
+        <section class="section">
+          <div class="container">
+            <div class="section-head" data-reveal style="text-align:center; margin-left:auto; margin-right:auto;">
+              <div class="section-eyebrow" style="padding-left:0;">SPACE · 공간</div>
+              <h2 class="section-title">진료의 깊이는 <em>공간</em>에서 시작합니다.</h2>
+              <p style="margin-top:24px; font-size:1.05rem; color:var(--ink-500); line-height:1.7;">
+                400평 · 5·7층 · 6개 독립 수술실 · 에어샤워 감염관리 시스템.
+              </p>
+            </div>
+            <div class="interior-gallery" data-reveal data-reveal-delay="1">
+              {PUBLISHED_INTERIOR_PHOTOS.map((p) => {
+                const src = interiorPhotoSrc(p.src)
+                if (!src) return null
+                return (
+                  <div class={`tile ${p.size}`}>
+                    <img src={src} alt={p.alt} loading="lazy" />
+                    <div class="caption">{p.caption}</div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Signature */}
       <section class="section section-soft" style="padding-top:40px;">

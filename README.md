@@ -7,7 +7,9 @@
 
 ## URLs
 - **Local Preview**: https://3000-ih3i86phhlqz7gw0ibzh8-ea026bf9.sandbox.novita.ai (샌드박스 1시간 유효)
-- **Production (예정)**: https://bupyeongwoori.com (Cloudflare Pages 배포 시점에 확정)
+- **Production**: https://bupyeongwoori-dental.pages.dev (Cloudflare Pages, GitHub Actions 자동 배포)
+- **Repository**: https://github.com/sodanstjrwns-max/bupyeongwoori-dental
+- **Custom Domain (예정)**: https://bupyeongwoori.com
 
 ## Main Routes
 | Path | Description |

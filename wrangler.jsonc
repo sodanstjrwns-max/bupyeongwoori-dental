@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "webapp",
+  "name": "bupyeongwoori-dental",
   "compatibility_date": "2026-04-13",
   "pages_build_output_dir": "./dist",
   "compatibility_flags": [
@@ -9,14 +9,14 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "webapp-production",
-      "database_id": "00000000-0000-0000-0000-000000000000"
+      "database_name": "bupyeongwoori-production",
+      "database_id": "a114f1f6-ba56-47f3-b557-f4841d86a76e"
     }
   ],
   "r2_buckets": [
     {
       "binding": "R2",
-      "bucket_name": "webapp-media"
+      "bucket_name": "bupyeongwoori-media"
     }
   ]
 }

@@ -29,9 +29,18 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Sanitize commit message (ASCII only for Cloudflare API)
+        id: msg
+        run: |
+          RAW=$(git log -1 --pretty=%s)
+          ASCII=$(echo "$RAW" | iconv -f UTF-8 -t ASCII//TRANSLIT//IGNORE 2>/dev/null | tr -cd '[:print:]\n' | head -c 200)
+          if [ -z "$ASCII" ]; then ASCII="auto deploy ${GITHUB_SHA::7}"; fi
+          echo "message=$ASCII" >> $GITHUB_OUTPUT
+          echo "Commit message for CF: $ASCII"
+
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=bupyeongwoori-dental --branch=main
+          command: pages deploy dist --project-name=bupyeongwoori-dental --branch=main --commit-message="${{ steps.msg.outputs.message }}" --commit-hash=${{ github.sha }}

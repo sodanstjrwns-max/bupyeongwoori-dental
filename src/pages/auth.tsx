@@ -1,5 +1,5 @@
 import { Layout } from '../components/Layout'
-import { CLINIC } from '../lib/constants'
+import { CLINIC, OG_IMAGES } from '../lib/constants'
 
 export const SignupPage = ({ error }: { error?: string }) => {
   return (
@@ -7,12 +7,17 @@ export const SignupPage = ({ error }: { error?: string }) => {
       title="회원가입"
       description={`${CLINIC.name} 회원가입. 가입 시 비포애프터 전체 사진 열람, 다양한 진료 정보 이용이 가능합니다.`}
       canonical={`https://${CLINIC.domain}/signup`}
+      ogImage={OG_IMAGES.default}
     >
       <section class="page-hero" style="padding:140px 0 60px;">
         <div class="container">
           <div class="breadcrumb"><a href="/">홈</a><span class="sep">/</span>회원가입</div>
-          <h1>회원 <em>가입</em></h1>
-          <p>가입하시면 비포애프터의 전체 사진(치료 후) 열람 등 회원 전용 혜택을 이용하실 수 있습니다.</p>
+          <h1 class="page-title">
+            가입하신 분께,<br />
+            <em class="ph-mint-3">변하지 않는</em><br />
+            <em class="ph-mint-3">우리의 약속을</em>.
+          </h1>
+          <p class="page-lead">비포애프터 전체 사진(치료 후) 열람과 진료 안내 — 회원만 누리는 정직한 정보.</p>
         </div>
       </section>
 
@@ -20,7 +25,7 @@ export const SignupPage = ({ error }: { error?: string }) => {
         <div class="container">
           <form class="form-wrap wide" method="post" action="/api/auth/signup" id="signup-form">
             <h2 class="form-title">회원가입</h2>
-            <p class="form-sub">부평우리치과 회원이 되어 주세요.</p>
+            <p class="form-sub">변하지 않는 한 자리에서, 변하지 않는 우리와 함께 시작하세요.</p>
 
             {error && <div class="alert alert-error">{error}</div>}
 
@@ -91,13 +96,13 @@ export const SignupPage = ({ error }: { error?: string }) => {
           const fd = new FormData(e.target);
           const p1 = fd.get('password'), p2 = fd.get('password_confirm');
           if (p1 !== p2) { alert('비밀번호가 일치하지 않습니다.'); return; }
-          fetch('/api/auth/signup', { method:'POST', body: fd })
-            .then(r => r.json())
-            .then(j => {
-              if (j.ok) { alert('가입이 완료되었습니다. 환영합니다!'); location.href = '/'; }
-              else { alert(j.error || '가입 실패'); }
+          fetch('/api/auth/signup', { method:'POST', body: fd, credentials:'same-origin' })
+            .then(async r => {
+              let j = {}; try { j = await r.json(); } catch(_) {}
+              if (r.ok && j.ok) { alert('가입이 완료되었습니다. 환영합니다!'); location.href = j.redirect || '/'; }
+              else { alert(j.error || ('가입 실패 (' + r.status + ')')); }
             })
-            .catch(() => alert('네트워크 오류'));
+            .catch((err) => alert('네트워크 오류: ' + (err && err.message ? err.message : '잠시 후 다시 시도해 주세요.')));
         });
       `}} />
     </Layout>
@@ -108,13 +113,19 @@ export const LoginPage = ({ redirect, error }: { redirect?: string; error?: stri
   return (
     <Layout
       title="로그인"
-      description={`${CLINIC.name} 회원 로그인.`}
+      description={`${CLINIC.name} 회원 로그인. 로그인 시 비포애프터 전체 케이스 열람, 진료 이력 확인, 예약 관리 등 회원 전용 서비스를 이용하실 수 있습니다.`}
       canonical={`https://${CLINIC.domain}/login`}
+      ogImage={OG_IMAGES.default}
     >
       <section class="page-hero" style="padding:140px 0 60px;">
         <div class="container">
           <div class="breadcrumb"><a href="/">홈</a><span class="sep">/</span>로그인</div>
-          <h1>로그 <em>인</em></h1>
+          <h1 class="page-title">
+            다시 오신 것을,<br />
+            <em class="ph-mint-3">변하지 않는</em><br />
+            <em class="ph-mint-3">자리에서</em>.
+          </h1>
+          <p class="page-lead">한 번 신뢰하신 마음, 그대로 이어가겠습니다.</p>
         </div>
       </section>
 
@@ -153,13 +164,13 @@ export const LoginPage = ({ redirect, error }: { redirect?: string; error?: stri
         document.getElementById('login-form')?.addEventListener('submit', function(e) {
           e.preventDefault();
           const fd = new FormData(e.target);
-          fetch('/api/auth/login', { method:'POST', body: fd })
-            .then(r => r.json())
-            .then(j => {
-              if (j.ok) { location.href = j.redirect || '/'; }
-              else { alert(j.error || '로그인 실패'); }
+          fetch('/api/auth/login', { method:'POST', body: fd, credentials:'same-origin' })
+            .then(async r => {
+              let j = {}; try { j = await r.json(); } catch(_) {}
+              if (r.ok && j.ok) { location.href = j.redirect || '/'; }
+              else { alert(j.error || ('로그인 실패 (' + r.status + ')')); }
             })
-            .catch(() => alert('네트워크 오류'));
+            .catch((err) => alert('네트워크 오류: ' + (err && err.message ? err.message : '잠시 후 다시 시도해 주세요.')));
         });
       `}} />
     </Layout>

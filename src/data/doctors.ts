@@ -18,12 +18,14 @@ export type Doctor = {
 }
 
 // 사진 URL 헬퍼: R2 key든 절대 URL이든 정적 경로든 모두 안전하게 변환
+// v 파라미터로 캐시 버스팅 (이미지 업스케일 후 엣지 캐시 무효화 목적)
+const PHOTO_CACHE_VERSION = '20260429u'
 export const doctorPhotoSrc = (photo?: string): string | null => {
   if (!photo) return null
   if (photo.startsWith('http://') || photo.startsWith('https://')) return photo
   if (photo.startsWith('/')) return photo
-  // R2 key (e.g., 'doctors/kim-jaein.jpg') -> /media/<key>
-  return `/media/${photo}`
+  // R2 key (e.g., 'doctors/kim-jaein.jpg') -> /media/<key>?v=<ver>
+  return `/media/${photo}?v=${PHOTO_CACHE_VERSION}`
 }
 
 export const DOCTORS: Doctor[] = [

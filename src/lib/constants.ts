@@ -13,16 +13,19 @@ export const CLINIC = {
   phone: '032-529-2875',
   mobile: '010-9687-2875',
   email: 'rombardo@naver.com',
-  address: '인천광역시 부평구 부평대로 16 에이플러스에셋빌딩 5층, 7층',
+  address: '인천광역시 부평구 부평대로 16 에이플러스에셋빌딩',
   addressShort: '인천 부평구 부평대로 16',
   directions: '인천 부평역 지하상가 26번 출구로 나오시면 바로 있습니다.',
   since: 2012,
-  domain: 'bupyeongwoori.com', // 예정
+  domain: 'wooridc.kr',
   socialLinks: {
-    blog: 'https://blog.naver.com/wooridental',
-    instagram: 'https://instagram.com/bupyeongwoori',
-    youtube: '',
-    kakao: '',
+    blog: 'https://blog.naver.com/pmarkpaperb64',
+    instagram: 'https://www.instagram.com/woorident/',
+    youtube: 'https://www.youtube.com/@부평우리치과의원',
+    facebook: 'https://www.facebook.com/woori2875',
+    naverPlace: 'https://naver.me/xMj67GgD',
+    naverBooking: 'https://naver.me/xMj67GgD', // 네이버 플레이스 → 예약 진입
+    kakao: 'http://pf.kakao.com/_RGexmxd', // 카카오톡 채널 상담
   },
   hours: [
     { day: '월요일', time: '10:00 - 20:00', isOpen: true },
@@ -98,11 +101,29 @@ export const SEO_REGIONS = [
 ] as const
 
 // 메타 기본값
+// SEO 권장: title 60자 이내, description 150자 이내
 export const SEO_DEFAULT = {
-  title: '부평우리치과 | 부평역 1번지 프리미엄 치과 · 임플란트 · 심미보철 · 교정',
+  // 60자 이내 압축: 브랜드 + 핵심 키워드 + 위치
+  title: '부평우리치과 | 부평역 임플란트·교정·심미보철',
   description:
-    '부평역 26번 출구 즉시 도착. 고려대 구강외과 의학박사, 스트라우만·오스템·네오 임플란트 자문의, Invisalign 우수인증의. 14년 한 자리에서 변하지 않는 퀄리티로 진료합니다.',
+    '부평역 26번 출구 1분. 의학박사 대표원장과 임플란트 자문의가 14년 한 자리에서 변하지 않는 퀄리티로 진료합니다.',
   keywords:
     '부평치과, 부평역치과, 부평 임플란트, 부평 교정, 부평 라미네이트, 부평우리치과, 인천치과, 부평구치과',
-  ogImage: '/static/og-default.jpg',
+  ogImage: '/static/og/og-default.png?v=20260430m',
+} as const
+
+// 페이지별 OG 이미지 매핑 — 원장님 주신 원본 로고 PNG 그대로 사용
+const OG_UNIFIED = '/static/og/og-default.png?v=20260430m'
+export const OG_IMAGES = {
+  home: OG_UNIFIED,
+  mission: OG_UNIFIED,
+  doctors: OG_UNIFIED,
+  treatments: OG_UNIFIED,
+  beforeAfter: OG_UNIFIED,
+  blog: OG_UNIFIED,
+  notices: OG_UNIFIED,
+  glossary: OG_UNIFIED,
+  faq: OG_UNIFIED,
+  visit: OG_UNIFIED,
+  default: OG_UNIFIED,
 } as const

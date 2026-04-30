@@ -13,13 +13,13 @@ export const dentistSchema = () => ({
   url: `https://${CLINIC.domain}/`,
   telephone: CLINIC.phone,
   email: CLINIC.email,
-  image: `https://${CLINIC.domain}/static/og-default.jpg`,
-  logo: `https://${CLINIC.domain}/static/logo.png`,
+  image: `https://${CLINIC.domain}/static/og/og-default.png?v=20260430m`,
+  logo: `https://${CLINIC.domain}/media/brand/mark-256.png`,
   priceRange: '₩₩',
   foundingDate: String(CLINIC.since),
   address: {
     '@type': 'PostalAddress',
-    streetAddress: '부평대로 16 에이플러스에셋빌딩 5층, 7층',
+    streetAddress: '부평대로 16 에이플러스에셋빌딩',
     addressLocality: '부평구',
     addressRegion: '인천광역시',
     postalCode: '21315',
@@ -103,14 +103,14 @@ export const articleSchema = (opts: {
   '@type': 'Article',
   headline: opts.title,
   description: opts.description,
-  image: opts.image ?? `https://${CLINIC.domain}/static/og-default.jpg`,
+  image: opts.image ?? `https://${CLINIC.domain}/static/og/og-default.png?v=20260430m`,
   datePublished: opts.datePublished,
   dateModified: opts.dateModified ?? opts.datePublished,
   author: { '@type': 'Person', name: opts.author ?? CLINIC.representative },
   publisher: {
     '@type': 'Organization',
     name: CLINIC.name,
-    logo: { '@type': 'ImageObject', url: `https://${CLINIC.domain}/static/logo.png` },
+    logo: { '@type': 'ImageObject', url: `https://${CLINIC.domain}/media/brand/mark-256.png` },
   },
   mainEntityOfPage: { '@type': 'WebPage', '@id': opts.url },
 })
@@ -130,5 +130,45 @@ export const doctorSchema = (d: {
   alumniOf: (d.education ?? []).map((e) => ({
     '@type': 'EducationalOrganization',
     name: e,
+  })),
+})
+
+// Service 스키마 — 시술 페이지용 (LocalBusiness 연결)
+export const serviceSchema = (s: {
+  name: string
+  nameEn?: string
+  description: string
+  slug: string
+  category?: string
+}) => ({
+  '@context': 'https://schema.org',
+  '@type': 'MedicalProcedure',
+  name: s.name,
+  alternateName: s.nameEn,
+  description: s.description,
+  url: `https://${CLINIC.domain}/treatments/${s.slug}`,
+  procedureType: 'https://schema.org/TherapeuticProcedure',
+  category: s.category ?? 'Dentistry',
+  bodyLocation: '구강',
+  followup: '정기검진 및 유지관리 권장',
+  provider: {
+    '@type': 'Dentist',
+    '@id': `https://${CLINIC.domain}/#clinic`,
+    name: CLINIC.name,
+    url: `https://${CLINIC.domain}/`,
+  },
+})
+
+// ItemList 스키마 — 블로그/공지/시술 리스트 페이지용
+export const itemListSchema = (items: { name: string; url: string }[], listName?: string) => ({
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  name: listName,
+  numberOfItems: items.length,
+  itemListElement: items.map((it, idx) => ({
+    '@type': 'ListItem',
+    position: idx + 1,
+    name: it.name,
+    url: it.url.startsWith('http') ? it.url : `https://${CLINIC.domain}${it.url}`,
   })),
 })

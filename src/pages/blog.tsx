@@ -1,7 +1,9 @@
 import { Layout } from '../components/Layout'
-import { CLINIC } from '../lib/constants'
+import { CLINIC, OG_IMAGES } from '../lib/constants'
 import { DOCTORS } from '../data/doctors'
-import { articleSchema, breadcrumbSchema } from '../lib/schema'
+import { articleSchema, breadcrumbSchema, itemListSchema } from '../lib/schema'
+import { CtaSection } from '../components/CtaSection'
+import { InlineCta } from '../components/InlineCta'
 
 type BlogRow = {
   id: number
@@ -31,18 +33,26 @@ export const BlogListPage = ({
   return (
     <Layout
       title="블로그"
-      description="부평우리치과의 치과 지식·케이스·건강 팁을 공유합니다."
+      description="부평우리치과의 진료 정보 아카이브. 임플란트·심미보철·교정·라미네이트 등 검색했을 때 충분한 답을 드릴 수 있도록, 치과 지식과 실제 케이스를 기록합니다."
       canonical={`https://${CLINIC.domain}/blog`}
       keywords="부평치과 블로그, 임플란트 정보, 치과 건강 정보, 부평우리치과 블로그"
-      jsonLd={[breadcrumbSchema([{ name: '홈', url: '/' }, { name: '블로그', url: '/blog' }])]}
+      ogImage={OG_IMAGES.blog}
+      jsonLd={[
+        breadcrumbSchema([{ name: '홈', url: '/' }, { name: '블로그', url: '/blog' }]),
+        itemListSchema(
+          posts.slice(0, 30).map((p) => ({ name: p.title, url: `/blog/${p.slug}` })),
+          '부평우리치과 블로그'
+        ),
+      ]}
     >
       <section class="page-hero">
         <div class="container">
-          <div class="page-eyebrow">BLOG</div>
+          <div class="page-eyebrow">BLOG · 치과 지식</div>
           <h1 class="page-title">
-            치과 지식과 <em>이야기</em>
+            검색했을 때 <em class="ph-mint-3">충분한 정보</em>를<br/>
+            드릴 수 있는 치과.
           </h1>
-          <p class="page-lead">대표원장이 직접 전하는 치과 지식과 임상 경험을 공유합니다.</p>
+          <p class="page-lead">대표원장이 직접 전하는 치과 지식과 14년 임상 경험. 알음알음이 아니라 정확한 판단으로 찾아오실 수 있도록.</p>
         </div>
       </section>
 
@@ -93,6 +103,12 @@ export const BlogListPage = ({
           )}
         </div>
       </section>
+
+      <CtaSection
+        eyebrow="CONTACT · 더 궁금한 점이 있다면"
+        title="글로 다 못 담은 이야기, 직접 들어보세요."
+        lead="블로그에서 본 진료가 내게도 가능한지, 무료 상담으로 정직하게 안내드립니다."
+      />
     </Layout>
   )
 }
@@ -112,7 +128,7 @@ export const BlogDetailPage = ({
       description={post.meta_description ?? post.excerpt ?? post.title}
       keywords={post.meta_keywords ?? `부평치과, 부평우리치과, ${post.category ?? ''}`}
       canonical={url}
-      ogImage={post.cover_key ? `/media/${post.cover_key}` : undefined}
+      ogImage={post.cover_key ? `/media/${post.cover_key}` : OG_IMAGES.blog}
       jsonLd={[
         articleSchema({
           title: post.title,
@@ -148,7 +164,7 @@ export const BlogDetailPage = ({
             <img src={`/media/${post.cover_key}`} alt={post.title} style="width:100%; border-radius:16px; margin:40px 0;" />
           ) : null}
 
-          <div class="prose">
+          <div class="prose post-content">
             {/* @ts-ignore */}
             <div dangerouslySetInnerHTML={{ __html: post.content }} />
           </div>
@@ -161,12 +177,14 @@ export const BlogDetailPage = ({
             </div>
           ) : null}
 
-          <div style="margin-top:48px; padding-top:40px; border-top:1px solid var(--ink-100); display:flex; gap:12px; flex-wrap:wrap;">
-            <a href="/blog" class="btn btn-dark">← 블로그 목록</a>
-            <a href={`tel:${CLINIC.phone}`} class="btn btn-primary">
-              <i class="fas fa-phone"></i> 상담 문의
-            </a>
-          </div>
+          <InlineCta
+            title="이 글에서 다룬 진료, 직접 받아보고 싶다면"
+            lead={`${post.category ? `[${post.category}] ` : ''}궁금하신 점은 진단으로 가장 정확하게 안내드립니다. 진료 가능 여부·비용·치료 플랜을 무료 상담으로 확인하세요.`}
+            backLabel="블로그 목록으로"
+            backHref="/blog"
+            extraLabel={post.category ? `${post.category} 글 더 보기` : undefined}
+            extraHref={post.category ? `/blog?category=${encodeURIComponent(post.category)}` : undefined}
+          />
         </div>
       </article>
 
@@ -175,7 +193,7 @@ export const BlogDetailPage = ({
           <div class="container">
             <div class="section-head">
               <div class="section-eyebrow">RELATED</div>
-              <h2 class="section-title">함께 읽으면 좋은 글</h2>
+              <h2 class="section-title">함께 읽으면 <em class="ph-mint-3">좋은 글</em></h2>
             </div>
             <div class="blog-grid">
               {related.map((p) => (
@@ -195,6 +213,12 @@ export const BlogDetailPage = ({
           </div>
         </section>
       )}
+
+      <CtaSection
+        eyebrow="CONTACT · 글에서 본 진료, 직접 상담"
+        title="궁금한 점은 직접 듣는 게 가장 빠릅니다."
+        lead="진료 가능 여부와 정확한 비용·치료 플랜을 무료로 안내드립니다."
+      />
     </Layout>
   )
 }

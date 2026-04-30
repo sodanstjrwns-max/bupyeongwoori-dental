@@ -1,8 +1,10 @@
 import { Layout } from '../components/Layout'
-import { CLINIC } from '../lib/constants'
+import { CLINIC, OG_IMAGES } from '../lib/constants'
 import { GLOSSARY, GLOSSARY_CATEGORIES, getRelatedTerms, type GlossaryTerm } from '../data/glossary'
 import { TREATMENT_LIST } from '../data/treatments'
 import { breadcrumbSchema } from '../lib/schema'
+import { CtaSection } from '../components/CtaSection'
+import { InlineCta } from '../components/InlineCta'
 
 // ============================================================
 // 목록 페이지
@@ -52,6 +54,7 @@ export const GlossaryListPage = ({
       description={`치과 용어 ${GLOSSARY.length}개 이상을 한 곳에서 검색. 임플란트·교정·심미·예방 등 분야별로 정리된 치과 용어 사전.`}
       keywords="치과 백과사전, 치과 용어, 임플란트 용어, 교정 용어, 치과 용어 사전, 부평우리치과"
       canonical={`https://${CLINIC.domain}/glossary`}
+      ogImage={OG_IMAGES.glossary}
       jsonLd={[breadcrumbSchema([{ name: '홈', url: '/' }, { name: '백과사전', url: '/glossary' }])]}
     >
       <section class="page-hero">
@@ -127,6 +130,13 @@ export const GlossaryListPage = ({
           )}
         </div>
       </section>
+
+      <CtaSection
+        variant="light"
+        eyebrow="CONTACT · 용어를 넘어 직접 진료 상담"
+        title="용어로 다 못 풀리는 건, 직접 듣는 게 빠릅니다."
+        lead="궁금한 진료 용어가 내 케이스에 어떻게 적용되는지, 무료 상담으로 정직하게 안내드립니다."
+      />
     </Layout>
   )
 }
@@ -147,6 +157,7 @@ export const GlossaryDetailPage = ({ term }: { term: GlossaryTerm }) => {
       description={`${term.term}${term.termEn ? ` (${term.termEn})` : ''} — ${term.short}. 부평우리치과 치과 백과사전.`}
       keywords={`${term.term}, ${term.termEn ?? ''}, 치과 용어, 부평우리치과`}
       canonical={`https://${CLINIC.domain}/glossary/${term.slug}`}
+      ogImage={OG_IMAGES.glossary}
       jsonLd={[
         breadcrumbSchema([
           { name: '홈', url: '/' },
@@ -207,16 +218,22 @@ export const GlossaryDetailPage = ({ term }: { term: GlossaryTerm }) => {
             </div>
           )}
 
-          <div style="margin-top:48px; padding-top:32px; border-top:1px solid var(--ink-100); display:flex; gap:12px; flex-wrap:wrap;">
-            <a href="/glossary" class="btn btn-dark">← 백과사전 목록</a>
-            {cat ? (
-              <a href={`/glossary?category=${cat.slug}`} class="btn" style="background:white; border:1px solid var(--ink-200); color:var(--ink-900);">
-                {cat.name} 분야 보기
-              </a>
-            ) : null}
-          </div>
+          <InlineCta
+            title={`'${term.term}' — 내 케이스에선 어떻게 적용될까요?`}
+            lead="용어 설명만으로는 부족합니다. 직접 진단을 받으시면 본인의 구강 상태에 맞는 정확한 치료 방향을 확인하실 수 있습니다."
+            backLabel="백과사전 목록으로"
+            backHref="/glossary"
+            extraLabel={cat ? `${cat.name} 분야 더 보기` : undefined}
+            extraHref={cat ? `/glossary?category=${cat.slug}` : undefined}
+          />
         </div>
       </article>
+
+      <CtaSection
+        eyebrow="CONTACT · 이 용어, 내 케이스에 어떻게?"
+        title="궁금한 용어가 내 진료에 어떻게 적용되는지."
+        lead="용어 설명만으로는 부족할 때, 직접 진단으로 가장 정확하게 안내드립니다."
+      />
     </Layout>
   )
 }

@@ -7,16 +7,30 @@ export const Footer = () => {
       <div class="container">
         <div class="footer-grid">
           <div class="footer-brand">
-            <div class="logo">{CLINIC.name}</div>
+            <a href="/" class="footer-logo" aria-label={`${CLINIC.name} 홈`}>
+              <img src="/media/brand/full-h192.png?v=3" alt={CLINIC.name} height="72" loading="lazy" class="footer-logo-img" />
+            </a>
             <p>{CLINIC.mission}</p>
             <div class="footer-social" aria-label="SNS">
-              <a href={CLINIC.socialLinks.blog} target="_blank" rel="noopener" aria-label="네이버 블로그">
+              <a href={CLINIC.socialLinks.naverPlace} target="_blank" rel="noopener" aria-label="네이버 플레이스" title="네이버 플레이스 · 예약">
+                <i class="fas fa-map-marker-alt"></i>
+              </a>
+              <a href={CLINIC.socialLinks.blog} target="_blank" rel="noopener" aria-label="네이버 블로그" title="네이버 블로그">
                 <i class="fas fa-blog"></i>
               </a>
-              <a href={CLINIC.socialLinks.instagram} target="_blank" rel="noopener" aria-label="인스타그램">
+              <a href={CLINIC.socialLinks.instagram} target="_blank" rel="noopener" aria-label="인스타그램" title="인스타그램">
                 <i class="fab fa-instagram"></i>
               </a>
-              <a href={`tel:${CLINIC.phone}`} aria-label="전화">
+              <a href={CLINIC.socialLinks.youtube} target="_blank" rel="noopener" aria-label="유튜브" title="유튜브">
+                <i class="fab fa-youtube"></i>
+              </a>
+              <a href={CLINIC.socialLinks.facebook} target="_blank" rel="noopener" aria-label="페이스북" title="페이스북">
+                <i class="fab fa-facebook-f"></i>
+              </a>
+              <a href={CLINIC.socialLinks.kakao} target="_blank" rel="noopener" aria-label="카카오톡 상담" title="카카오톡 상담" style="background:#FEE500; color:#3A1D1D;">
+                <i class="fas fa-comment"></i>
+              </a>
+              <a href={`tel:${CLINIC.phone}`} aria-label="전화" title="전화 상담">
                 <i class="fas fa-phone"></i>
               </a>
             </div>

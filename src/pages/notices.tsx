@@ -129,6 +129,13 @@ export const NoticeDetailPage = ({ notice }: { notice: NoticeRow }) => {
       description={autoDesc}
       canonical={`https://${CLINIC.domain}/notices/${notice.id}`}
       ogImage={ogImage}
+      ogType="article"
+      articleMeta={{
+        publishedTime: notice.published_at,
+        modifiedTime: notice.published_at,
+        author: CLINIC.name,
+        section: '공지사항',
+      }}
       jsonLd={[
         breadcrumbSchema([
           { name: '홈', url: '/' },

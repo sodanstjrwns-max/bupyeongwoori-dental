@@ -1,8 +1,8 @@
 import { Layout } from '../components/Layout'
-import { CLINIC, SEO_REGIONS, OG_IMAGES } from '../lib/constants'
+import { CLINIC, OG_IMAGES } from '../lib/constants'
 import { TREATMENT_LIST, CORE_LIST } from '../data/treatments'
 import { DOCTORS } from '../data/doctors'
-import { breadcrumbSchema } from '../lib/schema'
+import { breadcrumbSchema, articleSchema, serviceSchema } from '../lib/schema'
 import { CtaSection } from '../components/CtaSection'
 
 type BeforeAfterRow = {
@@ -33,13 +33,11 @@ export const BeforeAfterListPage = ({
   cases,
   isLoggedIn,
   activeTreatment,
-  activeRegion,
   query,
 }: {
   cases: BeforeAfterRow[]
   isLoggedIn: boolean
   activeTreatment?: string
-  activeRegion?: string
   query?: string
 }) => {
   const treatmentName = (slug: string) => TREATMENT_LIST.find((t) => t.slug === slug)?.name ?? slug
@@ -90,19 +88,6 @@ export const BeforeAfterListPage = ({
                     <option value={t.slug} selected={activeTreatment === t.slug}>{t.name}{t.isCore ? ' ★' : ''}</option>
                   ))}
                 </select>
-              </label>
-              <label>
-                <span>지역 검색 (동/구)</span>
-                <input
-                  type="text"
-                  name="region"
-                  list="region-list"
-                  placeholder="예: 부평동, 초지동, 십정동"
-                  value={activeRegion ?? ''}
-                />
-                <datalist id="region-list">
-                  {SEO_REGIONS.map((r) => <option value={r} />)}
-                </datalist>
               </label>
               <label>
                 <span>키워드 검색</span>
@@ -163,7 +148,6 @@ export const BeforeAfterListPage = ({
                   <div class="ba-meta">
                     <div class="ba-tags">
                       <span class="ba-tag">{treatmentName(c.treatment_slug)}</span>
-                      {c.region ? <span class="ba-tag ghost">{c.region}</span> : null}
                       {c.treatment_period ? <span class="ba-tag ghost">{c.treatment_period}</span> : null}
                     </div>
                     <h3 class="ba-title">{c.title}</h3>
@@ -179,16 +163,6 @@ export const BeforeAfterListPage = ({
           )}
         </div>
       </section>
-
-      {/* Regional SEO footer (검색엔진/크롤러용 hidden links - 사용자 눈에는 비노출) */}
-      <nav aria-label="지역별 케이스" class="sr-only" style="position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;">
-        <h2>지역별 케이스</h2>
-        <ul>
-          {SEO_REGIONS.map((r) => (
-            <li><a href={`/before-after?region=${encodeURIComponent(r)}`}>{r} 케이스</a></li>
-          ))}
-        </ul>
-      </nav>
 
       <CtaSection
         eyebrow="CONTACT · 내 케이스도 가능할까?"
@@ -214,20 +188,131 @@ export const BeforeAfterDetailPage = ({
   const treatment = TREATMENT_LIST.find((t) => t.slug === caseRow.treatment_slug)
   const doctor = DOCTORS.find((d) => d.slug === caseRow.doctor_slug)
 
+  // ============================================================
+  // SEO/AEO: 케이스용 풍부 JSON-LD 구축
+  // ============================================================
+  const baseUrl = `https://${CLINIC.domain}`
+  const caseUrl = `${baseUrl}/before-after/${caseRow.slug}`
+
+  // 이미지 절대 URL 후보 (Article의 image 배열용)
+  const imgKeys = [
+    caseRow.before_pano_key,
+    caseRow.after_pano_key,
+    caseRow.before_intra_key,
+    caseRow.after_intra_key,
+  ].filter(Boolean) as string[]
+  const imageUrls = imgKeys.length > 0
+    ? imgKeys.map((k) => `${baseUrl}/media/${k}`)
+    : [`${baseUrl}${OG_IMAGES.beforeAfter}`]
+
+  const description = caseRow.summary
+    ?? `${treatment?.name ?? '진료'} 실제 케이스 — ${caseRow.title}. ${CLINIC.name}의 검증된 진료 결과를 확인하세요.`
+
+  // 1) Article (비포애프터 케이스 자체를 발행물로)
+  const articleLd = articleSchema({
+    title: `${caseRow.title} | 비포애프터 케이스`,
+    description,
+    url: caseUrl,
+    image: imageUrls[0],
+    author: doctor ? `${doctor.title} ${doctor.name}` : CLINIC.representative,
+    datePublished: caseRow.created_at,
+    dateModified: caseRow.created_at,
+  })
+  // image를 배열로 강화 (Google 권장: 16:9, 4:3, 1:1)
+  ;(articleLd as any).image = imageUrls
+  ;(articleLd as any).articleSection = treatment?.name ?? '비포애프터'
+  ;(articleLd as any).keywords = [
+    treatment?.name,
+    '비포애프터',
+    '부평 치과',
+    `부평 ${treatment?.name ?? ''}`,
+    caseRow.region,
+  ].filter(Boolean).join(', ')
+
+  // 2) ImageObject — Before/After 각각 명시적으로 마킹 (이미지 검색 노출용)
+  const imageObjectsLd = imgKeys.map((k, idx) => {
+    const isAfter = k === caseRow.after_pano_key || k === caseRow.after_intra_key
+    const isPano = k === caseRow.before_pano_key || k === caseRow.after_pano_key
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'ImageObject',
+      '@id': `${caseUrl}#image-${idx + 1}`,
+      contentUrl: `${baseUrl}/media/${k}`,
+      url: `${baseUrl}/media/${k}`,
+      caption: `${caseRow.title} - ${isAfter ? 'AFTER' : 'BEFORE'} (${isPano ? '파노라마' : '구내사진'})`,
+      description: `${treatment?.name ?? '진료'} ${isAfter ? '시술 후' : '시술 전'} ${isPano ? '파노라마 X-ray' : '구내 사진'}`,
+      representativeOfPage: idx === 0,
+      creator: { '@type': 'Organization', name: CLINIC.name },
+      copyrightHolder: { '@type': 'Organization', name: CLINIC.name },
+      license: caseUrl,
+      acquireLicensePage: `${baseUrl}/contact`,
+    }
+  })
+
+  // 3) MedicalProcedure — 어떤 진료 케이스인지 명확히
+  const procedureLd = treatment ? {
+    ...serviceSchema({
+      name: treatment.name,
+      nameEn: treatment.nameEn,
+      description: treatment.metaDescription ?? description,
+      slug: treatment.slug,
+      category: 'Dentistry',
+    }),
+    '@id': `${caseUrl}#procedure`,
+  } : null
+
+  // 4) MedicalWebPage — 의료 콘텐츠임을 명시 (E-E-A-T 강화)
+  const medicalWebPageLd = {
+    '@context': 'https://schema.org',
+    '@type': 'MedicalWebPage',
+    '@id': caseUrl,
+    url: caseUrl,
+    name: caseRow.title,
+    description,
+    inLanguage: 'ko-KR',
+    audience: { '@type': 'MedicalAudience', audienceType: 'Patient' },
+    about: treatment ? { '@type': 'MedicalProcedure', name: treatment.name } : undefined,
+    lastReviewed: caseRow.created_at,
+    reviewedBy: doctor
+      ? { '@type': 'Physician', name: `${doctor.title} ${doctor.name}`, worksFor: { '@type': 'Dentist', name: CLINIC.name } }
+      : { '@type': 'Dentist', name: CLINIC.name },
+    primaryImageOfPage: imageUrls[0]
+      ? { '@type': 'ImageObject', url: imageUrls[0] }
+      : undefined,
+  }
+
+  // 5) BreadcrumbList
+  const breadcrumbLd = breadcrumbSchema([
+    { name: '홈', url: '/' },
+    { name: '비포애프터', url: '/before-after' },
+    ...(treatment ? [{ name: treatment.name, url: `/treatments/${treatment.slug}` }] : []),
+    { name: caseRow.title, url: `/before-after/${caseRow.slug}` },
+  ])
+
+  const jsonLdList: Record<string, unknown>[] = [
+    articleLd as any,
+    medicalWebPageLd as any,
+    ...imageObjectsLd as any[],
+    breadcrumbLd as any,
+  ]
+  if (procedureLd) jsonLdList.push(procedureLd as any)
+
   return (
     <Layout
       title={caseRow.title}
-      description={caseRow.summary ?? `${treatment?.name ?? '진료'} 케이스 — ${caseRow.title}`}
-      canonical={`https://${CLINIC.domain}/before-after/${caseRow.slug}`}
-      keywords={`${treatment?.keywords ?? ''}, 부평 치과 비포애프터, ${caseRow.region ?? ''}`}
+      description={description}
+      canonical={caseUrl}
+      keywords={`${treatment?.keywords ?? ''}, 부평 치과 비포애프터, ${treatment?.name ?? ''} 사례, ${caseRow.region ?? ''}, 부평 임플란트 전후, 부평 라미네이트 전후, 부평 교정 전후`}
       ogImage={caseRow.before_pano_key ? `/media/${caseRow.before_pano_key}` : (caseRow.before_intra_key ? `/media/${caseRow.before_intra_key}` : OG_IMAGES.beforeAfter)}
-      jsonLd={[
-        breadcrumbSchema([
-          { name: '홈', url: '/' },
-          { name: '비포애프터', url: '/before-after' },
-          { name: caseRow.title, url: `/before-after/${caseRow.slug}` },
-        ]),
-      ]}
+      ogType="article"
+      articleMeta={{
+        publishedTime: caseRow.created_at,
+        modifiedTime: caseRow.created_at,
+        author: doctor ? `${doctor.title} ${doctor.name}` : CLINIC.representative,
+        section: treatment?.name ?? '비포애프터',
+        tags: [treatment?.name, '비포애프터', '부평 치과', caseRow.region].filter(Boolean) as string[],
+      }}
+      jsonLd={jsonLdList}
     >
       <section class="ba-detail-hero">
         <div class="ba-detail-hero-bg" aria-hidden="true"></div>

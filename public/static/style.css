@@ -6686,3 +6686,56 @@ th{ font-weight:700; background:var(--ink-50); font-size:.85rem; letter-spacing:
   color:#fff;
   letter-spacing: -0.01em;
 }
+
+/* ============================================================
+   Extra Treatments Grid (홈 — 5개 추가 진료 H3 카드)
+   ============================================================ */
+.extra-treatments {
+  padding-top: 32px;
+  border-top: 1px solid var(--ink-100);
+}
+.extra-treatments-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+.extra-treatment-link {
+  display: block;
+  padding: 24px 22px;
+  border: 1px solid var(--ink-100);
+  border-radius: 14px;
+  background: #fff;
+  text-decoration: none;
+  color: var(--ink-900);
+  transition: all .25s ease;
+}
+.extra-treatment-link:hover {
+  border-color: var(--brand-400);
+  background: var(--brand-50);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(109, 187, 185, .12);
+}
+.extra-treatment-link h3 {
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0 0 8px;
+  color: var(--ink-900);
+}
+.extra-treatment-link p {
+  font-size: .9rem;
+  color: var(--ink-600);
+  line-height: 1.5;
+  margin: 0;
+}
+@media (max-width: 640px) {
+  .extra-treatments-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .extra-treatment-link {
+    padding: 18px 16px;
+  }
+  .extra-treatment-link h3 { font-size: 1rem; }
+  .extra-treatment-link p { font-size: .82rem; }
+}

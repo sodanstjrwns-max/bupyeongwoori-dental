@@ -27,7 +27,13 @@
 | `/login` · `/signup` · `/logout` | 회원 인증 |
 | `/admin` | 관리자 대시보드(로그인 필요) |
 | `/admin/blog`·`/before-after`·`/notices` | CMS CRUD + R2 이미지 업로드 |
-| `/sitemap.xml` · `/robots.txt` · `/manifest.webmanifest` | SEO/PWA |
+| `/sitemap.xml` | **Sitemap Index** — 4개 하위 sitemap 가리킴 |
+| `/sitemap-pages.xml` | 정적 페이지 + 진료 8종 + 용어집 |
+| `/sitemap-blog.xml` | 블로그 (DB 자동) — `is_published=1` 자동 등록 |
+| `/sitemap-ba.xml` | 비포애프터 (DB 자동) — `is_published=1` 자동 등록 |
+| `/sitemap-notices.xml` | 공지사항 (DB 자동) — `is_published=1` 자동 등록 |
+| `/robots.txt` · `/manifest.webmanifest` | SEO/PWA |
+| `/static/{INDEXNOW_KEY}.txt` | IndexNow 인증 키 파일 |
 | `/media/:key` | R2 이미지 프록시 |
 
 ## Data Architecture
@@ -45,7 +51,14 @@
 - **Font**: Pretendard 단독 사용 (서울비디치과 bdbddc.com 동일 스타일, CDN `orioncactus/pretendard`) · font-weight 800~900, letter-spacing -0.03em ~ -0.04em의 두껍고 타이트한 타이포그래피
 - **Palette**: Tiffany Blue (`--brand-*` 50~900), Ink (고명도 그레이), Gold `#bfa36a`
 - **Layout**: 잡지형 히어로, 섹션 레벨링, 장비 마키, 풀 카드, 상세 페이지 FAQ 아코디언, 모바일 details 메뉴
-- **SEO**: JSON-LD (Dentist, WebSite, Breadcrumb, FAQPage, Article, Physician), OG, Twitter, canonical, robots, sitemap
+- **SEO/AEO 풀세트 (2026-05-14 빡세게 업그레이드)**:
+  - **JSON-LD**: Dentist, WebSite, BreadcrumbList, FAQPage, Article, ImageObject, MedicalProcedure, MedicalWebPage, Physician, Organization, Person, NewsArticle, ItemList — 페이지 유형별 자동 주입
+  - **OG type 페이지별 분리**: 블로그/BA/공지 **상세 = `article`** (published_time, modified_time, author, section, tag 풀세트) / 목록·홈 = `website`
+  - **Sitemap Index**: `/sitemap.xml`이 4개 자식 sitemap을 가리키는 인덱스 구조 — 대규모 콘텐츠 대비, DB의 `is_published=1` 포스팅 자동 등록
+  - **자동 SEO 최적화 (`src/lib/auto-seo.ts`)**: 포스팅 작성 시 `excerpt`/`meta_description`/`meta_keywords`/`summary` 빈 필드 자동 채움 — 관리자가 깜빡해도 SEO 100% 작동
+  - **IndexNow 풀발사**: 블로그/BA/공지 발행·수정 시 Bing/Yandex/Seznam에 즉시 핑 + sitemap-pages/blog/ba/notices 동시 무효화
+  - **메타 기본값**: 임플란트·인비절라인·라미네이트·글로우네이트·치아교정·심미보철·투명교정·사랑니발치 8종 키워드 풀 커버
+  - **검증 도구**: `curl https://wooridc.kr/sitemap.xml` / `/sitemap-blog.xml` / `/sitemap-ba.xml`로 즉시 확인 가능
 
 ## User Guide
 ### 일반 방문자
@@ -69,4 +82,4 @@
 - **Tech Stack**: Hono + TypeScript + JSX SSR + Pretendard + Vanilla JS(CDN) + Cloudflare D1/R2
 - **Build**: `npm run build` → `dist/_worker.js`
 - **Local Start**: `pm2 start ecosystem.config.cjs` (symlink trick으로 wrangler d1 CLI ↔ pages dev 간 DB 공유)
-- **Last Updated**: 2026-04-20
+- **Last Updated**: 2026-05-14 (SEO/AEO 풀세트 빡세게 업그레이드 — Sitemap Index, 자동 SEO 최적화, OG type 분리, IndexNow 발사 강화)

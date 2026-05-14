@@ -8,6 +8,16 @@ export type HeadProps = {
   canonical?: string
   jsonLd?: Record<string, unknown> | Record<string, unknown>[]
   noindex?: boolean
+  /** OG type: 'website' (default for index pages) | 'article' (for blog/BA/notice detail) */
+  ogType?: 'website' | 'article'
+  /** Article 전용 메타 (ogType='article'일 때만 사용) */
+  articleMeta?: {
+    publishedTime?: string
+    modifiedTime?: string
+    author?: string
+    section?: string
+    tags?: string[]
+  }
 }
 
 // SNS 크롤러(Facebook/Kakao/Naver)는 상대경로를 못 읽기 때문에 절대 URL로 변환
@@ -26,6 +36,8 @@ export const Head = (props: HeadProps) => {
   const keywords = props.keywords ?? SEO_DEFAULT.keywords
   const ogImage = toAbsoluteUrl(props.ogImage ?? SEO_DEFAULT.ogImage)
   const canonical = props.canonical ?? ''
+  const ogType = props.ogType ?? 'website'
+  const articleMeta = props.articleMeta
 
   const jsonLds = Array.isArray(props.jsonLd) ? props.jsonLd : props.jsonLd ? [props.jsonLd] : []
 
@@ -50,7 +62,7 @@ export const Head = (props: HeadProps) => {
       {canonical ? <link rel="canonical" href={canonical} /> : null}
 
       {/* OpenGraph */}
-      <meta property="og:type" content="website" />
+      <meta property="og:type" content={ogType} />
       <meta property="og:site_name" content={CLINIC.name} />
       <meta property="og:title" content={title} />
       <meta property="og:description" content={description} />
@@ -60,6 +72,19 @@ export const Head = (props: HeadProps) => {
       <meta property="og:image:alt" content={title} />
       <meta property="og:locale" content="ko_KR" />
       {canonical ? <meta property="og:url" content={canonical} /> : null}
+
+      {/* Article 전용 메타 (ogType='article'일 때만 출력) */}
+      {ogType === 'article' && articleMeta ? (
+        <>
+          {articleMeta.publishedTime ? <meta property="article:published_time" content={articleMeta.publishedTime} /> : null}
+          {articleMeta.modifiedTime ? <meta property="article:modified_time" content={articleMeta.modifiedTime} /> : null}
+          {articleMeta.author ? <meta property="article:author" content={articleMeta.author} /> : null}
+          {articleMeta.section ? <meta property="article:section" content={articleMeta.section} /> : null}
+          {(articleMeta.tags ?? []).map((t, i) => (
+            <meta key={i} property="article:tag" content={t} />
+          ))}
+        </>
+      ) : null}
 
       {/* Twitter */}
       <meta name="twitter:card" content="summary_large_image" />
@@ -79,7 +104,7 @@ export const Head = (props: HeadProps) => {
         href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"
       />
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
-      <link rel="stylesheet" href="/static/style.css?v=20260430k" />
+      <link rel="stylesheet" href="/static/style.css?v=20260430n" />
 
       {/* Structured data */}
       {jsonLds.map((ld, i) => (

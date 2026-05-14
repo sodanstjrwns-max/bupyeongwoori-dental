@@ -36,9 +36,10 @@ import {
   normalizePhone,
 } from './lib/auth'
 import { getGlossaryTerm, GLOSSARY } from './data/glossary'
-import { CLINIC, SEO_REGIONS } from './lib/constants'
+import { CLINIC } from './lib/constants'
 import { TREATMENT_LIST } from './data/treatments'
 import { pingIndexNow, INDEXNOW_KEY } from './lib/indexnow'
+import { autoFillBlogSeo, autoFillBaSeo, buildIndexNowUrls } from './lib/auto-seo'
 
 const app = new Hono<{ Bindings: Bindings }>()
 
@@ -360,14 +361,12 @@ app.post('/mypage/delete', async (c) => {
 // ============================================================
 app.get('/before-after', async (c) => {
   const treatment = c.req.query('treatment') ?? ''
-  const region = c.req.query('region') ?? ''
   const q = c.req.query('q') ?? ''
   const loggedIn = await isLogged(c)
 
   let sql = 'SELECT * FROM before_after WHERE is_published = 1'
   const params: any[] = []
   if (treatment) { sql += ' AND treatment_slug = ?'; params.push(treatment) }
-  if (region) { sql += ' AND (region = ? OR region_city LIKE ?)'; params.push(region, `%${region}%`) }
   if (q) { sql += ' AND (title LIKE ? OR summary LIKE ?)'; params.push(`%${q}%`, `%${q}%`) }
   sql += ' ORDER BY created_at DESC LIMIT 60'
   const cases = (await c.env.DB.prepare(sql).bind(...params).all()).results as any[]
@@ -377,7 +376,6 @@ app.get('/before-after', async (c) => {
       cases={cases}
       isLoggedIn={loggedIn}
       activeTreatment={treatment || undefined}
-      activeRegion={region || undefined}
       query={q || undefined}
     />
   )
@@ -605,11 +603,63 @@ ${noticeList || '- (현재 공지가 없습니다)'}
   return c.text(txt, 200, { 'Content-Type': 'text/markdown; charset=utf-8' })
 })
 
+// ============================================================
+// Sitemap Index — 대규모 콘텐츠 대비 (Google 권장: 카테고리별 분할)
+//   /sitemap.xml          → 인덱스 (4개 하위 sitemap 가리킴)
+//   /sitemap-pages.xml    → 정적 페이지 + 진료/용어
+//   /sitemap-blog.xml     → 블로그 (DB)
+//   /sitemap-ba.xml       → 비포애프터 (DB)
+//   /sitemap-notices.xml  → 공지사항 (DB)
+// ============================================================
+const sitemapXmlHeaders = { 'Content-Type': 'application/xml; charset=utf-8' }
+
+type SitemapEntry = { loc: string; lastmod: string; changefreq: string; priority: string }
+
+function buildUrlsetXml(base: string, entries: SitemapEntry[]): string {
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${entries.map(e => `  <url><loc>${base}${e.loc}</loc><lastmod>${e.lastmod}</lastmod><changefreq>${e.changefreq}</changefreq><priority>${e.priority}</priority></url>`).join('\n')}
+</urlset>`
+}
+
+// ---- Sitemap Index ----
 app.get('/sitemap.xml', async (c) => {
   const base = `https://${CLINIC.domain}`
   const today = new Date().toISOString().split('T')[0]
-  type Entry = { loc: string; lastmod: string; changefreq: string; priority: string }
-  const entries: Entry[] = [
+  // 각 하위 sitemap의 lastmod: 가장 최근 콘텐츠 시각 (DB에서 가장 큰 lastmod 추출)
+  let blogLast = today, baLast = today, noticeLast = today
+  try {
+    const b = await c.env.DB.prepare(
+      'SELECT MAX(COALESCE(updated_at, published_at, created_at)) AS lm FROM blog_posts WHERE is_published = 1'
+    ).first<{ lm: string | null }>()
+    if (b?.lm) blogLast = String(b.lm).split('T')[0].split(' ')[0]
+    const a = await c.env.DB.prepare(
+      'SELECT MAX(COALESCE(updated_at, published_at, created_at)) AS lm FROM before_after WHERE is_published = 1'
+    ).first<{ lm: string | null }>()
+    if (a?.lm) baLast = String(a.lm).split('T')[0].split(' ')[0]
+    const n = await c.env.DB.prepare(
+      'SELECT MAX(COALESCE(updated_at, published_at, created_at)) AS lm FROM notices WHERE is_published = 1'
+    ).first<{ lm: string | null }>()
+    if (n?.lm) noticeLast = String(n.lm).split('T')[0].split(' ')[0]
+  } catch (err) {
+    console.error('Sitemap index lastmod error:', err)
+  }
+
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap><loc>${base}/sitemap-pages.xml</loc><lastmod>${today}</lastmod></sitemap>
+  <sitemap><loc>${base}/sitemap-blog.xml</loc><lastmod>${blogLast}</lastmod></sitemap>
+  <sitemap><loc>${base}/sitemap-ba.xml</loc><lastmod>${baLast}</lastmod></sitemap>
+  <sitemap><loc>${base}/sitemap-notices.xml</loc><lastmod>${noticeLast}</lastmod></sitemap>
+</sitemapindex>`
+  return c.text(xml, 200, sitemapXmlHeaders)
+})
+
+// ---- 정적 페이지 + 진료/용어 ----
+app.get('/sitemap-pages.xml', (c) => {
+  const base = `https://${CLINIC.domain}`
+  const today = new Date().toISOString().split('T')[0]
+  const entries: SitemapEntry[] = [
     { loc: '/', lastmod: today, changefreq: 'daily', priority: '1.0' },
     { loc: '/mission', lastmod: today, changefreq: 'monthly', priority: '0.8' },
     { loc: '/doctors', lastmod: today, changefreq: 'monthly', priority: '0.9' },
@@ -622,49 +672,70 @@ app.get('/sitemap.xml', async (c) => {
     { loc: '/faq', lastmod: today, changefreq: 'monthly', priority: '0.7' },
     { loc: '/visit', lastmod: today, changefreq: 'monthly', priority: '0.8' },
   ]
-  // treatments
   for (const t of TREATMENT_LIST) {
     entries.push({ loc: `/treatments/${t.slug}`, lastmod: today, changefreq: 'monthly', priority: '0.9' })
   }
-  // glossary
   for (const g of GLOSSARY) {
     entries.push({ loc: `/glossary/${g.slug}`, lastmod: today, changefreq: 'monthly', priority: '0.6' })
   }
-  // regional SEO pages
-  for (const r of SEO_REGIONS) {
-    entries.push({ loc: `/before-after?region=${encodeURIComponent(r)}`, lastmod: today, changefreq: 'weekly', priority: '0.6' })
-  }
+  return c.text(buildUrlsetXml(base, entries), 200, sitemapXmlHeaders)
+})
 
-  // Dynamic content with real lastmod
+// ---- 블로그 ----
+app.get('/sitemap-blog.xml', async (c) => {
+  const base = `https://${CLINIC.domain}`
+  const today = new Date().toISOString().split('T')[0]
+  const entries: SitemapEntry[] = []
   try {
     const blogs = (await c.env.DB.prepare(
-      'SELECT slug, COALESCE(updated_at, published_at) AS lastmod FROM blog_posts WHERE is_published = 1'
+      'SELECT slug, COALESCE(updated_at, published_at, created_at) AS lastmod FROM blog_posts WHERE is_published = 1 ORDER BY COALESCE(updated_at, published_at, created_at) DESC'
     ).all()).results as any[]
     for (const b of blogs) {
       const lm = String(b.lastmod ?? today).split('T')[0].split(' ')[0]
-      entries.push({ loc: `/blog/${b.slug}`, lastmod: lm, changefreq: 'monthly', priority: '0.7' })
+      entries.push({ loc: `/blog/${b.slug}`, lastmod: lm, changefreq: 'weekly', priority: '0.85' })
     }
+  } catch (err) {
+    console.error('Sitemap blog error:', err)
+  }
+  return c.text(buildUrlsetXml(base, entries), 200, sitemapXmlHeaders)
+})
+
+// ---- 비포애프터 ----
+app.get('/sitemap-ba.xml', async (c) => {
+  const base = `https://${CLINIC.domain}`
+  const today = new Date().toISOString().split('T')[0]
+  const entries: SitemapEntry[] = []
+  try {
     const bas = (await c.env.DB.prepare(
-      'SELECT slug, COALESCE(updated_at, published_at) AS lastmod FROM before_after WHERE is_published = 1'
+      'SELECT slug, COALESCE(updated_at, published_at, created_at) AS lastmod FROM before_after WHERE is_published = 1 ORDER BY COALESCE(updated_at, published_at, created_at) DESC'
     ).all()).results as any[]
     for (const b of bas) {
       const lm = String(b.lastmod ?? today).split('T')[0].split(' ')[0]
-      entries.push({ loc: `/before-after/${b.slug}`, lastmod: lm, changefreq: 'monthly', priority: '0.7' })
+      entries.push({ loc: `/before-after/${b.slug}`, lastmod: lm, changefreq: 'weekly', priority: '0.85' })
     }
+  } catch (err) {
+    console.error('Sitemap BA error:', err)
+  }
+  return c.text(buildUrlsetXml(base, entries), 200, sitemapXmlHeaders)
+})
+
+// ---- 공지사항 ----
+app.get('/sitemap-notices.xml', async (c) => {
+  const base = `https://${CLINIC.domain}`
+  const today = new Date().toISOString().split('T')[0]
+  const entries: SitemapEntry[] = []
+  try {
     const notices = (await c.env.DB.prepare(
-      'SELECT id, COALESCE(updated_at, published_at) AS lastmod FROM notices WHERE is_published = 1'
+      'SELECT id, COALESCE(updated_at, published_at, created_at) AS lastmod FROM notices WHERE is_published = 1 ORDER BY COALESCE(updated_at, published_at, created_at) DESC'
     ).all()).results as any[]
     for (const n of notices) {
       const lm = String(n.lastmod ?? today).split('T')[0].split(' ')[0]
-      entries.push({ loc: `/notices/${n.id}`, lastmod: lm, changefreq: 'monthly', priority: '0.7' })
+      entries.push({ loc: `/notices/${n.id}`, lastmod: lm, changefreq: 'weekly', priority: '0.7' })
     }
-  } catch {}
-
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${entries.map(e => `  <url><loc>${base}${e.loc}</loc><lastmod>${e.lastmod}</lastmod><changefreq>${e.changefreq}</changefreq><priority>${e.priority}</priority></url>`).join('\n')}
-</urlset>`
-  return c.text(xml, 200, { 'Content-Type': 'application/xml; charset=utf-8' })
+  } catch (err) {
+    console.error('Sitemap notices error:', err)
+  }
+  return c.text(buildUrlsetXml(base, entries), 200, sitemapXmlHeaders)
 })
 
 app.get('/manifest.webmanifest', (c) => {
@@ -885,6 +956,15 @@ app.post('/admin/before-after/new', async (c) => {
   for (const f of fields) values[f] = get(f) || null
   values.age = values.age ? Number(values.age) : null
   values.is_published = form.get('is_published') ? 1 : 0
+  // 자동 SEO: summary 비어있으면 자동 채움
+  const treatmentName = TREATMENT_LIST.find((t) => t.slug === values.treatment_slug)?.name
+  const seoFill = autoFillBaSeo({
+    title: values.title ?? '',
+    summary: values.summary,
+    content: values.content,
+    treatment_name: treatmentName,
+  })
+  values.summary = seoFill.summary
   // Upload files
   const bp = await uploadToR2(c, form.get('before_pano_file') as any, 'ba/pano-before') ?? get('before_pano_key') ?? null
   const ap = await uploadToR2(c, form.get('after_pano_file') as any, 'ba/pano-after') ?? get('after_pano_key') ?? null
@@ -893,9 +973,13 @@ app.post('/admin/before-after/new', async (c) => {
   await c.env.DB.prepare(
     `INSERT INTO before_after (slug, title, treatment_slug, doctor_slug, age, gender, region, region_city, treatment_period, summary, content, before_pano_key, after_pano_key, before_intra_key, after_intra_key, is_published) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
   ).bind(values.slug, values.title, values.treatment_slug, values.doctor_slug, values.age, values.gender, values.region, values.region_city, values.treatment_period, values.summary, values.content, bp, ap, bi, ai, values.is_published).run()
-  // IndexNow ping (fire-and-forget)
+  // IndexNow ping (fire-and-forget) — sitemap 전체에 발사
   if (values.is_published && values.slug) {
-    c.executionCtx.waitUntil(pingIndexNow([`/before-after/${values.slug}`, '/before-after', '/sitemap.xml']).catch(() => {}))
+    c.executionCtx.waitUntil(pingIndexNow(buildIndexNowUrls({
+      detailPath: `/before-after/${values.slug}`,
+      listPath: '/before-after',
+      alsoPingHome: true,
+    })).catch(() => {}))
   }
   return c.redirect('/admin/before-after')
 })
@@ -908,17 +992,28 @@ app.post('/admin/before-after/:id/edit', async (c) => {
   const ap = await uploadToR2(c, form.get('after_pano_file') as any, 'ba/pano-after') ?? (get('after_pano_key') || null)
   const bi = await uploadToR2(c, form.get('before_intra_file') as any, 'ba/intra-before') ?? (get('before_intra_key') || null)
   const ai = await uploadToR2(c, form.get('after_intra_file') as any, 'ba/intra-after') ?? (get('after_intra_key') || null)
+  // 자동 SEO: summary 비어있으면 자동 채움
+  const treatmentName = TREATMENT_LIST.find((t) => t.slug === get('treatment_slug'))?.name
+  const seoFill = autoFillBaSeo({
+    title: get('title'),
+    summary: get('summary'),
+    content: get('content'),
+    treatment_name: treatmentName,
+  })
   await c.env.DB.prepare(
     `UPDATE before_after SET slug=?, title=?, treatment_slug=?, doctor_slug=?, age=?, gender=?, region=?, region_city=?, treatment_period=?, summary=?, content=?, before_pano_key=?, after_pano_key=?, before_intra_key=?, after_intra_key=?, is_published=?, updated_at=CURRENT_TIMESTAMP WHERE id=?`
   ).bind(
     get('slug'), get('title'), get('treatment_slug'), get('doctor_slug'),
     get('age') ? Number(get('age')) : null, get('gender') || null, get('region') || null,
-    get('region_city') || null, get('treatment_period') || null, get('summary') || null, get('content') || null,
+    get('region_city') || null, get('treatment_period') || null, seoFill.summary, get('content') || null,
     bp, ap, bi, ai, form.get('is_published') ? 1 : 0, id
   ).run()
-  // IndexNow ping (fire-and-forget)
+  // IndexNow ping (fire-and-forget) — sitemap 전체에 발사
   if (form.get('is_published') && get('slug')) {
-    c.executionCtx.waitUntil(pingIndexNow([`/before-after/${get('slug')}`, '/before-after']).catch(() => {}))
+    c.executionCtx.waitUntil(pingIndexNow(buildIndexNowUrls({
+      detailPath: `/before-after/${get('slug')}`,
+      listPath: '/before-after',
+    })).catch(() => {}))
   }
   return c.redirect('/admin/before-after')
 })
@@ -945,16 +1040,30 @@ app.post('/admin/blog/new', async (c) => {
   const form = await c.req.formData()
   const get = (k: string) => String(form.get(k) ?? '').trim()
   const coverKey = await uploadToR2(c, form.get('cover_file') as any, 'blog/cover') ?? (get('cover_key') || null)
+  // 자동 SEO: 빈 필드 자동 채움
+  const seoFill = autoFillBlogSeo({
+    title: get('title'),
+    excerpt: get('excerpt'),
+    content: get('content'),
+    category: get('category'),
+    tags: get('tags'),
+    meta_description: get('meta_description'),
+    meta_keywords: get('meta_keywords'),
+  })
   await c.env.DB.prepare(
     `INSERT INTO blog_posts (slug, title, excerpt, content, cover_key, author_slug, category, tags, meta_description, meta_keywords, is_published) VALUES (?,?,?,?,?,?,?,?,?,?,?)`
   ).bind(
-    get('slug'), get('title'), get('excerpt') || null, get('content') || '',
+    get('slug'), get('title'), seoFill.excerpt, get('content') || '',
     coverKey, get('author_slug') || 'kim-jaein', get('category') || null, get('tags') || null,
-    get('meta_description') || null, get('meta_keywords') || null, form.get('is_published') ? 1 : 0
+    seoFill.meta_description, seoFill.meta_keywords, form.get('is_published') ? 1 : 0
   ).run()
-  // IndexNow ping (fire-and-forget)
+  // IndexNow ping (fire-and-forget) — sitemap 전체에 발사
   if (form.get('is_published') && get('slug')) {
-    c.executionCtx.waitUntil(pingIndexNow([`/blog/${get('slug')}`, '/blog', '/sitemap.xml']).catch(() => {}))
+    c.executionCtx.waitUntil(pingIndexNow(buildIndexNowUrls({
+      detailPath: `/blog/${get('slug')}`,
+      listPath: '/blog',
+      alsoPingHome: true,
+    })).catch(() => {}))
   }
   return c.redirect('/admin/blog')
 })
@@ -963,16 +1072,29 @@ app.post('/admin/blog/:id/edit', async (c) => {
   const form = await c.req.formData()
   const get = (k: string) => String(form.get(k) ?? '').trim()
   const coverKey = await uploadToR2(c, form.get('cover_file') as any, 'blog/cover') ?? (get('cover_key') || null)
+  // 자동 SEO: 빈 필드 자동 채움
+  const seoFill = autoFillBlogSeo({
+    title: get('title'),
+    excerpt: get('excerpt'),
+    content: get('content'),
+    category: get('category'),
+    tags: get('tags'),
+    meta_description: get('meta_description'),
+    meta_keywords: get('meta_keywords'),
+  })
   await c.env.DB.prepare(
     `UPDATE blog_posts SET slug=?, title=?, excerpt=?, content=?, cover_key=?, author_slug=?, category=?, tags=?, meta_description=?, meta_keywords=?, is_published=?, updated_at=CURRENT_TIMESTAMP WHERE id=?`
   ).bind(
-    get('slug'), get('title'), get('excerpt') || null, get('content') || '',
+    get('slug'), get('title'), seoFill.excerpt, get('content') || '',
     coverKey, get('author_slug') || 'kim-jaein', get('category') || null, get('tags') || null,
-    get('meta_description') || null, get('meta_keywords') || null, form.get('is_published') ? 1 : 0, id
+    seoFill.meta_description, seoFill.meta_keywords, form.get('is_published') ? 1 : 0, id
   ).run()
-  // IndexNow ping (fire-and-forget)
+  // IndexNow ping (fire-and-forget) — sitemap 전체에 발사
   if (form.get('is_published') && get('slug')) {
-    c.executionCtx.waitUntil(pingIndexNow([`/blog/${get('slug')}`, '/blog']).catch(() => {}))
+    c.executionCtx.waitUntil(pingIndexNow(buildIndexNowUrls({
+      detailPath: `/blog/${get('slug')}`,
+      listPath: '/blog',
+    })).catch(() => {}))
   }
   return c.redirect('/admin/blog')
 })
@@ -1004,9 +1126,13 @@ app.post('/admin/notices/new', async (c) => {
     get('title'), get('content'), imageKey,
     form.get('is_major') ? 1 : 0, form.get('is_published') ? 1 : 0
   ).run()
-  // IndexNow ping (fire-and-forget)
+  // IndexNow ping (fire-and-forget) — sitemap 전체에 발사
   if (form.get('is_published') && result.meta?.last_row_id) {
-    c.executionCtx.waitUntil(pingIndexNow([`/notices/${result.meta.last_row_id}`, '/notices', '/sitemap.xml']).catch(() => {}))
+    c.executionCtx.waitUntil(pingIndexNow(buildIndexNowUrls({
+      detailPath: `/notices/${result.meta.last_row_id}`,
+      listPath: '/notices',
+      alsoPingHome: true,
+    })).catch(() => {}))
   }
   return c.redirect('/admin/notices')
 })
@@ -1021,9 +1147,12 @@ app.post('/admin/notices/:id/edit', async (c) => {
     get('title'), get('content'), imageKey,
     form.get('is_major') ? 1 : 0, form.get('is_published') ? 1 : 0, id
   ).run()
-  // IndexNow ping (fire-and-forget)
+  // IndexNow ping (fire-and-forget) — sitemap 전체에 발사
   if (form.get('is_published')) {
-    c.executionCtx.waitUntil(pingIndexNow([`/notices/${id}`, '/notices']).catch(() => {}))
+    c.executionCtx.waitUntil(pingIndexNow(buildIndexNowUrls({
+      detailPath: `/notices/${id}`,
+      listPath: '/notices',
+    })).catch(() => {}))
   }
   return c.redirect('/admin/notices')
 })

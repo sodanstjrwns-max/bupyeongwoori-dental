@@ -122,24 +122,51 @@ export const BlogDetailPage = ({
 }) => {
   const author = DOCTORS.find((d) => d.slug === post.author_slug)
   const url = `https://${CLINIC.domain}/blog/${post.slug}`
+  const baseUrl = `https://${CLINIC.domain}`
+  const description = post.meta_description ?? post.excerpt ?? post.title
+  const coverAbs = post.cover_key
+    ? `${baseUrl}/media/${post.cover_key}`
+    : `${baseUrl}${OG_IMAGES.blog}`
+
+  // Article JSON-LD — keywords/section/image/dateModified까지 풀세트
+  const articleLd = articleSchema({
+    title: post.title,
+    description,
+    url,
+    image: coverAbs,
+    author: author ? `${author.title} ${author.name}` : undefined,
+    datePublished: post.published_at,
+    dateModified: post.published_at,
+  }) as any
+  if (post.category) articleLd.articleSection = post.category
+  articleLd.keywords = post.meta_keywords
+    ?? (post.tags
+      ? post.tags.split(',').map((t) => t.trim()).filter(Boolean).join(', ')
+      : `부평치과, 부평우리치과${post.category ? `, ${post.category}` : ''}`)
+  articleLd.inLanguage = 'ko-KR'
+  articleLd.isAccessibleForFree = true
+
   return (
     <Layout
       title={post.title}
-      description={post.meta_description ?? post.excerpt ?? post.title}
+      description={description}
       keywords={post.meta_keywords ?? `부평치과, 부평우리치과, ${post.category ?? ''}`}
       canonical={url}
       ogImage={post.cover_key ? `/media/${post.cover_key}` : OG_IMAGES.blog}
+      ogType="article"
+      articleMeta={{
+        publishedTime: post.published_at,
+        modifiedTime: post.published_at,
+        author: author ? `${author.title} ${author.name}` : CLINIC.representative,
+        section: post.category ?? '치과 지식',
+        tags: post.tags ? post.tags.split(',').map((t) => t.trim()).filter(Boolean) : undefined,
+      }}
       jsonLd={[
-        articleSchema({
-          title: post.title,
-          description: post.meta_description ?? post.excerpt ?? post.title,
-          url,
-          author: author?.name,
-          datePublished: post.published_at,
-        }),
+        articleLd,
         breadcrumbSchema([
           { name: '홈', url: '/' },
           { name: '블로그', url: '/blog' },
+          ...(post.category ? [{ name: post.category, url: `/blog?category=${encodeURIComponent(post.category)}` }] : []),
           { name: post.title, url: `/blog/${post.slug}` },
         ]),
       ]}

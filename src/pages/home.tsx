@@ -28,7 +28,9 @@ export const HomePage = () => {
 
           {/* Main title (line-by-line rise) */}
           <div>
+            {/* SEO-friendly H1: 검색 키워드(부평우리치과·임플란트·교정·심미보철) 명시 + 시각적 슬로건은 강조어 처리 */}
             <h1 id="hero-title" class="hero-title">
+              <span class="sr-only">부평우리치과 — 부평역 26번 출구 임플란트·치아교정·심미보철 전문 치과. </span>
               <span class="hero-title-row"><span>변하지 않는 <em class="mint-1">진료</em>,</span></span>
               <span class="hero-title-row"><span>변하지 않는 <em class="mint-2">신뢰</em>,</span></span>
               <span class="hero-title-row"><span>변하지 않는 <em class="mint-3">우리</em>.</span></span>
@@ -121,6 +123,7 @@ export const HomePage = () => {
             </div>
             <div>
               <h2 data-reveal class="philosophy-h2" style="margin-bottom:40px; max-width:900px; word-break:keep-all;">
+                <span class="sr-only">부평우리치과의 진료 철학 — </span>
                 <span class="ph-line">정직하게 진단하고,</span><br />
                 <span class="ph-line">최선을 다해 <em class="ph-mint-1">진료</em>하며,</span><br />
                 <span class="ph-line">14년째 같은 자리에서 <em class="ph-mint-2">신뢰</em>를 쌓고,</span><br />
@@ -159,8 +162,7 @@ export const HomePage = () => {
             <div>
               <div class="section-eyebrow" data-reveal>우리가 가장 잘하는 진료</div>
               <h2 data-reveal data-reveal-delay="1" style="font-size:var(--h-2); margin-top:20px; max-width:900px;">
-                세 가지 진료에<br />
-                <em>14년의 깊이</em>를 담았습니다.
+                부평우리치과 핵심 진료 — <em>임플란트·치아교정·심미보철</em>
               </h2>
               <p data-reveal data-reveal-delay="2" style="font-size:var(--t-lead); color:var(--ink-600); max-width:640px; margin-top:24px; line-height:1.6;">
                 부평우리치과의 정체성은 세 가지 진료에 있습니다.
@@ -185,6 +187,33 @@ export const HomePage = () => {
             ))}
           </div>
 
+          {/* 추가 5개 진료를 H3로 노출 — SEO 키워드 강화 (라미네이트·투명교정·사랑니·일반보철·예방치료) */}
+          <div class="extra-treatments" data-reveal style="margin-top: clamp(48px, 6vw, 80px);">
+            <div class="section-eyebrow" style="margin-bottom:24px;">그 외 전문 진료</div>
+            <div class="extra-treatments-grid">
+              <a href="/treatments/laminate" class="extra-treatment-link">
+                <h3>라미네이트</h3>
+                <p>최소 삭제 · 최대 자연스러움. 앞니 심미 라미네이트.</p>
+              </a>
+              <a href="/treatments/clear-aligner" class="extra-treatment-link">
+                <h3>투명교정</h3>
+                <p>Invisalign 우수 인증의의 보이지 않는 교정.</p>
+              </a>
+              <a href="/treatments/wisdom-tooth" class="extra-treatment-link">
+                <h3>사랑니발치</h3>
+                <p>구강외과 의학박사의 안전한 매복 사랑니 발치.</p>
+              </a>
+              <a href="/treatments/general-prosthesis" class="extra-treatment-link">
+                <h3>일반보철</h3>
+                <p>오래 쓰는 크라운·브릿지·인레이.</p>
+              </a>
+              <a href="/treatments/prevention" class="extra-treatment-link">
+                <h3>예방치료</h3>
+                <p>스케일링·불소도포·정기 검진으로 평생 치아 관리.</p>
+              </a>
+            </div>
+          </div>
+
           <div style="margin-top:64px; text-align:center;" data-reveal>
             <a href="/treatments" class="btn btn-outline btn-lg">
               전체 진료 과목 8개 보기
@@ -201,6 +230,7 @@ export const HomePage = () => {
             Credentials · 자격·인증
           </div>
           <h2 data-reveal data-reveal-delay="1" style="text-align:center; max-width:900px; margin:0 auto 64px;">
+            <span class="sr-only">부평우리치과 자격·인증 — </span>
             말보다 <em>증명</em>으로.
           </h2>
 
@@ -233,6 +263,7 @@ export const HomePage = () => {
             </div>
             <div>
               <h2 data-reveal data-reveal-delay="1" style="max-width:900px;">
+                <span class="sr-only">부평우리치과 의료진 6인 소개 — </span>
                 전문 분야는 다르지만,<br />
                 <em>원칙은 하나</em>입니다.
               </h2>
@@ -293,6 +324,7 @@ export const HomePage = () => {
             </div>
             <div>
               <h2 data-reveal data-reveal-delay="1" style="max-width:900px;">
+                <span class="sr-only">부평우리치과 진료 장비 — CBCT·ZEISS 미세현미경·KaVo 핸드피스 — </span>
                 장비가 말하는<br/>
                 <em>진료의 깊이.</em>
               </h2>
@@ -336,6 +368,7 @@ export const HomePage = () => {
             <div>
               <div class="section-eyebrow" data-reveal>400평 프리미엄 공간</div>
               <h2 data-reveal data-reveal-delay="1" style="font-size:var(--h-2); margin-top:20px; max-width:900px;">
+                <span class="sr-only">400평 프리미엄 공간 — </span>
                 머무는 시간까지<br />
                 <em>진료의 일부</em>입니다.
               </h2>
@@ -392,6 +425,7 @@ export const HomePage = () => {
               Contact · 상담은 언제나 무료
             </div>
             <h2 class="cta-h2">
+              <span class="sr-only">부평우리치과 상담·예약 안내 — </span>
               <span class="cta-line">이번엔, <em class="cta-mint-1">제대로</em> 받아보세요.</span><br/>
               <span class="cta-line"><em class="cta-mint-2">14년</em> 한 자리에서,</span><br/>
               <span class="cta-line">변하지 않는 <em class="cta-mint-3">우리</em>가 답합니다.</span>

@@ -1,4 +1,5 @@
 import { CLINIC, CORE_TREATMENTS, OTHER_TREATMENTS } from '../lib/constants'
+import { AREAS } from '../data/areas'
 
 export const Footer = () => {
   const year = new Date().getFullYear()
@@ -63,6 +64,21 @@ export const Footer = () => {
             <a href="/notices">공지사항</a>
             <a href="/glossary">치과 백과사전</a>
             <a href="/faq">자주 묻는 질문</a>
+          </div>
+        </div>
+
+        {/* 지역별 진료 안내 — SEO 내부 링크 구조 */}
+        <div style="margin-top:56px; padding-top:28px; border-top:1px solid rgba(255,255,255,0.08);">
+          <h4 style="color:rgba(255,255,255,0.9); font-size:0.9rem; margin-bottom:16px; letter-spacing:0.05em;">
+            <i class="fas fa-map-marker-alt" style="margin-right:6px;"></i> 지역별 진료 안내
+          </h4>
+          <div style="display:flex; flex-wrap:wrap; gap:8px 14px; font-size:0.82rem;">
+            {AREAS.map((a) => (
+              <a href={`/areas/${a.slug}`} style="color:rgba(255,255,255,0.55); text-decoration:none;">
+                {a.name} 치과
+              </a>
+            ))}
+            <a href="/areas" style="color:rgba(255,255,255,0.85); font-weight:600;">전체 지역 →</a>
           </div>
         </div>
 

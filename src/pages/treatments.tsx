@@ -3,6 +3,7 @@ import { CLINIC, OG_IMAGES } from '../lib/constants'
 import { TREATMENT_LIST, CORE_LIST, OTHER_LIST, getTreatment } from '../data/treatments'
 import { DOCTORS, getDoctor, doctorPhotoSrc } from '../data/doctors'
 import { breadcrumbSchema, faqSchema, serviceSchema, itemListSchema } from '../lib/schema'
+import { AREAS, TREATMENT_LOCAL } from '../data/areas'
 
 // =========================================================
 // 진료 전체 보기
@@ -559,6 +560,33 @@ export const TreatmentDetailPage = ({
           </div>
         </div>
       </section>
+
+      {/* 지역별 진료 안내 — SEO 내부 링크 */}
+      {TREATMENT_LOCAL[t.slug] && (
+        <section class="section section-soft">
+          <div class="container">
+            <div class="section-head" data-reveal>
+              <div class="section-eyebrow">REGIONAL · 지역별</div>
+              <h2 class="section-title">어느 지역에서 <em class="ph-mint-3">{t.name}</em>을(를) 받으시나요?</h2>
+              <p style="text-align:center; color:var(--ink-500); margin-top:8px;">
+                지역별로 거리·교통편·{t.name} 안내를 자세히 정리했습니다.
+              </p>
+            </div>
+            <div class="area-cross-grid" data-reveal>
+              {AREAS.map((a) => (
+                <a href={`/areas/${a.slug}/${t.slug}`} class="area-cross-card">
+                  <span>{a.name} {t.name}</span>
+                  <i class="fas fa-arrow-right"></i>
+                </a>
+              ))}
+              <a href="/areas" class="area-cross-card">
+                <span><strong>모든 지역 보기</strong></span>
+                <i class="fas fa-th"></i>
+              </a>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* CTA */}
       <section class="section">

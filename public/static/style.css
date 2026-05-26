@@ -6739,3 +6739,294 @@ th{ font-weight:700; background:var(--ink-50); font-size:.85rem; letter-spacing:
   .extra-treatment-link h3 { font-size: 1rem; }
   .extra-treatment-link p { font-size: .82rem; }
 }
+
+/* ============================================================ */
+/* AREA PAGES — 지역 × 진료 SEO 랜딩 (2026-05-26 슈퍼 업그레이드) */
+/* ============================================================ */
+
+/* 지역 인덱스 그리드 */
+.area-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+  margin-top: 32px;
+}
+@media (min-width: 640px) {
+  .area-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 1000px) {
+  .area-grid { grid-template-columns: repeat(4, 1fr); }
+}
+.area-card {
+  display: block;
+  padding: 24px 22px;
+  border: 1px solid var(--ink-200);
+  border-radius: 14px;
+  background: #fff;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.25s ease;
+}
+.area-card:hover {
+  border-color: var(--brand-500);
+  transform: translateY(-3px);
+  box-shadow: 0 14px 36px rgba(109, 187, 185, 0.18);
+}
+.area-card-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--ink-100);
+}
+.area-card-name {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--ink-900);
+  letter-spacing: -0.02em;
+}
+.area-card-district {
+  font-size: 0.78rem;
+  color: var(--ink-500);
+  padding: 3px 8px;
+  border: 1px solid var(--ink-200);
+  border-radius: 99px;
+}
+.area-card-meta {
+  display: grid;
+  gap: 8px;
+  font-size: 0.86rem;
+  color: var(--ink-600);
+  line-height: 1.5;
+}
+.area-card-meta i {
+  color: var(--brand-500);
+  width: 16px;
+}
+.area-card-cta {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--ink-200);
+  color: var(--brand-600);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+/* 교통/거리 안내 카드 */
+.area-transport-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  margin-top: 24px;
+}
+@media (min-width: 720px) {
+  .area-transport-grid { grid-template-columns: repeat(3, 1fr); }
+}
+.area-transport-card {
+  background: #fff;
+  border: 1px solid var(--ink-200);
+  border-radius: 12px;
+  padding: 24px 20px;
+  text-align: center;
+}
+.area-transport-card .icon {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  background: var(--brand-50);
+  color: var(--brand-600);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 14px;
+  font-size: 1.2rem;
+}
+.area-transport-card .label {
+  font-size: 0.78rem;
+  color: var(--ink-500);
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+.area-transport-card .value {
+  font-weight: 600;
+  color: var(--ink-900);
+  line-height: 1.45;
+  font-size: 0.95rem;
+}
+
+/* 지역 → 진료 그리드 */
+.area-treatment-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  margin-top: 24px;
+}
+@media (min-width: 720px) {
+  .area-treatment-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 1100px) {
+  .area-treatment-grid { grid-template-columns: repeat(4, 1fr); }
+}
+.area-treatment-card {
+  display: block;
+  background: #fff;
+  border: 1px solid var(--ink-200);
+  border-radius: 14px;
+  padding: 22px 20px;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.22s ease;
+}
+.area-treatment-card:hover {
+  border-color: var(--brand-500);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(109, 187, 185, 0.15);
+}
+.area-treatment-head {
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--ink-100);
+}
+.area-treatment-tag {
+  font-size: 0.72rem;
+  color: var(--brand-600);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.area-treatment-head h3 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--ink-900);
+  margin: 0;
+}
+.area-treatment-card p {
+  font-size: 0.85rem;
+  color: var(--ink-600);
+  line-height: 1.5;
+  margin: 0 0 12px;
+}
+.area-treatment-cta {
+  font-size: 0.82rem;
+  color: var(--brand-600);
+  font-weight: 600;
+}
+
+/* 왜 여기인가 — 4개 그리드 */
+.why-here-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-top: 24px;
+}
+@media (min-width: 720px) {
+  .why-here-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 1100px) {
+  .why-here-grid { grid-template-columns: repeat(4, 1fr); }
+}
+.why-here-card {
+  background: #fff;
+  border: 1px solid var(--ink-200);
+  border-radius: 12px;
+  padding: 22px 20px;
+  position: relative;
+}
+.why-here-num {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--brand-500);
+  letter-spacing: -0.02em;
+  margin-bottom: 10px;
+}
+.why-here-card p {
+  font-size: 0.92rem;
+  color: var(--ink-700);
+  line-height: 1.55;
+  margin: 0;
+}
+
+/* 진료 특징 그리드 (area-treatment 페이지) */
+.treatment-feature-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-top: 24px;
+}
+@media (min-width: 720px) {
+  .treatment-feature-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 1100px) {
+  .treatment-feature-grid { grid-template-columns: repeat(4, 1fr); }
+}
+.treatment-feature-card {
+  background: #fff;
+  border: 1px solid var(--ink-200);
+  border-radius: 12px;
+  padding: 22px 20px;
+  text-align: center;
+}
+.treatment-feature-icon {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  background: var(--brand-50);
+  color: var(--brand-600);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 14px;
+  font-size: 1.3rem;
+}
+.treatment-feature-card h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--ink-900);
+  margin: 0 0 8px;
+}
+.treatment-feature-card p {
+  font-size: 0.85rem;
+  color: var(--ink-600);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Cross-link 그리드 (같은 지역 다른 진료 / 다른 지역 같은 진료) */
+.area-cross-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-top: 24px;
+}
+@media (min-width: 640px) {
+  .area-cross-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 1000px) {
+  .area-cross-grid { grid-template-columns: repeat(4, 1fr); }
+}
+.area-cross-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 18px;
+  border: 1px solid var(--ink-200);
+  border-radius: 10px;
+  background: #fff;
+  text-decoration: none;
+  color: var(--ink-900);
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+.area-cross-card:hover {
+  border-color: var(--brand-500);
+  color: var(--brand-700);
+  background: var(--brand-50);
+}
+.area-cross-card i {
+  color: var(--brand-500);
+  font-size: 0.85rem;
+}
+

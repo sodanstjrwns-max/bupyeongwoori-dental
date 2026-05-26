@@ -40,6 +40,8 @@ import { CLINIC } from './lib/constants'
 import { TREATMENT_LIST } from './data/treatments'
 import { pingIndexNow, INDEXNOW_KEY } from './lib/indexnow'
 import { autoFillBlogSeo, autoFillBaSeo, buildIndexNowUrls } from './lib/auto-seo'
+import { AreasIndexPage, AreaHubPage, AreaTreatmentPage } from './pages/areas'
+import { AREAS, getArea, TREATMENT_LOCAL } from './data/areas'
 
 const app = new Hono<{ Bindings: Bindings }>()
 
@@ -138,6 +140,29 @@ app.get('/treatments/:slug', async (c) => {
   const user = await getUserFromSession(c)
   const isLoggedIn = !!user
   return c.html(<TreatmentDetailPage slug={slug} cases={cases} isLoggedIn={isLoggedIn} />)
+})
+
+// ============================================================
+// Areas — 지역 × 진료 SEO 랜딩 (8 지역 × 8 진료 = 64 + 9 페이지)
+// ============================================================
+app.get('/areas', (c) => c.html(<AreasIndexPage />))
+
+app.get('/areas/:region', (c) => {
+  const region = c.req.param('region')
+  const area = getArea(region)
+  if (!area) return c.notFound()
+  return c.html(<AreaHubPage area={area} />)
+})
+
+app.get('/areas/:region/:treatment', (c) => {
+  const region = c.req.param('region')
+  const treatmentSlug = c.req.param('treatment')
+  const area = getArea(region)
+  if (!area) return c.notFound()
+  if (!TREATMENT_LOCAL[treatmentSlug]) return c.notFound()
+  const treatment = TREATMENT_LIST.find(t => t.slug === treatmentSlug)
+  if (!treatment) return c.notFound()
+  return c.html(<AreaTreatmentPage area={area} treatment={treatment} />)
 })
 
 // Auth pages
@@ -648,11 +673,42 @@ app.get('/sitemap.xml', async (c) => {
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <sitemap><loc>${base}/sitemap-pages.xml</loc><lastmod>${today}</lastmod></sitemap>
+  <sitemap><loc>${base}/sitemap-areas.xml</loc><lastmod>${today}</lastmod></sitemap>
   <sitemap><loc>${base}/sitemap-blog.xml</loc><lastmod>${blogLast}</lastmod></sitemap>
   <sitemap><loc>${base}/sitemap-ba.xml</loc><lastmod>${baLast}</lastmod></sitemap>
   <sitemap><loc>${base}/sitemap-notices.xml</loc><lastmod>${noticeLast}</lastmod></sitemap>
 </sitemapindex>`
   return c.text(xml, 200, sitemapXmlHeaders)
+})
+
+// ---- 지역 × 진료 (8 + 64 페이지) ----
+app.get('/sitemap-areas.xml', (c) => {
+  const base = `https://${CLINIC.domain}`
+  const today = new Date().toISOString().split('T')[0]
+  const entries: SitemapEntry[] = [
+    { loc: '/areas', lastmod: today, changefreq: 'weekly', priority: '0.9' },
+  ]
+  // 지역 허브 페이지 (8개)
+  for (const a of AREAS) {
+    entries.push({
+      loc: `/areas/${a.slug}`,
+      lastmod: today,
+      changefreq: 'weekly',
+      priority: String(Math.max(0.7, a.priority * 0.95)),
+    })
+  }
+  // 지역×진료 페이지 (64개)
+  for (const a of AREAS) {
+    for (const tSlug of Object.keys(TREATMENT_LOCAL)) {
+      entries.push({
+        loc: `/areas/${a.slug}/${tSlug}`,
+        lastmod: today,
+        changefreq: 'weekly',
+        priority: String(Math.max(0.7, a.priority * 0.9)),
+      })
+    }
+  }
+  return c.text(buildUrlsetXml(base, entries), 200, sitemapXmlHeaders)
 })
 
 // ---- 정적 페이지 + 진료/용어 ----

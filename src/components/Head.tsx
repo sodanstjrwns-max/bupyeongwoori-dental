@@ -104,7 +104,7 @@ export const Head = (props: HeadProps) => {
         href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"
       />
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
-      <link rel="stylesheet" href="/static/style.css?v=20260430n" />
+      <link rel="stylesheet" href="/static/style.css?v=20260526a" />
 
       {/* Structured data */}
       {jsonLds.map((ld, i) => (

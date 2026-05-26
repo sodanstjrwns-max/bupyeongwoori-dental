@@ -27,8 +27,12 @@
 | `/login` · `/signup` · `/logout` | 회원 인증 |
 | `/admin` | 관리자 대시보드(로그인 필요) |
 | `/admin/blog`·`/before-after`·`/notices` | CMS CRUD + R2 이미지 업로드 |
-| `/sitemap.xml` | **Sitemap Index** — 4개 하위 sitemap 가리킴 |
+| `/areas` | **지역별 진료 인덱스** (8지역 허브 진입점) |
+| `/areas/:region` | **지역 허브** (8개: 부평역/부평구/부평동/십정동/산곡동/부개동/삼산동/갈산동) |
+| `/areas/:region/:treatment` | **지역×진료 랜딩** (64개: 8지역 × 8진료, 도어웨이 회피 유니크 콘텐츠) |
+| `/sitemap.xml` | **Sitemap Index** — 5개 하위 sitemap 가리킴 |
 | `/sitemap-pages.xml` | 정적 페이지 + 진료 8종 + 용어집 |
+| `/sitemap-areas.xml` | **지역×진료 73 URL** (1 인덱스 + 8 허브 + 64 상세) |
 | `/sitemap-blog.xml` | 블로그 (DB 자동) — `is_published=1` 자동 등록 |
 | `/sitemap-ba.xml` | 비포애프터 (DB 자동) — `is_published=1` 자동 등록 |
 | `/sitemap-notices.xml` | 공지사항 (DB 자동) — `is_published=1` 자동 등록 |
@@ -59,6 +63,15 @@
   - **IndexNow 풀발사**: 블로그/BA/공지 발행·수정 시 Bing/Yandex/Seznam에 즉시 핑 + sitemap-pages/blog/ba/notices 동시 무효화
   - **메타 기본값**: 임플란트·인비절라인·라미네이트·글로우네이트·치아교정·심미보철·투명교정·사랑니발치 8종 키워드 풀 커버
   - **검증 도구**: `curl https://wooridc.kr/sitemap.xml` / `/sitemap-blog.xml` / `/sitemap-ba.xml`로 즉시 확인 가능
+- **🚀 지역×진료 슈퍼 SEO (2026-05-26 신설)**:
+  - **72개 자동 랜딩 페이지**: `/areas/:region/:treatment` 조합으로 "부평역 임플란트", "산곡동 라미네이트", "십정동 투명교정" 등 롱테일 키워드 풀 커버
+  - **8 지역**: 부평역(1.0) / 부평구(0.95) / 부평동(0.9) / 십정동(0.85) / 산곡동(0.85) / 부개동(0.8) / 삼산동(0.75) / 갈산동(0.75) — 우선순위 차등
+  - **8 진료**: 임플란트 / 교정 / 심미보철 / 라미네이트 / 투명교정 / 사랑니발치 / 일반보철 / 예방
+  - **JSON-LD 풀세트 (페이지당)**: `Dentist + MedicalBusiness` (geo·areaServed) + `GeoCoordinates` + `MedicalProcedure/Service` (areaServed) + `FAQPage` + `BreadcrumbList`
+  - **도어웨이 회피**: 각 페이지마다 지역 고유 intro/거리/교통/FAQ 자동 생성 — 구글 정책 100% 준수
+  - **내부 링크 강화**: Footer 지역 8개 링크 + 진료 상세 페이지 "어느 지역에서 받으시나요?" 크로스 링크
+  - **데이터 모델**: `src/data/areas.ts` — `AreaInfo[]` + `TREATMENT_LOCAL` (지역별 angle/FAQ/bullet 자동생성기)
+  - **검증**: `curl https://wooridc.kr/sitemap-areas.xml | grep -c '<loc>'` → **73**
 
 ## User Guide
 ### 일반 방문자
@@ -82,4 +95,4 @@
 - **Tech Stack**: Hono + TypeScript + JSX SSR + Pretendard + Vanilla JS(CDN) + Cloudflare D1/R2
 - **Build**: `npm run build` → `dist/_worker.js`
 - **Local Start**: `pm2 start ecosystem.config.cjs` (symlink trick으로 wrangler d1 CLI ↔ pages dev 간 DB 공유)
-- **Last Updated**: 2026-05-14 (SEO/AEO 풀세트 빡세게 업그레이드 — Sitemap Index, 자동 SEO 최적화, OG type 분리, IndexNow 발사 강화)
+- **Last Updated**: 2026-05-26 (🚀 **지역×진료 슈퍼 SEO 풀세트** — 72개 자동 랜딩 페이지, MedicalBusiness+GeoCoordinates+Service JSON-LD, 도어웨이 회피, 내부 링크 강화, sitemap-areas.xml 신설, IndexNow 75개 URL 발사)

@@ -189,13 +189,25 @@ type TreatmentCaseRow = {
   created_at: string
 }
 
+type RelatedPostRow = {
+  id: number
+  slug: string
+  title: string
+  excerpt: string | null
+  cover_key: string | null
+  category: string | null
+  published_at: string
+}
+
 export const TreatmentDetailPage = ({
   slug,
   cases = [],
+  relatedPosts = [],
   isLoggedIn = false,
 }: {
   slug: string
   cases?: TreatmentCaseRow[]
+  relatedPosts?: RelatedPostRow[]
   isLoggedIn?: boolean
 }) => {
   const t = getTreatment(slug)
@@ -492,6 +504,36 @@ export const TreatmentDetailPage = ({
               <a href={`/before-after?treatment=${t.slug}`} class="btn btn-dark">
                 {t.name} 전체 케이스 더 보기 <i class="fas fa-arrow-right"></i>
               </a>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Phase 3-6: 관련 블로그 — 토픽 클러스터 권위 강화 */}
+      {relatedPosts.length > 0 && (
+        <section class="section section-soft">
+          <div class="container">
+            <div class="tx-eyebrow">RELATED · {t.name} 관련 블로그</div>
+            <h2 class="tx-section-title">{t.name}을(를) 더 알아보세요</h2>
+            <div class="tx-related-grid">
+              {relatedPosts.map((p) => (
+                <a href={`/blog/${p.slug}`} class="tx-related-card" data-reveal>
+                  {p.cover_key ? (
+                    <div class="tx-related-cover">
+                      <img src={`/media/${p.cover_key}`} alt={p.title} loading="lazy" />
+                    </div>
+                  ) : null}
+                  <div class="tx-related-body">
+                    {p.category ? <div class="tx-related-cat">{p.category}</div> : null}
+                    <h3 class="tx-related-title">{p.title}</h3>
+                    {p.excerpt ? <p class="tx-related-excerpt">{p.excerpt}</p> : null}
+                    <div class="tx-related-cta">자세히 보기 →</div>
+                  </div>
+                </a>
+              ))}
+            </div>
+            <div style="margin-top:24px; text-align:center;">
+              <a href="/blog" class="btn btn-dark"><i class="fas fa-book"></i> 블로그 전체 보기</a>
             </div>
           </div>
         </section>

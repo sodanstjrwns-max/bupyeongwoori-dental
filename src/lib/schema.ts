@@ -159,6 +159,62 @@ export const serviceSchema = (s: {
   },
 })
 
+// ============================================================
+// Phase 2-3: AggregateRating — 실제 네이버 플레이스 리뷰 기반
+// ⚠️ 정직성 원칙: 가짜 별점 절대 X — 실제 리뷰 수치만 사용
+// 네이버 플레이스 https://naver.me/xMj67GgD 의 실제 리뷰 수를 확인 후 입력
+// ============================================================
+const REAL_REVIEW_DATA = {
+  ratingValue: 4.9,        // ⚠️ 실제 네이버 플레이스 평점으로 업데이트 필요
+  reviewCount: 0,          // ⚠️ 실제 리뷰 수로 업데이트 필요 (0이면 스키마 비활성)
+  bestRating: 5,
+  worstRating: 1,
+}
+
+/**
+ * Dentist + AggregateRating 스키마
+ * ⚠️ reviewCount가 0이면 null 반환 → 가짜 별점 방지
+ * 실제 리뷰 수치 확정 후 REAL_REVIEW_DATA 업데이트하면 자동 활성화
+ */
+export const dentistAggregateRatingSchema = () => {
+  // 정직성 가드: 실제 리뷰 수가 입력 안 된 상태면 스키마 생성 안 함
+  if (!REAL_REVIEW_DATA.reviewCount || REAL_REVIEW_DATA.reviewCount < 1) {
+    return null
+  }
+  return {
+  '@context': 'https://schema.org',
+  '@type': 'Dentist',
+  '@id': `https://${CLINIC.domain}/#clinic-rating`,
+  name: CLINIC.name,
+  url: `https://${CLINIC.domain}/`,
+  image: `https://${CLINIC.domain}/static/og/og-default.png?v=20260430m`,
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: '부평대로 16 에이플러스에셋빌딩',
+    addressLocality: '부평구',
+    addressRegion: '인천광역시',
+    postalCode: '21315',
+    addressCountry: 'KR',
+  },
+  aggregateRating: {
+    '@type': 'AggregateRating',
+    ratingValue: REAL_REVIEW_DATA.ratingValue,
+    reviewCount: REAL_REVIEW_DATA.reviewCount,
+    bestRating: REAL_REVIEW_DATA.bestRating,
+    worstRating: REAL_REVIEW_DATA.worstRating,
+  },
+  }
+}
+
+/**
+ * Phase 2-4: Speakable Specification 빌더
+ * 음성 검색 대응 — 시리/구글 어시스턴트가 읽어줄 영역 지정
+ */
+export const speakableSpec = (selectors: string[]) => ({
+  '@type': 'SpeakableSpecification',
+  cssSelector: selectors,
+})
+
 // ItemList 스키마 — 블로그/공지/시술 리스트 페이지용
 export const itemListSchema = (items: { name: string; url: string }[], listName?: string) => ({
   '@context': 'https://schema.org',

@@ -9,12 +9,22 @@
 
 import { Layout } from '../components/Layout'
 import { CLINIC, OG_IMAGES } from '../lib/constants'
-import { AREAS, type AreaInfo, TREATMENT_LOCAL } from '../data/areas'
+import {
+  AREAS,
+  type AreaInfo,
+  TREATMENT_LOCAL,
+  AREA_SIGNATURE,
+  TREATMENT_SIGNATURE,
+  buildAreaTreatmentDescription,
+  buildAreaTreatmentTitle,
+  buildAreaTreatmentKeywords,
+} from '../data/areas'
 import { TREATMENT_LIST } from '../data/treatments'
 import type { TreatmentDetail } from '../data/treatments'
-import { breadcrumbSchema, dentistSchema, faqSchema, serviceSchema } from '../lib/schema'
+import { breadcrumbSchema, dentistSchema, faqSchema, serviceSchema, dentistAggregateRatingSchema } from '../lib/schema'
 import { CtaSection } from '../components/CtaSection'
 import { InlineCta } from '../components/InlineCta'
+import { buildOgImageUrl } from '../lib/og-dynamic'
 
 const BASE = `https://${CLINIC.domain}`
 
@@ -100,20 +110,26 @@ export const AreasIndexPage = () => {
 // /areas/:region — 지역 허브 페이지 (예: /areas/bupyeong-station)
 // ============================================================
 export const AreaHubPage = ({ area }: { area: AreaInfo }) => {
+  const sig = AREA_SIGNATURE[area.slug]
+  // Phase 1-1: 지역별 시그니처 description (8개 페이지 모두 다르게)
   const title = `${area.name} 치과 | ${CLINIC.name} (${area.distance})`
-  const description = `${area.nameFull}에서 ${CLINIC.name}까지 ${area.distance}. ${area.intro.slice(0, 100)}...`
+  const description = sig
+    ? `${area.nameFull} 치과 — ${CLINIC.name} (${area.distance}, ${sig.landmark}). ${sig.demographic} 분들이 14년간 신뢰한 치과. 임플란트·교정·심미보철·라미네이트·사랑니까지 8개 진료 풀세트.`
+    : `${area.nameFull}에서 ${CLINIC.name}까지 ${area.distance}. ${area.intro.slice(0, 100)}...`
 
   const treatments = Object.keys(TREATMENT_LOCAL)
     .map(slug => TREATMENT_LIST.find(t => t.slug === slug))
     .filter(Boolean) as TreatmentDetail[]
+  // Phase 1-2: 지역별 OG 이미지
+  const ogImg = buildOgImageUrl({ type: 'area-hub', area: area.slug })
 
   return (
     <Layout
       title={`${area.name} 치과`}
       description={description}
       canonical={`${BASE}/areas/${area.slug}`}
-      keywords={area.keywords.join(', ')}
-      ogImage={OG_IMAGES.home}
+      keywords={[...area.keywords, `${area.name} 임플란트 잘하는 곳`, `${area.name} 치과 추천`, `${area.name} 근처 치과`].join(', ')}
+      ogImage={ogImg}
       jsonLd={[
         breadcrumbSchema([
           { name: '홈', url: '/' },
@@ -163,12 +179,21 @@ export const AreaHubPage = ({ area }: { area: AreaInfo }) => {
             url: `${BASE}/areas/${area.slug}/${t.slug}`,
           })),
         },
-        // FAQPage — 지역 환자분들이 자주 묻는 질문
-        faqSchema([
-          { q: `${area.name}에서 ${CLINIC.name}까지 어떻게 가나요?`, a: `${area.transport}. ${area.distance}.` },
-          { q: `${area.name} 거주자입니다. 어떤 진료를 받을 수 있나요?`, a: `임플란트·치아교정·심미보철·라미네이트·투명교정·사랑니발치·일반보철·예방치료까지 8개 진료 모두 가능합니다.` },
-          { q: `${area.name}에서 진료받으려면 예약이 필수인가요?`, a: '예약제로 운영되며, 네이버 예약 또는 전화(032-529-2875)로 예약 가능합니다.' },
-        ]),
+        // FAQPage + Speakable (음성검색 대응)
+        {
+          ...faqSchema([
+            { q: `${area.name}에서 ${CLINIC.name}까지 어떻게 가나요?`, a: `${area.transport}. ${area.distance}.` },
+            { q: `${area.name} 거주자입니다. 어떤 진료를 받을 수 있나요?`, a: `임플란트·치아교정·심미보철·라미네이트·투명교정·사랑니발치·일반보철·예방치료까지 8개 진료 모두 가능합니다.` },
+            { q: `${area.name}에서 진료받으려면 예약이 필수인가요?`, a: '예약제로 운영되며, 네이버 예약 또는 전화(032-529-2875)로 예약 가능합니다.' },
+            { q: `${area.name} 근처 치과 중 어디가 좋나요?`, a: `${CLINIC.name}은(는) 부평역 26번 출구 도보 1분 거리로 ${area.name}에서 가장 접근성이 높은 치과 중 하나이며, 의학박사 대표원장의 14년 임상 경험을 바탕으로 진료합니다.` },
+          ]),
+          speakable: {
+            '@type': 'SpeakableSpecification',
+            cssSelector: ['.page-title', '.page-lead', '.section-title'],
+          },
+        },
+        // AggregateRating (실제 네이버 리뷰 기반)
+        dentistAggregateRatingSchema(),
       ]}
     >
       <section class="page-hero">
@@ -252,11 +277,16 @@ export const AreaTreatmentPage = ({ area, treatment }: { area: AreaInfo; treatme
   if (!local) return null
 
   const title = `${area.name} ${treatment.name}`
-  const description = `${area.name}에서 ${treatment.name} — ${CLINIC.name} (부평역 26번 출구 도보 1분). ${treatment.metaDescription.slice(0, 100)}`
+  // Phase 1-1: 지역×진료 다양화된 description (64개 페이지 모두 유니크)
+  const description = buildAreaTreatmentDescription(area.slug, treatment.slug, treatment.name)
+  // Phase 1-1: 다양화된 키워드 (지역×진료 롱테일 풀세트)
+  const dynamicKeywords = buildAreaTreatmentKeywords(area.slug, treatment.slug, treatment.name, treatment.keywords)
   const url = `${BASE}/areas/${area.slug}/${treatment.slug}`
   const angle = local.localAngle(area.name)
   const bullets = local.whyHereBullets(area.name)
   const localFaqs = local.localFaqs(area.name)
+  // Phase 1-2: 페이지별 OG 이미지 (지역×진료 시그니처)
+  const ogImg = buildOgImageUrl({ type: 'area-treatment', area: area.slug, treatment: treatment.slug })
 
   // 같은 지역의 다른 진료 (cross-link)
   const otherTreatments = Object.keys(TREATMENT_LOCAL)
@@ -272,13 +302,8 @@ export const AreaTreatmentPage = ({ area, treatment }: { area: AreaInfo; treatme
       title={`${area.name} ${treatment.name}`}
       description={description}
       canonical={url}
-      keywords={[
-        `${area.name} ${treatment.name}`,
-        `${area.name} 치과`,
-        `${area.district} ${treatment.name}`,
-        treatment.keywords,
-      ].filter(Boolean).join(', ')}
-      ogImage={OG_IMAGES.home}
+      keywords={dynamicKeywords}
+      ogImage={ogImg}
       ogType="article"
       articleMeta={{
         publishedTime: '2026-05-14T00:00:00+09:00',
@@ -336,11 +361,19 @@ export const AreaTreatmentPage = ({ area, treatment }: { area: AreaInfo; treatme
           '@id': `${url}#procedure`,
           areaServed: { '@type': 'Place', name: area.nameFull },
         },
-        // FAQPage
-        faqSchema([
-          ...localFaqs,
-          ...(treatment.faqs?.slice(0, 3) ?? []),
-        ]),
+        // FAQPage + Speakable (Phase 2-4: 음성검색 대응)
+        {
+          ...faqSchema([
+            ...localFaqs,
+            ...(treatment.faqs?.slice(0, 3) ?? []),
+          ]),
+          speakable: {
+            '@type': 'SpeakableSpecification',
+            cssSelector: ['.section-title', '.faq-item summary', '.faq-answer', '.page-lead'],
+          },
+        },
+        // Phase 2-3: AggregateRating (실제 네이버 플레이스 리뷰 수치 기반)
+        dentistAggregateRatingSchema(),
       ]}
     >
       <section class="page-hero area-treatment-hero">

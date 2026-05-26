@@ -4,6 +4,7 @@ import { DOCTORS } from '../data/doctors'
 import { articleSchema, breadcrumbSchema, itemListSchema } from '../lib/schema'
 import { CtaSection } from '../components/CtaSection'
 import { InlineCta } from '../components/InlineCta'
+import { autoLinkContent } from '../lib/auto-link'
 
 type BlogRow = {
   id: number
@@ -193,7 +194,8 @@ export const BlogDetailPage = ({
 
           <div class="prose post-content">
             {/* @ts-ignore */}
-            <div dangerouslySetInnerHTML={{ __html: post.content }} />
+            {/* Phase 3-5: 자동 내부 링크 — 진료/지역 키워드 발견 시 토픽 클러스터 링크 */}
+            <div dangerouslySetInnerHTML={{ __html: autoLinkContent(post.content) }} />
           </div>
 
           {post.tags ? (

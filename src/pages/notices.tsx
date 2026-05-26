@@ -3,6 +3,7 @@ import { CLINIC, OG_IMAGES } from '../lib/constants'
 import { breadcrumbSchema, itemListSchema } from '../lib/schema'
 import { CtaSection } from '../components/CtaSection'
 import { InlineCta } from '../components/InlineCta'
+import { autoLinkContent } from '../lib/auto-link'
 
 type NoticeRow = {
   id: number
@@ -184,7 +185,8 @@ export const NoticeDetailPage = ({ notice }: { notice: NoticeRow }) => {
 
           <div class="prose notice-content">
             {/* @ts-ignore */}
-            <div dangerouslySetInnerHTML={{ __html: notice.content }} />
+            {/* Phase 3-5: 자동 내부 링크 */}
+            <div dangerouslySetInnerHTML={{ __html: autoLinkContent(notice.content) }} />
           </div>
 
           <InlineCta

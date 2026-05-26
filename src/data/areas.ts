@@ -267,6 +267,162 @@ export const TREATMENT_LOCAL: Record<string, {
   },
 }
 
+// ============================================================
+// 지역별 시그니처 — description / 키워드 다양화 (Phase 1-1: 도어웨이 박멸)
+// 각 지역의 특성/랜드마크/인구 특징을 반영해 64개 페이지의 description이
+// 단조롭지 않고 지역마다 유니크하게 보이도록 함
+// ============================================================
+export const AREA_SIGNATURE: Record<string, {
+  /** 지역별 랜드마크/특성 — description에 자연 삽입 */
+  landmark: string
+  /** 지역별 주민 특성 키워드 (학생/직장인/가족 등) */
+  demographic: string
+  /** 지역별 시간/거리 — 동선 강조 문구 */
+  commute: string
+  /** description에 들어갈 시그니처 문구 (지역×진료 결합) */
+  signature: (treatmentName: string) => string
+}> = {
+  'bupyeong-station': {
+    landmark: '부평역 지하상가 26번 출구 바로 앞',
+    demographic: '출퇴근 직장인·환승 통행객',
+    commute: '도보 1분',
+    signature: (t) => `부평역 26번 출구 도보 1분, 점심시간·퇴근길에도 부담 없는 ${t} 진료. 1호선·인천1호선 환승 거점.`,
+  },
+  'bupyeong-gu': {
+    landmark: '부평구 56만 주민의 중심 상권',
+    demographic: '부평1~6동·산곡·청천·갈산·부개·삼산 주민',
+    commute: '부평구 전역 접근성 1위',
+    signature: (t) => `인천 부평구 ${t}, 14년간 같은 자리 같은 의료진. 부평구 전역에서 부평역으로 모이는 교통 거점.`,
+  },
+  'bupyeong-dong': {
+    landmark: '부평동(1~6동) 중앙상권',
+    demographic: '부평동 토박이·신규 이주민 가족',
+    commute: '도보 또는 마을버스 5분',
+    signature: (t) => `부평동 중앙상권에서 도보권 ${t}. 14년간 부평동 가족 단위 환자분들이 신뢰한 동네 치과.`,
+  },
+  'sipjeong-dong': {
+    landmark: '백운역 인근 주거 밀집지',
+    demographic: '십정1·2동 오래된 주민·가족',
+    commute: '백운역에서 1호선 1정거장 또는 마을버스 564·570',
+    signature: (t) => `십정동에서 1호선 1정거장 ${t}. 백운역·십정시장 인근 주민분들이 14년간 꾸준히 찾으신 치과.`,
+  },
+  'sangok-dong': {
+    landmark: '산곡1~4동 대단지 아파트 밀집',
+    demographic: '산곡동 가족·학생·시니어',
+    commute: '버스 511·530·556번 10분',
+    signature: (t) => `산곡동에서 부평역행 버스 10분 ${t}. 자녀 교정부터 부모님 임플란트까지 가족 단위 케어 가능.`,
+  },
+  'bugae-dong': {
+    landmark: '부개역 인근 주거지',
+    demographic: '부개1~3동 직장인·가족',
+    commute: '부개역에서 1호선 1정거장',
+    signature: (t) => `부개동에서 부개역→부평역 한 정거장 ${t}. 출퇴근 동선 그대로 들르실 수 있는 위치.`,
+  },
+  'samsan-dong': {
+    landmark: '삼산월드체육관·삼산타운 인근',
+    demographic: '삼산동 젊은 가족 단위',
+    commute: '버스 28·45·555번 15분',
+    signature: (t) => `삼산동에서 부평역행 버스 15분 ${t}. 자녀 예방치료부터 라미네이트까지 폭넓게 진료.`,
+  },
+  'galsan-dong': {
+    landmark: '갈산역 인근·인천1호선 거점',
+    demographic: '갈산1·2동 직장인·신혼부부',
+    commute: '갈산역→부평구청 환승→부평역',
+    signature: (t) => `갈산동에서 인천1호선 환승 한 번에 부평역 ${t}. 갈산역 거주자분들의 통근 동선 친화 위치.`,
+  },
+}
+
+// 진료별 시그니처 — 페이지 메타에 들어갈 진료 핵심 USP
+export const TREATMENT_SIGNATURE: Record<string, {
+  /** 짧은 USP 한 문장 */
+  usp: string
+  /** 메타 디스크립션용 핵심 문구 */
+  meta: string
+}> = {
+  'implant': {
+    usp: '고려대 구강악안면외과 의학박사·스트라우만/오스템/네오 공식 자문의 직접 집도',
+    meta: 'CBCT 3D 진단·디지털 가이드 수술·14년 임상으로 오래가는 임플란트',
+  },
+  'ortho': {
+    usp: '인비절라인 Diamond Provider(국내 1% 의사) 직접 진단·설계',
+    meta: '투명교정·메탈·세라믹·설측까지 라이프스타일 맞춤 교정 플랜',
+  },
+  'esthetic': {
+    usp: '칼짜이스 미세현미경 Extaro 300으로 강남급 보철 결과',
+    meta: '1mm 단위 정밀 가공, 원래 내 치아보다 자연스러운 심미보철',
+  },
+  'laminate': {
+    usp: '디지털 시뮬레이션으로 결과 미리 확인 후 진행',
+    meta: '결혼·면접·중요 일정 전 빠른 진행, 글로우네이트·이맥스 최상위 소재',
+  },
+  'clear-aligner': {
+    usp: '인비절라인 Diamond Provider의 ClinCheck 시뮬레이션 기반 설계',
+    meta: '식사·양치 자유로운 투명교정, 일상 그대로 진행하는 교정',
+  },
+  'wisdom-tooth': {
+    usp: '구강악안면외과 의학박사가 CBCT 3D 진단으로 안전 발치',
+    meta: '매복 사랑니·신경 인접 사랑니까지 안전하게, 빠른 사후 케어',
+  },
+  'general-prosthesis': {
+    usp: '미세현미경 정밀 가공으로 오래 유지되는 적합도',
+    meta: '크라운·브릿지·틀니 모든 옵션, 14년 케이스 축적 노하우',
+  },
+  'prevention': {
+    usp: '어린이부터 시니어까지 가족 단위 정기 관리',
+    meta: '스케일링(건강보험)·불소도포·실란트, 평생 치아 관리의 시작',
+  },
+}
+
+/**
+ * Phase 1-1: 지역×진료 다양화된 description 생성기
+ * 64개 페이지 모두 다른 description (도어웨이 회피)
+ */
+export function buildAreaTreatmentDescription(areaSlug: string, treatmentSlug: string, treatmentName: string): string {
+  const sig = AREA_SIGNATURE[areaSlug]
+  const tSig = TREATMENT_SIGNATURE[treatmentSlug]
+  const area = getArea(areaSlug)
+  if (!sig || !tSig || !area) {
+    return `${area?.name ?? ''} ${treatmentName} - ${CLINIC.name}`
+  }
+  // 패턴 1: 지역 시그니처 + 진료 USP + 거리
+  return `${sig.signature(treatmentName)} ${tSig.usp}. ${area.distance} (${sig.landmark}).`
+}
+
+/**
+ * Phase 1-1: 지역×진료 다양화된 title 생성기
+ * 단순 "부평역 임플란트" → "부평역 임플란트 | 도보 1분, 의학박사 직접 집도 | 부평우리치과"
+ */
+export function buildAreaTreatmentTitle(areaSlug: string, treatmentName: string): string {
+  const sig = AREA_SIGNATURE[areaSlug]
+  const area = getArea(areaSlug)
+  if (!sig || !area) {
+    return `${area?.name ?? ''} ${treatmentName} | ${CLINIC.name}`
+  }
+  // 60자 이내 유지
+  return `${area.name} ${treatmentName} | ${sig.commute}·14년 임상 | ${CLINIC.name}`
+}
+
+/**
+ * Phase 1-1: 지역×진료 다양화된 키워드 생성기
+ * 지역명 + 진료명 + 동선/랜드마크/인구특성까지 풀세트
+ */
+export function buildAreaTreatmentKeywords(areaSlug: string, treatmentSlug: string, treatmentName: string, treatmentBaseKeywords?: string): string {
+  const sig = AREA_SIGNATURE[areaSlug]
+  const area = getArea(areaSlug)
+  if (!sig || !area) return treatmentBaseKeywords ?? ''
+  const list = [
+    `${area.name} ${treatmentName}`,
+    `${area.name} 치과`,
+    `${area.name} ${treatmentName} 잘하는 곳`,
+    `${area.name} ${treatmentName} 추천`,
+    `${area.name} ${treatmentName} 가격`,
+    `${area.district} ${treatmentName}`,
+    `${area.name} 근처 치과`,
+    treatmentBaseKeywords,
+  ].filter(Boolean)
+  return list.join(', ')
+}
+
 // 헬퍼: 지역 슬러그로 AreaInfo 가져오기
 export function getArea(slug: string): AreaInfo | undefined {
   return AREAS.find(a => a.slug === slug)

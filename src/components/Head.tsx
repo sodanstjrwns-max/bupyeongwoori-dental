@@ -6,7 +6,8 @@ export type HeadProps = {
   keywords?: string
   ogImage?: string
   canonical?: string
-  jsonLd?: Record<string, unknown> | Record<string, unknown>[]
+  jsonLd?: Record<string, unknown> | Array<Record<string, unknown> | null | undefined | false>
+
   noindex?: boolean
   /** OG type: 'website' (default for index pages) | 'article' (for blog/BA/notice detail) */
   ogType?: 'website' | 'article'
@@ -39,7 +40,11 @@ export const Head = (props: HeadProps) => {
   const ogType = props.ogType ?? 'website'
   const articleMeta = props.articleMeta
 
-  const jsonLds = Array.isArray(props.jsonLd) ? props.jsonLd : props.jsonLd ? [props.jsonLd] : []
+  // null/undefined/false 필터링 — AggregateRating 같은 조건부 스키마 안전 처리
+  const jsonLdsRaw = Array.isArray(props.jsonLd)
+    ? props.jsonLd
+    : props.jsonLd ? [props.jsonLd] : []
+  const jsonLds = jsonLdsRaw.filter((x): x is Record<string, unknown> => Boolean(x) && typeof x === 'object')
 
   return (
     <>
@@ -97,6 +102,9 @@ export const Head = (props: HeadProps) => {
       <link rel="apple-touch-icon" href="/static/apple-touch-icon.png?v=20260430g" />
       <link rel="manifest" href="/manifest.webmanifest" />
 
+      {/* Phase 4-8: RSS autodiscovery — 피드리더/뉴스 크롤러가 자동 발견 */}
+      <link rel="alternate" type="application/rss+xml" title={`${CLINIC.name} 블로그`} href={`https://${CLINIC.domain}/rss.xml`} />
+
       {/* Fonts — 비디치과(bdbddc.com)와 완전히 동일: Pretendard static 단독 */}
       <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin="anonymous" />
       <link
@@ -104,7 +112,7 @@ export const Head = (props: HeadProps) => {
         href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"
       />
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
-      <link rel="stylesheet" href="/static/style.css?v=20260526a" />
+      <link rel="stylesheet" href="/static/style.css?v=20260526b" />
 
       {/* Structured data */}
       {jsonLds.map((ld, i) => (

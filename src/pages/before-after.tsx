@@ -4,6 +4,7 @@ import { TREATMENT_LIST, CORE_LIST } from '../data/treatments'
 import { DOCTORS } from '../data/doctors'
 import { breadcrumbSchema, articleSchema, serviceSchema } from '../lib/schema'
 import { CtaSection } from '../components/CtaSection'
+import { autoLinkContent } from '../lib/auto-link'
 
 type BeforeAfterRow = {
   id: number
@@ -486,7 +487,8 @@ export const BeforeAfterDetailPage = ({
           {caseRow.content ? (
             <div class="prose case-content" data-reveal>
               {/* @ts-ignore */}
-              <div dangerouslySetInnerHTML={{ __html: caseRow.content }} />
+              {/* Phase 3-5: 자동 내부 링크 — 진료/지역 키워드 토픽 클러스터 */}
+              <div dangerouslySetInnerHTML={{ __html: autoLinkContent(caseRow.content) }} />
             </div>
           ) : null}
 

@@ -124,6 +124,7 @@ app.get('/treatments', (c) => c.html(<TreatmentsListPage />))
 app.get('/treatments/:slug', async (c) => {
   const slug = c.req.param('slug')
   let cases: any[] = []
+  let relatedPosts: any[] = []
   try {
     const r = await c.env.DB.prepare(
       `SELECT id, slug, title, treatment_slug, doctor_slug, age, gender, region, region_city,
@@ -137,9 +138,26 @@ app.get('/treatments/:slug', async (c) => {
   } catch (e) {
     console.error('treatment cases fetch failed', e)
   }
+  // Phase 3-6: 진료 관련 블로그 자동 매칭 — 카테고리/태그로 찾기
+  try {
+    const tName = TREATMENT_LIST.find(t => t.slug === slug)?.name ?? ''
+    if (tName) {
+      const r2 = await c.env.DB.prepare(
+        `SELECT id, slug, title, excerpt, cover_key, category, published_at
+         FROM blog_posts
+         WHERE is_published = 1
+           AND (category = ? OR title LIKE ? OR tags LIKE ? OR meta_keywords LIKE ?)
+         ORDER BY published_at DESC
+         LIMIT 4`
+      ).bind(tName, `%${tName}%`, `%${tName}%`, `%${tName}%`).all()
+      relatedPosts = (r2.results as any[]) ?? []
+    }
+  } catch (e) {
+    console.error('treatment related posts fetch failed', e)
+  }
   const user = await getUserFromSession(c)
   const isLoggedIn = !!user
-  return c.html(<TreatmentDetailPage slug={slug} cases={cases} isLoggedIn={isLoggedIn} />)
+  return c.html(<TreatmentDetailPage slug={slug} cases={cases} relatedPosts={relatedPosts} isLoggedIn={isLoggedIn} />)
 })
 
 // ============================================================
@@ -677,6 +695,8 @@ app.get('/sitemap.xml', async (c) => {
   <sitemap><loc>${base}/sitemap-blog.xml</loc><lastmod>${blogLast}</lastmod></sitemap>
   <sitemap><loc>${base}/sitemap-ba.xml</loc><lastmod>${baLast}</lastmod></sitemap>
   <sitemap><loc>${base}/sitemap-notices.xml</loc><lastmod>${noticeLast}</lastmod></sitemap>
+  <sitemap><loc>${base}/sitemap-images.xml</loc><lastmod>${baLast}</lastmod></sitemap>
+  <sitemap><loc>${base}/sitemap-news.xml</loc><lastmod>${blogLast}</lastmod></sitemap>
 </sitemapindex>`
   return c.text(xml, 200, sitemapXmlHeaders)
 })
@@ -792,6 +812,190 @@ app.get('/sitemap-notices.xml', async (c) => {
     console.error('Sitemap notices error:', err)
   }
   return c.text(buildUrlsetXml(base, entries), 200, sitemapXmlHeaders)
+})
+
+// ============================================================
+// Phase 4-7: 이미지 sitemap — 비포애프터(공개분) + 블로그 커버 + 의료진/장비
+// 구글 이미지 검색 노출용 (image: 네임스페이스 사용)
+// ============================================================
+app.get('/sitemap-images.xml', async (c) => {
+  const base = `https://${CLINIC.domain}`
+  type ImgUrl = { pageUrl: string; pageTitle: string; images: { loc: string; title?: string; caption?: string }[] }
+  const urls: ImgUrl[] = []
+  // BA 비포(공개) 이미지 — 애프터는 회원 전용이라 색인 제외
+  try {
+    const ba = (await c.env.DB.prepare(
+      `SELECT id, slug, title, treatment_slug, before_intra_key, before_pano_key
+       FROM before_after
+       WHERE is_published = 1
+       ORDER BY created_at DESC
+       LIMIT 200`
+    ).all()).results as any[]
+    for (const b of ba) {
+      const imgs: { loc: string; title?: string; caption?: string }[] = []
+      if (b.before_intra_key) imgs.push({
+        loc: `${base}/media/${b.before_intra_key}`,
+        title: `${b.title} - 치료 전 (구강 내)`,
+        caption: `${CLINIC.name} 비포애프터 - ${b.title}`,
+      })
+      if (b.before_pano_key) imgs.push({
+        loc: `${base}/media/${b.before_pano_key}`,
+        title: `${b.title} - 치료 전 (파노라마)`,
+        caption: `${CLINIC.name} 비포애프터 - ${b.title}`,
+      })
+      if (imgs.length > 0) {
+        urls.push({
+          pageUrl: `${base}/before-after/${b.slug}`,
+          pageTitle: b.title,
+          images: imgs,
+        })
+      }
+    }
+  } catch (err) { console.error('Sitemap images BA error:', err) }
+  // 블로그 커버 이미지
+  try {
+    const blog = (await c.env.DB.prepare(
+      `SELECT slug, title, cover_key
+       FROM blog_posts
+       WHERE is_published = 1 AND cover_key IS NOT NULL AND cover_key != ''
+       ORDER BY published_at DESC
+       LIMIT 200`
+    ).all()).results as any[]
+    for (const p of blog) {
+      urls.push({
+        pageUrl: `${base}/blog/${p.slug}`,
+        pageTitle: p.title,
+        images: [{
+          loc: `${base}/media/${p.cover_key}`,
+          title: `${p.title}`,
+          caption: `${CLINIC.name} 블로그 - ${p.title}`,
+        }],
+      })
+    }
+  } catch (err) { console.error('Sitemap images blog error:', err) }
+  // OG 기본 이미지 (홈)
+  urls.push({
+    pageUrl: `${base}/`,
+    pageTitle: CLINIC.name,
+    images: [{
+      loc: `${base}/static/og/og-default.png?v=20260430m`,
+      title: `${CLINIC.name} 공식 이미지`,
+      caption: `${CLINIC.name} - 부평역 26번 출구 도보 1분`,
+    }],
+  })
+
+  const escapeXml = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;')
+  const xmlBody = urls.map(u => {
+    const imageBlocks = u.images.map(img => `
+    <image:image>
+      <image:loc>${escapeXml(img.loc)}</image:loc>
+      ${img.title ? `<image:title>${escapeXml(img.title)}</image:title>` : ''}
+      ${img.caption ? `<image:caption>${escapeXml(img.caption)}</image:caption>` : ''}
+    </image:image>`).join('')
+    return `  <url>
+    <loc>${escapeXml(u.pageUrl)}</loc>${imageBlocks}
+  </url>`
+  }).join('\n')
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+${xmlBody}
+</urlset>`
+  return c.text(xml, 200, sitemapXmlHeaders)
+})
+
+// ============================================================
+// Phase 4-8: News sitemap — 최근 2일 이내 블로그만 (구글 뉴스 정책)
+// ============================================================
+app.get('/sitemap-news.xml', async (c) => {
+  const base = `https://${CLINIC.domain}`
+  const escapeXml = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;')
+  let items: string[] = []
+  try {
+    // 최근 2일 이내 발행된 블로그만 (구글 뉴스 sitemap 정책)
+    const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
+    const r = await c.env.DB.prepare(
+      `SELECT slug, title, published_at, meta_keywords
+       FROM blog_posts
+       WHERE is_published = 1 AND published_at >= ?
+       ORDER BY published_at DESC
+       LIMIT 1000`
+    ).bind(twoDaysAgo).all()
+    const posts = (r.results as any[]) ?? []
+    items = posts.map(p => {
+      const pubDate = new Date(p.published_at).toISOString()
+      const keywords = (p.meta_keywords ?? '').slice(0, 200)
+      return `  <url>
+    <loc>${escapeXml(`${base}/blog/${p.slug}`)}</loc>
+    <news:news>
+      <news:publication>
+        <news:name>${escapeXml(CLINIC.name)}</news:name>
+        <news:language>ko</news:language>
+      </news:publication>
+      <news:publication_date>${pubDate}</news:publication_date>
+      <news:title>${escapeXml(p.title)}</news:title>
+      ${keywords ? `<news:keywords>${escapeXml(keywords)}</news:keywords>` : ''}
+    </news:news>
+  </url>`
+    })
+  } catch (err) { console.error('Sitemap news error:', err) }
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">
+${items.join('\n')}
+</urlset>`
+  return c.text(xml, 200, sitemapXmlHeaders)
+})
+
+// ============================================================
+// Phase 4-8: RSS 2.0 피드 — 블로그 (구글 뉴스 보조 + 피드리더)
+// ============================================================
+app.get('/rss.xml', async (c) => {
+  const base = `https://${CLINIC.domain}`
+  const escapeXml = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;')
+  let items: string[] = []
+  let lastBuildDate = new Date().toUTCString()
+  try {
+    const r = await c.env.DB.prepare(
+      `SELECT slug, title, excerpt, meta_description, published_at, category, cover_key
+       FROM blog_posts
+       WHERE is_published = 1
+       ORDER BY published_at DESC
+       LIMIT 30`
+    ).all()
+    const posts = (r.results as any[]) ?? []
+    if (posts[0]?.published_at) {
+      lastBuildDate = new Date(posts[0].published_at).toUTCString()
+    }
+    items = posts.map(p => {
+      const link = `${base}/blog/${p.slug}`
+      const pubDate = new Date(p.published_at).toUTCString()
+      const desc = p.excerpt ?? p.meta_description ?? ''
+      const category = p.category ?? ''
+      const enclosure = p.cover_key ? `\n      <enclosure url="${escapeXml(`${base}/media/${p.cover_key}`)}" type="image/jpeg"/>` : ''
+      return `    <item>
+      <title>${escapeXml(p.title)}</title>
+      <link>${escapeXml(link)}</link>
+      <guid isPermaLink="true">${escapeXml(link)}</guid>
+      <description>${escapeXml(desc)}</description>
+      ${category ? `<category>${escapeXml(category)}</category>` : ''}
+      <pubDate>${pubDate}</pubDate>${enclosure}
+    </item>`
+    })
+  } catch (err) { console.error('RSS error:', err) }
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>${escapeXml(`${CLINIC.name} 블로그`)}</title>
+    <link>${base}/blog</link>
+    <atom:link href="${base}/rss.xml" rel="self" type="application/rss+xml"/>
+    <description>${escapeXml('부평우리치과의 진료 정보 아카이브. 임플란트·심미보철·교정·라미네이트 등 치과 지식과 실제 케이스를 기록합니다.')}</description>
+    <language>ko-KR</language>
+    <lastBuildDate>${lastBuildDate}</lastBuildDate>
+${items.join('\n')}
+  </channel>
+</rss>`
+  return c.text(xml, 200, { 'Content-Type': 'application/rss+xml; charset=utf-8' })
 })
 
 app.get('/manifest.webmanifest', (c) => {

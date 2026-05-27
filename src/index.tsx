@@ -572,6 +572,11 @@ app.get('/robots.txt', (c) => {
     'Disallow: /api',
     '',
     `Sitemap: https://${CLINIC.domain}/sitemap.xml`,
+    `Sitemap: https://${CLINIC.domain}/sitemap-pages.xml`,
+    `Sitemap: https://${CLINIC.domain}/sitemap-areas.xml`,
+    `Sitemap: https://${CLINIC.domain}/sitemap-glossary.xml`,
+    `Sitemap: https://${CLINIC.domain}/sitemap-blog.xml`,
+    `Sitemap: https://${CLINIC.domain}/sitemap-notices.xml`,
     `Host: https://${CLINIC.domain}`,
   ]
   return c.text(lines.join('\n'), 200, { 'Content-Type': 'text/plain; charset=utf-8' })
@@ -665,110 +670,202 @@ ${entries.map(e => `  <url><loc>${base}${e.loc}</loc><lastmod>${e.lastmod}</last
 </urlset>`
 }
 
-// ---- Sitemap Index ----
+/**
+ * lastmod ISO 8601 완전 포맷으로 변환 (W3C Datetime)
+ * 예: "2026-05-27T14:30:00+09:00"
+ * - DB에서 온 값이 날짜만(YYYY-MM-DD) → 정오 KST 추가
+ * - DB에서 ISO 형식(YYYY-MM-DDTHH:mm:ss) → 그대로
+ * - SQLite datetime "YYYY-MM-DD HH:mm:ss" → ISO 변환 (KST 가정)
+ */
+function toIsoLastmod(raw: string | null | undefined, fallback?: string): string {
+  const fb = fallback ?? new Date().toISOString()
+  if (!raw) return fb
+  const s = String(raw).trim()
+  // 이미 완전한 ISO 형식 (T 또는 Z 포함)
+  if (/T\d{2}:\d{2}/.test(s) || s.endsWith('Z')) {
+    // 그대로 사용 (timezone 없으면 +00:00 가정 — 그대로 통과)
+    return s
+  }
+  // SQLite "YYYY-MM-DD HH:mm:ss" → ISO 변환 (KST 가정)
+  const dtMatch = s.match(/^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2}:\d{2})/)
+  if (dtMatch) {
+    return `${dtMatch[1]}T${dtMatch[2]}+09:00`
+  }
+  // "YYYY-MM-DD" → 12:00 KST 추가
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+    return `${s}T12:00:00+09:00`
+  }
+  return fb
+}
+
+/** 오늘 자정 KST의 ISO 문자열 (정적 페이지 default lastmod) */
+function todayIsoKst(): string {
+  const d = new Date()
+  const yyyy = d.getFullYear()
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
+  return `${yyyy}-${mm}-${dd}T00:00:00+09:00`
+}
+
+// ============================================================
+// Sitemap Index — 조건부 등록 (빈 sitemap 자동 제외)
+// ============================================================
 app.get('/sitemap.xml', async (c) => {
   const base = `https://${CLINIC.domain}`
-  const today = new Date().toISOString().split('T')[0]
-  // 각 하위 sitemap의 lastmod: 가장 최근 콘텐츠 시각 (DB에서 가장 큰 lastmod 추출)
-  let blogLast = today, baLast = today, noticeLast = today
+  const todayIso = todayIsoKst()
+  // 각 자식 sitemap의 lastmod + 등록 여부
+  let blogLast = todayIso, baLast = todayIso, noticeLast = todayIso
+  let blogCount = 0, baCount = 0, noticeCount = 0, newsCount = 0, imageCount = 0
   try {
     const b = await c.env.DB.prepare(
-      'SELECT MAX(COALESCE(updated_at, published_at, created_at)) AS lm FROM blog_posts WHERE is_published = 1'
-    ).first<{ lm: string | null }>()
-    if (b?.lm) blogLast = String(b.lm).split('T')[0].split(' ')[0]
+      'SELECT MAX(COALESCE(updated_at, published_at, created_at)) AS lm, COUNT(*) AS cnt FROM blog_posts WHERE is_published = 1'
+    ).first<{ lm: string | null; cnt: number }>()
+    if (b?.lm) blogLast = toIsoLastmod(b.lm, todayIso)
+    blogCount = Number(b?.cnt ?? 0)
     const a = await c.env.DB.prepare(
-      'SELECT MAX(COALESCE(updated_at, published_at, created_at)) AS lm FROM before_after WHERE is_published = 1'
-    ).first<{ lm: string | null }>()
-    if (a?.lm) baLast = String(a.lm).split('T')[0].split(' ')[0]
+      'SELECT MAX(COALESCE(updated_at, published_at, created_at)) AS lm, COUNT(*) AS cnt FROM before_after WHERE is_published = 1'
+    ).first<{ lm: string | null; cnt: number }>()
+    if (a?.lm) baLast = toIsoLastmod(a.lm, todayIso)
+    baCount = Number(a?.cnt ?? 0)
     const n = await c.env.DB.prepare(
-      'SELECT MAX(COALESCE(updated_at, published_at, created_at)) AS lm FROM notices WHERE is_published = 1'
-    ).first<{ lm: string | null }>()
-    if (n?.lm) noticeLast = String(n.lm).split('T')[0].split(' ')[0]
+      'SELECT MAX(COALESCE(updated_at, published_at, created_at)) AS lm, COUNT(*) AS cnt FROM notices WHERE is_published = 1'
+    ).first<{ lm: string | null; cnt: number }>()
+    if (n?.lm) noticeLast = toIsoLastmod(n.lm, todayIso)
+    noticeCount = Number(n?.cnt ?? 0)
+    // News sitemap 활성 조건: 최근 2일 내 발행된 블로그가 있는지
+    const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
+    const nw = await c.env.DB.prepare(
+      'SELECT COUNT(*) AS cnt FROM blog_posts WHERE is_published = 1 AND published_at >= ?'
+    ).bind(twoDaysAgo).first<{ cnt: number }>()
+    newsCount = Number(nw?.cnt ?? 0)
+    // Image sitemap 활성 조건: BA(공개) 이미지 또는 블로그 커버가 1개라도 있으면
+    const im = await c.env.DB.prepare(
+      `SELECT
+         (SELECT COUNT(*) FROM before_after WHERE is_published=1 AND (before_intra_key IS NOT NULL OR before_pano_key IS NOT NULL))
+       + (SELECT COUNT(*) FROM blog_posts WHERE is_published=1 AND cover_key IS NOT NULL AND cover_key != '')
+         AS cnt`
+    ).first<{ cnt: number }>()
+    imageCount = Number(im?.cnt ?? 0)
   } catch (err) {
     console.error('Sitemap index lastmod error:', err)
   }
 
+  // 항상 등록 (정적 콘텐츠)
+  const children: string[] = [
+    `  <sitemap><loc>${base}/sitemap-pages.xml</loc><lastmod>${todayIso}</lastmod></sitemap>`,
+    `  <sitemap><loc>${base}/sitemap-areas.xml</loc><lastmod>${todayIso}</lastmod></sitemap>`,
+    `  <sitemap><loc>${base}/sitemap-glossary.xml</loc><lastmod>${todayIso}</lastmod></sitemap>`,
+  ]
+  // 조건부 등록 (DB 의존, 데이터 있을 때만)
+  if (blogCount > 0) {
+    children.push(`  <sitemap><loc>${base}/sitemap-blog.xml</loc><lastmod>${blogLast}</lastmod></sitemap>`)
+  }
+  if (baCount > 0) {
+    children.push(`  <sitemap><loc>${base}/sitemap-ba.xml</loc><lastmod>${baLast}</lastmod></sitemap>`)
+  }
+  if (noticeCount > 0) {
+    children.push(`  <sitemap><loc>${base}/sitemap-notices.xml</loc><lastmod>${noticeLast}</lastmod></sitemap>`)
+  }
+  if (imageCount > 0) {
+    children.push(`  <sitemap><loc>${base}/sitemap-images.xml</loc><lastmod>${baLast}</lastmod></sitemap>`)
+  }
+  if (newsCount > 0) {
+    children.push(`  <sitemap><loc>${base}/sitemap-news.xml</loc><lastmod>${blogLast}</lastmod></sitemap>`)
+  }
+
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <sitemap><loc>${base}/sitemap-pages.xml</loc><lastmod>${today}</lastmod></sitemap>
-  <sitemap><loc>${base}/sitemap-areas.xml</loc><lastmod>${today}</lastmod></sitemap>
-  <sitemap><loc>${base}/sitemap-blog.xml</loc><lastmod>${blogLast}</lastmod></sitemap>
-  <sitemap><loc>${base}/sitemap-ba.xml</loc><lastmod>${baLast}</lastmod></sitemap>
-  <sitemap><loc>${base}/sitemap-notices.xml</loc><lastmod>${noticeLast}</lastmod></sitemap>
-  <sitemap><loc>${base}/sitemap-images.xml</loc><lastmod>${baLast}</lastmod></sitemap>
-  <sitemap><loc>${base}/sitemap-news.xml</loc><lastmod>${blogLast}</lastmod></sitemap>
+${children.join('\n')}
 </sitemapindex>`
   return c.text(xml, 200, sitemapXmlHeaders)
 })
 
-// ---- 지역 × 진료 (8 + 64 페이지) ----
+// ============================================================
+// sitemap-areas.xml — 지역 × 진료 (8 허브 + 64 상세 = 72 + 인덱스 1)
+// ============================================================
 app.get('/sitemap-areas.xml', (c) => {
   const base = `https://${CLINIC.domain}`
-  const today = new Date().toISOString().split('T')[0]
+  const todayIso = todayIsoKst()
   const entries: SitemapEntry[] = [
-    { loc: '/areas', lastmod: today, changefreq: 'weekly', priority: '0.9' },
+    { loc: '/areas', lastmod: todayIso, changefreq: 'weekly', priority: '0.9' },
   ]
-  // 지역 허브 페이지 (8개)
+  // 지역 허브 페이지 (8개) — priority 0.76~0.95
   for (const a of AREAS) {
     entries.push({
       loc: `/areas/${a.slug}`,
-      lastmod: today,
+      lastmod: todayIso,
       changefreq: 'weekly',
-      priority: String(Math.max(0.7, a.priority * 0.95)),
+      priority: (Math.max(0.7, a.priority * 0.95)).toFixed(2),
     })
   }
-  // 지역×진료 페이지 (64개)
+  // 지역×진료 페이지 (64개) — priority 0.72~0.9
   for (const a of AREAS) {
     for (const tSlug of Object.keys(TREATMENT_LOCAL)) {
       entries.push({
         loc: `/areas/${a.slug}/${tSlug}`,
-        lastmod: today,
+        lastmod: todayIso,
         changefreq: 'weekly',
-        priority: String(Math.max(0.7, a.priority * 0.9)),
+        priority: (Math.max(0.7, a.priority * 0.9)).toFixed(2),
       })
     }
   }
   return c.text(buildUrlsetXml(base, entries), 200, sitemapXmlHeaders)
 })
 
-// ---- 정적 페이지 + 진료/용어 ----
+// ============================================================
+// sitemap-pages.xml — 정적 페이지 + 진료 상세 (용어집은 별도)
+// 슬림화: 약 20개 핵심 URL만 (검색콘솔 추적 효율 ↑)
+// ============================================================
 app.get('/sitemap-pages.xml', (c) => {
   const base = `https://${CLINIC.domain}`
-  const today = new Date().toISOString().split('T')[0]
+  const todayIso = todayIsoKst()
   const entries: SitemapEntry[] = [
-    { loc: '/', lastmod: today, changefreq: 'daily', priority: '1.0' },
-    { loc: '/mission', lastmod: today, changefreq: 'monthly', priority: '0.8' },
-    { loc: '/doctors', lastmod: today, changefreq: 'monthly', priority: '0.9' },
-    { loc: '/doctors/kim-jaein', lastmod: today, changefreq: 'monthly', priority: '0.9' },
-    { loc: '/treatments', lastmod: today, changefreq: 'monthly', priority: '0.9' },
-    { loc: '/before-after', lastmod: today, changefreq: 'weekly', priority: '0.8' },
-    { loc: '/blog', lastmod: today, changefreq: 'daily', priority: '0.9' },
-    { loc: '/notices', lastmod: today, changefreq: 'daily', priority: '0.8' },
-    { loc: '/glossary', lastmod: today, changefreq: 'monthly', priority: '0.7' },
-    { loc: '/faq', lastmod: today, changefreq: 'monthly', priority: '0.7' },
-    { loc: '/visit', lastmod: today, changefreq: 'monthly', priority: '0.8' },
+    { loc: '/', lastmod: todayIso, changefreq: 'daily', priority: '1.0' },
+    { loc: '/mission', lastmod: todayIso, changefreq: 'monthly', priority: '0.8' },
+    { loc: '/doctors', lastmod: todayIso, changefreq: 'monthly', priority: '0.9' },
+    { loc: '/doctors/kim-jaein', lastmod: todayIso, changefreq: 'monthly', priority: '0.9' },
+    { loc: '/treatments', lastmod: todayIso, changefreq: 'monthly', priority: '0.9' },
+    { loc: '/before-after', lastmod: todayIso, changefreq: 'weekly', priority: '0.8' },
+    { loc: '/blog', lastmod: todayIso, changefreq: 'daily', priority: '0.9' },
+    { loc: '/notices', lastmod: todayIso, changefreq: 'daily', priority: '0.8' },
+    { loc: '/glossary', lastmod: todayIso, changefreq: 'monthly', priority: '0.7' },
+    { loc: '/faq', lastmod: todayIso, changefreq: 'monthly', priority: '0.8' },
+    { loc: '/visit', lastmod: todayIso, changefreq: 'monthly', priority: '0.8' },
   ]
+  // 진료 상세 8종 — 핵심 SEO 페이지
   for (const t of TREATMENT_LIST) {
-    entries.push({ loc: `/treatments/${t.slug}`, lastmod: today, changefreq: 'monthly', priority: '0.9' })
-  }
-  for (const g of GLOSSARY) {
-    entries.push({ loc: `/glossary/${g.slug}`, lastmod: today, changefreq: 'monthly', priority: '0.6' })
+    entries.push({ loc: `/treatments/${t.slug}`, lastmod: todayIso, changefreq: 'monthly', priority: '0.95' })
   }
   return c.text(buildUrlsetXml(base, entries), 200, sitemapXmlHeaders)
 })
 
-// ---- 블로그 ----
+// ============================================================
+// sitemap-glossary.xml — 치과 백과사전 (582 용어) 단독
+// 검색콘솔에서 추적 효율 위해 메인 페이지 sitemap과 분리
+// ============================================================
+app.get('/sitemap-glossary.xml', (c) => {
+  const base = `https://${CLINIC.domain}`
+  const todayIso = todayIsoKst()
+  const entries: SitemapEntry[] = []
+  for (const g of GLOSSARY) {
+    entries.push({ loc: `/glossary/${g.slug}`, lastmod: todayIso, changefreq: 'monthly', priority: '0.6' })
+  }
+  return c.text(buildUrlsetXml(base, entries), 200, sitemapXmlHeaders)
+})
+
+// ============================================================
+// sitemap-blog.xml — 블로그 (DB 자동 등록, is_published=1)
+// ============================================================
 app.get('/sitemap-blog.xml', async (c) => {
   const base = `https://${CLINIC.domain}`
-  const today = new Date().toISOString().split('T')[0]
+  const todayIso = todayIsoKst()
   const entries: SitemapEntry[] = []
   try {
     const blogs = (await c.env.DB.prepare(
       'SELECT slug, COALESCE(updated_at, published_at, created_at) AS lastmod FROM blog_posts WHERE is_published = 1 ORDER BY COALESCE(updated_at, published_at, created_at) DESC'
     ).all()).results as any[]
     for (const b of blogs) {
-      const lm = String(b.lastmod ?? today).split('T')[0].split(' ')[0]
-      entries.push({ loc: `/blog/${b.slug}`, lastmod: lm, changefreq: 'weekly', priority: '0.85' })
+      entries.push({ loc: `/blog/${b.slug}`, lastmod: toIsoLastmod(b.lastmod, todayIso), changefreq: 'weekly', priority: '0.85' })
     }
   } catch (err) {
     console.error('Sitemap blog error:', err)
@@ -776,18 +873,19 @@ app.get('/sitemap-blog.xml', async (c) => {
   return c.text(buildUrlsetXml(base, entries), 200, sitemapXmlHeaders)
 })
 
-// ---- 비포애프터 ----
+// ============================================================
+// sitemap-ba.xml — 비포애프터 (DB 자동 등록)
+// ============================================================
 app.get('/sitemap-ba.xml', async (c) => {
   const base = `https://${CLINIC.domain}`
-  const today = new Date().toISOString().split('T')[0]
+  const todayIso = todayIsoKst()
   const entries: SitemapEntry[] = []
   try {
     const bas = (await c.env.DB.prepare(
       'SELECT slug, COALESCE(updated_at, published_at, created_at) AS lastmod FROM before_after WHERE is_published = 1 ORDER BY COALESCE(updated_at, published_at, created_at) DESC'
     ).all()).results as any[]
     for (const b of bas) {
-      const lm = String(b.lastmod ?? today).split('T')[0].split(' ')[0]
-      entries.push({ loc: `/before-after/${b.slug}`, lastmod: lm, changefreq: 'weekly', priority: '0.85' })
+      entries.push({ loc: `/before-after/${b.slug}`, lastmod: toIsoLastmod(b.lastmod, todayIso), changefreq: 'weekly', priority: '0.85' })
     }
   } catch (err) {
     console.error('Sitemap BA error:', err)
@@ -795,18 +893,19 @@ app.get('/sitemap-ba.xml', async (c) => {
   return c.text(buildUrlsetXml(base, entries), 200, sitemapXmlHeaders)
 })
 
-// ---- 공지사항 ----
+// ============================================================
+// sitemap-notices.xml — 공지사항 (DB 자동 등록)
+// ============================================================
 app.get('/sitemap-notices.xml', async (c) => {
   const base = `https://${CLINIC.domain}`
-  const today = new Date().toISOString().split('T')[0]
+  const todayIso = todayIsoKst()
   const entries: SitemapEntry[] = []
   try {
     const notices = (await c.env.DB.prepare(
       'SELECT id, COALESCE(updated_at, published_at, created_at) AS lastmod FROM notices WHERE is_published = 1 ORDER BY COALESCE(updated_at, published_at, created_at) DESC'
     ).all()).results as any[]
     for (const n of notices) {
-      const lm = String(n.lastmod ?? today).split('T')[0].split(' ')[0]
-      entries.push({ loc: `/notices/${n.id}`, lastmod: lm, changefreq: 'weekly', priority: '0.7' })
+      entries.push({ loc: `/notices/${n.id}`, lastmod: toIsoLastmod(n.lastmod, todayIso), changefreq: 'weekly', priority: '0.7' })
     }
   } catch (err) {
     console.error('Sitemap notices error:', err)

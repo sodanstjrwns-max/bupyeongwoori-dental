@@ -106,12 +106,18 @@ export const Head = (props: HeadProps) => {
       <link rel="alternate" type="application/rss+xml" title={`${CLINIC.name} 블로그`} href={`https://${CLINIC.domain}/rss.xml`} />
 
       {/* Fonts — 비디치과(bdbddc.com)와 완전히 동일: Pretendard static 단독 */}
+      {/* CWV 튜닝: dns-prefetch + preconnect + 자체 CSS preload (LCP/FCP 개선 → 랭킹 시그널) */}
+      <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
       <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin="anonymous" />
+      <link rel="preload" href="/static/style.css?v=20260526b" as="style" />
       <link
         rel="stylesheet"
         href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"
       />
-      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" media="print" onload="this.media='all'" />
+      <noscript>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+      </noscript>
       <link rel="stylesheet" href="/static/style.css?v=20260526b" />
 
       {/* Structured data */}

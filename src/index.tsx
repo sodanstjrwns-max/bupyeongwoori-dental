@@ -44,7 +44,7 @@ import { AreasIndexPage, AreaHubPage, AreaTreatmentPage } from './pages/areas'
 import { AREAS, getArea, TREATMENT_LOCAL } from './data/areas'
 import { SearchPage, searchStatic, type SearchResultItem } from './pages/search'
 import { NotFoundPage } from './pages/not-found'
-import { treatmentToMarkdown, glossaryToMarkdown, blogToMarkdown } from './lib/markdown-export'
+import { treatmentToMarkdown, glossaryToMarkdown, blogToMarkdown, faqToMarkdown } from './lib/markdown-export'
 import { getDoctor } from './data/doctors'
 
 const app = new Hono<{ Bindings: Bindings }>()
@@ -136,6 +136,8 @@ app.get('/treatments/:slug', async (c) => {
       'Content-Type': 'text/markdown; charset=utf-8',
       'Cache-Control': 'public, max-age=86400',
       'Link': `<https://${CLINIC.domain}/treatments/${t.slug}>; rel="canonical"`,
+      // 검색엔진 중복콘텐츠 방어 — LLM 크롤러는 본문을 그대로 읽음
+      'X-Robots-Tag': 'noindex',
     })
   }
   let cases: any[] = []
@@ -477,6 +479,7 @@ app.get('/blog/:slug', async (c) => {
       'Content-Type': 'text/markdown; charset=utf-8',
       'Cache-Control': 'public, max-age=3600',
       'Link': `<https://${CLINIC.domain}/blog/${post.slug}>; rel="canonical"`,
+      'X-Robots-Tag': 'noindex',
     })
   }
   const post = await c.env.DB.prepare('SELECT * FROM blog_posts WHERE slug = ? AND is_published = 1 LIMIT 1').bind(slug).first<any>()
@@ -521,6 +524,7 @@ app.get('/glossary/:slug', (c) => {
       'Content-Type': 'text/markdown; charset=utf-8',
       'Cache-Control': 'public, max-age=86400',
       'Link': `<https://${CLINIC.domain}/glossary/${term.slug}>; rel="canonical"`,
+      'X-Robots-Tag': 'noindex',
     })
   }
   const term = getGlossaryTerm(slug)
@@ -532,6 +536,17 @@ app.get('/glossary/:slug', (c) => {
 // FAQ
 // ============================================================
 app.get('/faq', (c) => c.html(<FaqAllPage />))
+
+// AEO: FAQ 전체 마크다운 — 160+ Q&A를 LLM이 한 번에 흡수
+app.get('/faq.md', (c) => {
+  const md = faqToMarkdown(TREATMENT_LIST.map((t) => ({ name: t.name, nameEn: t.nameEn, slug: t.slug, faqs: [...t.faqs] })))
+  return c.text(md, 200, {
+    'Content-Type': 'text/markdown; charset=utf-8',
+    'Cache-Control': 'public, max-age=86400',
+    'Link': `<https://${CLINIC.domain}/faq>; rel="canonical"`,
+    'X-Robots-Tag': 'noindex',
+  })
+})
 
 // ============================================================
 // 통합 검색 — WebSite SearchAction 실동작 엔드포인트 (AEO/Sitelinks Search Box)
@@ -736,6 +751,7 @@ ${AREAS.map((a) => `- [${a.name} 치과 안내](${base}/areas/${a.slug}): ${a.na
 - 진료 상세: \`${base}/treatments/{slug}.md\` (예: ${base}/treatments/implant.md)
 - 백과사전 용어: \`${base}/glossary/{slug}.md\`
 - 블로그 글: \`${base}/blog/{slug}.md\`
+- FAQ 전체 (160+ Q&A): [faq.md](${base}/faq.md)
 - 전체 상세 본문: [llms-full.txt](${base}/llms-full.txt)
 
 ## 최신 블로그 글

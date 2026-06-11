@@ -247,6 +247,8 @@ export const TreatmentDetailPage = ({
           description: t.metaDescription,
           slug: t.slug,
           category: 'Dentistry',
+          steps: t.process ? [...t.process] : undefined,
+          devices: t.devices ? [...t.devices] : undefined,
         }),
         // E-E-A-T: 의료 콘텐츠 명시 + 검수 의료진 연결 (담당 원장 1순위, 없으면 대표원장)
         medicalWebPageSchema({

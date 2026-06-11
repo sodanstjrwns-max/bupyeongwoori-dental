@@ -10,7 +10,19 @@ export const HomePage = () => {
       title=""
       canonical={`https://${CLINIC.domain}/`}
       ogImage={OG_IMAGES.home}
-      jsonLd={[dentistSchema(), websiteSchema()]}
+      jsonLd={[
+        dentistSchema(),
+        websiteSchema(),
+        // 음성검색 AEO — 시리/구글어시스턴트가 읽을 핵심 영역 지정
+        {
+          '@context': 'https://schema.org',
+          '@type': 'WebPage',
+          '@id': `https://${CLINIC.domain}/#homepage`,
+          url: `https://${CLINIC.domain}/`,
+          name: `${CLINIC.name} — 부평역 26번 출구 임플란트·교정·심미보철`,
+          speakable: { '@type': 'SpeakableSpecification', cssSelector: ['#hero-title', '.hero-sub'] },
+        },
+      ]}
     >
       {/* =============== HERO (Editorial Cinematic) =============== */}
       <section class="hero" aria-labelledby="hero-title">

@@ -2,7 +2,7 @@ import { Layout } from '../components/Layout'
 import { CLINIC, OG_IMAGES } from '../lib/constants'
 import { DOCTORS, getDoctor, doctorPhotoSrc } from '../data/doctors'
 import { TREATMENT_LIST, getTreatment } from '../data/treatments'
-import { breadcrumbSchema, doctorSchema } from '../lib/schema'
+import { breadcrumbSchema, doctorSchema, profilePageSchema } from '../lib/schema'
 
 // =========================================================
 // 전체 의료진 페이지
@@ -130,6 +130,8 @@ export const DoctorDetailPage = ({ slug, cases = [], isLoggedIn = false }: { slu
           // knowsAbout: 진료 slug → 한글 진료명으로 변환 (AI 검색엔진의 전문성 매핑용)
           specialties: d.specialties.map((s) => getTreatment(s)?.name ?? s).filter(Boolean),
         }),
+        // ProfilePage — 구글 공식 인물 프로필 리치결과 (mainEntity로 #person 연결)
+        profilePageSchema({ name: d.name, title: d.title, slug: d.slug }),
         breadcrumbSchema([
           { name: '홈', url: '/' },
           { name: '의료진 소개', url: '/doctors' },

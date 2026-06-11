@@ -2,6 +2,7 @@
 // JSON-LD Schema builders (SEO/AEO)
 // ============================================================
 import { CLINIC, CORE_TREATMENTS, OTHER_TREATMENTS } from './constants'
+import { AREAS } from '../data/areas'
 
 export const dentistSchema = () => ({
   '@context': 'https://schema.org',
@@ -40,6 +41,49 @@ export const dentistSchema = () => ({
   ],
   sameAs: Object.values(CLINIC.socialLinks).filter(Boolean),
   medicalSpecialty: 'Dentistry',
+  // 월드클래스 LocalBusiness 시그널 — 지도/서비스권/연락채널/예약액션/시설
+  hasMap: CLINIC.socialLinks.naverPlace,
+  areaServed: AREAS.map((a) => ({
+    '@type': 'Place',
+    name: a.nameFull,
+    ...(a.geo ? { geo: { '@type': 'GeoCoordinates', latitude: a.geo.lat, longitude: a.geo.lng } } : {}),
+  })),
+  contactPoint: [
+    {
+      '@type': 'ContactPoint',
+      telephone: CLINIC.phone,
+      contactType: 'reservations',
+      availableLanguage: ['Korean'],
+      areaServed: 'KR',
+    },
+    {
+      '@type': 'ContactPoint',
+      url: CLINIC.socialLinks.kakao,
+      contactType: 'customer service',
+      name: '카카오톡 상담',
+      availableLanguage: ['Korean'],
+    },
+  ],
+  potentialAction: {
+    '@type': 'ReserveAction',
+    name: '네이버 예약',
+    target: {
+      '@type': 'EntryPoint',
+      urlTemplate: CLINIC.socialLinks.naverBooking,
+      actionPlatform: ['https://schema.org/DesktopWebPlatform', 'https://schema.org/MobileWebPlatform'],
+    },
+    result: { '@type': 'Reservation', name: '치과 진료 예약' },
+  },
+  amenityFeature: [
+    { '@type': 'LocationFeatureSpecification', name: '주차 가능', value: true },
+    { '@type': 'LocationFeatureSpecification', name: '부평역 26번 출구 도보 1분', value: true },
+    { '@type': 'LocationFeatureSpecification', name: 'CBCT 3D 정밀진단 (2대)', value: true },
+    { '@type': 'LocationFeatureSpecification', name: '칼짜이스 미세현미경 Extaro 300', value: true },
+    { '@type': 'LocationFeatureSpecification', name: '1인 1핸드피스 감염관리', value: true },
+  ],
+  knowsLanguage: 'ko',
+  currenciesAccepted: 'KRW',
+  paymentAccepted: '현금, 카드, 계좌이체',
   availableService: [
     ...CORE_TREATMENTS.map((t) => ({
       '@type': 'MedicalProcedure',
@@ -199,6 +243,10 @@ export const serviceSchema = (s: {
   description: string
   slug: string
   category?: string
+  /** 치료 과정 스텝 — howPerformed로 주입 (AI 답변엔진이 '치료 과정' 질문에 인용) */
+  steps?: { step: string; title: string; desc: string }[]
+  /** 사용 장비 — 전문성 시그널 */
+  devices?: string[]
 }) => ({
   '@context': 'https://schema.org',
   '@type': 'MedicalProcedure',
@@ -210,12 +258,46 @@ export const serviceSchema = (s: {
   category: s.category ?? 'Dentistry',
   bodyLocation: '구강',
   followup: '정기검진 및 유지관리 권장',
+  ...(s.steps && s.steps.length > 0
+    ? {
+        howPerformed: s.steps.map((p) => `${p.step}단계 ${p.title}: ${p.desc}`).join(' → '),
+        // HowTo 병행 — 구조화된 스텝 (일부 검색엔진이 스텝 UI로 활용)
+        step: s.steps.map((p, i) => ({
+          '@type': 'HowToStep',
+          position: i + 1,
+          name: p.title,
+          text: p.desc,
+        })),
+      }
+    : {}),
+  ...(s.devices && s.devices.length > 0 ? { device: s.devices.join(', ') } : {}),
   provider: {
     '@type': 'Dentist',
     '@id': `https://${CLINIC.domain}/#clinic`,
     name: CLINIC.name,
     url: `https://${CLINIC.domain}/`,
   },
+})
+
+/**
+ * ProfilePage 스키마 — 의료진 상세 페이지용
+ * 구글이 2024년부터 공식 지원하는 리치결과 타입 — 인물 검색 노출 강화
+ */
+export const profilePageSchema = (d: {
+  name: string
+  title: string
+  slug: string
+  dateModified?: string
+}) => ({
+  '@context': 'https://schema.org',
+  '@type': 'ProfilePage',
+  '@id': `https://${CLINIC.domain}/doctors/${d.slug}#profilepage`,
+  url: `https://${CLINIC.domain}/doctors/${d.slug}`,
+  name: `${d.title} ${d.name} | ${CLINIC.name}`,
+  inLanguage: 'ko-KR',
+  dateModified: d.dateModified ?? new Date().toISOString().slice(0, 10),
+  mainEntity: { '@id': `https://${CLINIC.domain}/doctors/${d.slug}#person` },
+  isPartOf: { '@type': 'WebSite', name: CLINIC.name, url: `https://${CLINIC.domain}/` },
 })
 
 // ============================================================

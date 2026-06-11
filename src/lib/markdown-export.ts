@@ -125,6 +125,27 @@ export function glossaryToMarkdown(term: GlossaryTerm): string {
   return lines.join('\n')
 }
 
+/** 전체 FAQ → 마크다운 (진료별 그룹) — AI 답변엔진의 Q&A 흩수 최적화 */
+export function faqToMarkdown(treatments: { name: string; nameEn: string; slug: string; faqs: { q: string; a: string }[] }[]): string {
+  const total = treatments.reduce((n, t) => n + t.faqs.length, 0)
+  const lines: string[] = [
+    `# ${CLINIC.name} 자주 묻는 질문 (FAQ) 전체 ${total}개`,
+    '',
+    `> 임플란트·심미보철·교정·라미네이트·사랑니발치 등 진료별 실제 환자 질문과 전문의 답변.`,
+    '',
+    `**페이지**: ${base()}/faq`,
+    '',
+  ]
+  for (const t of treatments) {
+    lines.push(`## ${t.name} (${t.nameEn}) — ${t.faqs.length}개`, '', `진료 상세: ${base()}/treatments/${t.slug}`, '')
+    for (const f of t.faqs) {
+      lines.push(`### Q. ${f.q}`, '', f.a, '')
+    }
+  }
+  lines.push(mdFooter())
+  return lines.join('\n')
+}
+
 /** 블로그 포스트(DB row) → 마크다운 */
 export function blogToMarkdown(post: {
   slug: string

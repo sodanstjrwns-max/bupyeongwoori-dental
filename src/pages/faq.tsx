@@ -23,6 +23,15 @@ export const FaqAllPage = () => {
       jsonLd={[
         breadcrumbSchema([{ name: '홈', url: '/' }, { name: 'FAQ', url: '/faq' }]),
         faqSchema(allFaqs.map((f) => ({ q: f.q, a: f.a })).slice(0, 100)),
+        // 음성검색 AEO — FAQ 페이지 핵심 영역
+        {
+          '@context': 'https://schema.org',
+          '@type': 'WebPage',
+          '@id': `https://${CLINIC.domain}/faq#webpage`,
+          url: `https://${CLINIC.domain}/faq`,
+          name: `${CLINIC.name} 자주 묻는 질문`,
+          speakable: { '@type': 'SpeakableSpecification', cssSelector: ['.page-title', '.page-lead'] },
+        },
       ]}
     >
       <section class="page-hero">

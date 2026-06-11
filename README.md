@@ -98,7 +98,7 @@
 - **Tech Stack**: Hono + TypeScript + JSX SSR + Pretendard + Vanilla JS(CDN) + Cloudflare D1/R2
 - **Build**: `npm run build` → `dist/_worker.js`
 - **Local Start**: `pm2 start ecosystem.config.cjs` (symlink trick으로 wrangler d1 CLI ↔ pages dev 간 DB 공유)
-- **Last Updated**: 2026-06-11 (🧠 **진짜 SEO/AEO 머신 업그레이드** — 아래 상세)
+- **Last Updated**: 2026-06-11 (🧠 **SEO/AEO 머신 1·2차 업그레이드** — 아래 상세)
 
 ## 🧠 SEO/AEO 머신 업그레이드 (2026-06-11)
 1. **통합 검색 `/search`** — WebSite SearchAction JSON-LD가 가리키던 엔드포인트 실제 구현 (구글 Sitelinks Search Box 자격). 정적(진료/용어 582/지역/FAQ) + DB(블로그/공지) 통합. 검색 결과는 noindex(씬콘텐츠 방지), 검색 홈만 색인.
@@ -109,6 +109,15 @@
 6. **Freshness 시그널** — 블로그 `dateModified`가 실제 `updated_at` 반영 (기존은 발행일 고정). 수정일이 본문에도 `<time datetime>`으로 표시.
 7. **커스텀 404** — 죽은 링크 유입을 검색창 + 핵심 페이지 칩으로 회수 (링크 에쿼티 보존).
 8. **내비/llms.txt 강화** — 통합 검색 메뉴 추가, llms.txt에 지역 허브 8개 + 머신리더블 .md 경로 안내 추가.
+
+## 🧠 SEO/AEO 머신 2차 업그레이드 (2026-06-11)
+1. **Dentist 스키마 월드클래스화** — `hasMap`(네이버 플레이스) + `areaServed`(8지역 Place+GeoCoordinates) + `contactPoint`(전화/카카오톡) + `ReserveAction`(네이버 예약 액션) + `amenityFeature`(CBCT·현미경·감염관리 등 5종)
+2. **MedicalProcedure 완성형** — 치료과정을 `howPerformed` + `HowToStep` 구조화 스텝으로 주입, 사용 장비 `device` 포함 — AI가 "임플란트 과정이 어떻게 돼요?" 질문에 우리 콘텐츠를 인용하도록
+3. **ProfilePage 스키마** — 의료진 상세에 구글 공식 인물 프로필 리치결과 타입 적용 (mainEntity → #person 연결)
+4. **`/faq.md`** — 164개 Q&A 전체 마크다운 (LLM이 한 번의 fetch로 전체 FAQ 흩수)
+5. **.md 라우트 `X-Robots-Tag: noindex`** — 검색엔진 중복콘텐츠 방어 (LLM 크롤러는 그대로 읽음, HTML 원본만 색인)
+6. **Speakable 확대** — 홈/FAQ에 SpeakableSpecification 추가 (음성검색 AEO)
+7. **CWV 튜닝** — 자체 CSS preload + dns-prefetch + FontAwesome 비동기 로딩(media=print 트릭) → LCP/FCP 개선이 랭킹 시그널로
 
 ### 배포 후 체크리스트 (운영자용)
 - [ ] Google Search Console에서 `/search?q=test` 크롤 확인

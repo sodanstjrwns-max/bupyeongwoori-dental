@@ -20,3 +20,6 @@
 
 /llms.txt
   Cache-Control: public, max-age=3600
+
+/llms-full.txt
+  Cache-Control: public, max-age=21600

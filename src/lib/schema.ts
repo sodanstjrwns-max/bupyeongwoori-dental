@@ -96,6 +96,7 @@ export const articleSchema = (opts: {
   url: string
   image?: string
   author?: string
+  authorSlug?: string
   datePublished: string
   dateModified?: string
 }) => ({
@@ -106,9 +107,17 @@ export const articleSchema = (opts: {
   image: opts.image ?? `https://${CLINIC.domain}/static/og/og-default.png?v=20260430m`,
   datePublished: opts.datePublished,
   dateModified: opts.dateModified ?? opts.datePublished,
-  author: { '@type': 'Person', name: opts.author ?? CLINIC.representative },
+  author: opts.authorSlug
+    ? {
+        '@type': 'Person',
+        '@id': `https://${CLINIC.domain}/doctors/${opts.authorSlug}#person`,
+        name: opts.author ?? CLINIC.representative,
+        url: `https://${CLINIC.domain}/doctors/${opts.authorSlug}`,
+      }
+    : { '@type': 'Person', name: opts.author ?? CLINIC.representative },
   publisher: {
     '@type': 'Organization',
+    '@id': `https://${CLINIC.domain}/#clinic`,
     name: CLINIC.name,
     logo: { '@type': 'ImageObject', url: `https://${CLINIC.domain}/media/brand/mark-256.png` },
   },
@@ -120,18 +129,68 @@ export const doctorSchema = (d: {
   title: string
   slug: string
   education?: string[]
+  specialties?: string[]
+  photo?: string | null
 }) => ({
   '@context': 'https://schema.org',
   '@type': 'Physician',
+  '@id': `https://${CLINIC.domain}/doctors/${d.slug}#person`,
   name: d.name,
   jobTitle: d.title,
   url: `https://${CLINIC.domain}/doctors/${d.slug}`,
-  worksFor: { '@type': 'Dentist', name: CLINIC.name },
+  ...(d.photo ? { image: d.photo.startsWith('http') ? d.photo : `https://${CLINIC.domain}${d.photo}` } : {}),
+  medicalSpecialty: 'Dentistry',
+  ...(d.specialties && d.specialties.length > 0 ? { knowsAbout: d.specialties } : {}),
+  worksFor: { '@type': 'Dentist', '@id': `https://${CLINIC.domain}/#clinic`, name: CLINIC.name },
   alumniOf: (d.education ?? []).map((e) => ({
     '@type': 'EducationalOrganization',
     name: e,
   })),
 })
+
+/**
+ * MedicalWebPage — E-E-A-T 핵심 스키마
+ * 의료 콘텐츠임을 명시하고, 검수자(reviewedBy)를 Physician으로 연결.
+ * 진료 상세/용어집/블로그 등 모든 의료 정보 페이지에 적용.
+ */
+export const medicalWebPageSchema = (opts: {
+  url: string
+  name: string
+  description: string
+  /** 검수 의료진 — 없으면 대표원장 기본값 */
+  reviewer?: { name: string; title: string; slug: string }
+  lastReviewed?: string
+  /** 페이지가 다루는 의학 주제 (예: '임플란트') */
+  about?: string
+  speakableSelectors?: string[]
+}) => {
+  const reviewer = opts.reviewer ?? { name: CLINIC.representative, title: '대표원장', slug: 'kim-jaein' }
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'MedicalWebPage',
+    '@id': `${opts.url}#webpage`,
+    url: opts.url,
+    name: opts.name,
+    description: opts.description,
+    inLanguage: 'ko-KR',
+    medicalAudience: { '@type': 'MedicalAudience', audienceType: 'Patient' },
+    ...(opts.about ? { about: { '@type': 'MedicalEntity', name: opts.about } } : {}),
+    lastReviewed: opts.lastReviewed ?? new Date().toISOString().slice(0, 10),
+    reviewedBy: {
+      '@type': 'Physician',
+      '@id': `https://${CLINIC.domain}/doctors/${reviewer.slug}#person`,
+      name: reviewer.name,
+      jobTitle: reviewer.title,
+      url: `https://${CLINIC.domain}/doctors/${reviewer.slug}`,
+      medicalSpecialty: 'Dentistry',
+      worksFor: { '@type': 'Dentist', '@id': `https://${CLINIC.domain}/#clinic`, name: CLINIC.name },
+    },
+    publisher: { '@type': 'Organization', '@id': `https://${CLINIC.domain}/#clinic`, name: CLINIC.name },
+    ...(opts.speakableSelectors && opts.speakableSelectors.length > 0
+      ? { speakable: { '@type': 'SpeakableSpecification', cssSelector: opts.speakableSelectors } }
+      : {}),
+  }
+}
 
 // Service 스키마 — 시술 페이지용 (LocalBusiness 연결)
 export const serviceSchema = (s: {

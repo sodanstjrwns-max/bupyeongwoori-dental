@@ -56,6 +56,7 @@ export const Nav = ({ onDark = false, user = null }: { onDark?: boolean; user?: 
                 <a href="/notices">공지사항</a>
                 <a href="/glossary">치과 백과사전</a>
                 <a href="/faq">자주 묻는 질문</a>
+                <a href="/search">통합 검색</a>
               </div>
             </div>
 
@@ -140,6 +141,7 @@ export const Nav = ({ onDark = false, user = null }: { onDark?: boolean; user?: 
           <a href="/notices">공지사항</a>
           <a href="/glossary">치과 백과사전</a>
           <a href="/faq">자주 묻는 질문</a>
+          <a href="/search">통합 검색</a>
         </details>
         <details>
           <summary>내원안내</summary>

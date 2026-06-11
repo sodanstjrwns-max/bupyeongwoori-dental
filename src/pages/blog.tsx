@@ -1,7 +1,7 @@
 import { Layout } from '../components/Layout'
 import { CLINIC, OG_IMAGES } from '../lib/constants'
 import { DOCTORS } from '../data/doctors'
-import { articleSchema, breadcrumbSchema, itemListSchema } from '../lib/schema'
+import { articleSchema, breadcrumbSchema, itemListSchema, medicalWebPageSchema } from '../lib/schema'
 import { CtaSection } from '../components/CtaSection'
 import { InlineCta } from '../components/InlineCta'
 import { autoLinkContent } from '../lib/auto-link'
@@ -21,6 +21,7 @@ type BlogRow = {
   view_count: number
   published_at: string
   created_at: string
+  updated_at?: string | null
 }
 
 export const BlogListPage = ({
@@ -129,6 +130,9 @@ export const BlogDetailPage = ({
     ? `${baseUrl}/media/${post.cover_key}`
     : `${baseUrl}${OG_IMAGES.blog}`
 
+  // 실제 수정일 — updated_at이 발행일 이후면 dateModified로 사용 (구글 freshness 시그널)
+  const modifiedAt = post.updated_at && post.updated_at > post.published_at ? post.updated_at : post.published_at
+
   // Article JSON-LD — keywords/section/image/dateModified까지 풀세트
   const articleLd = articleSchema({
     title: post.title,
@@ -136,8 +140,9 @@ export const BlogDetailPage = ({
     url,
     image: coverAbs,
     author: author ? `${author.title} ${author.name}` : undefined,
+    authorSlug: author?.slug,
     datePublished: post.published_at,
-    dateModified: post.published_at,
+    dateModified: modifiedAt,
   }) as any
   if (post.category) articleLd.articleSection = post.category
   articleLd.keywords = post.meta_keywords
@@ -157,7 +162,7 @@ export const BlogDetailPage = ({
       ogType="article"
       articleMeta={{
         publishedTime: post.published_at,
-        modifiedTime: post.published_at,
+        modifiedTime: modifiedAt,
         author: author ? `${author.title} ${author.name}` : CLINIC.representative,
         section: post.category ?? '치과 지식',
         tags: post.tags ? post.tags.split(',').map((t) => t.trim()).filter(Boolean) : undefined,
@@ -170,6 +175,14 @@ export const BlogDetailPage = ({
           ...(post.category ? [{ name: post.category, url: `/blog?category=${encodeURIComponent(post.category)}` }] : []),
           { name: post.title, url: `/blog/${post.slug}` },
         ]),
+        // E-E-A-T: 의료 블로그 콘텐츠 — 작성 의료진을 검수자로 명시
+        medicalWebPageSchema({
+          url,
+          name: post.title,
+          description,
+          reviewer: author ? { name: author.name, title: author.title, slug: author.slug } : undefined,
+          lastReviewed: modifiedAt?.slice(0, 10),
+        }),
       ]}
     >
       <article class="section" style="padding-top:120px;">
@@ -183,10 +196,27 @@ export const BlogDetailPage = ({
           <div class="blog-detail-meta">
             <span>{author ? `${author.title} ${author.name}` : '부평우리치과'}</span>
             <span>·</span>
-            <time>{new Date(post.published_at).toLocaleDateString('ko-KR')}</time>
+            <time datetime={post.published_at}>{new Date(post.published_at).toLocaleDateString('ko-KR')}</time>
+            {modifiedAt !== post.published_at ? (
+              <>
+                <span>·</span>
+                <span>수정 <time datetime={modifiedAt}>{new Date(modifiedAt).toLocaleDateString('ko-KR')}</time></span>
+              </>
+            ) : null}
             <span>·</span>
             <span>조회 {post.view_count.toLocaleString()}</span>
           </div>
+
+          {/* E-E-A-T 가시적 검수 표시 — 구글 품질평가 가이드라인의 '책임 명시' 충족 */}
+          {author ? (
+            <aside class="medical-review-badge" aria-label="의학적 검수 정보" style="display:flex; align-items:center; gap:12px; margin-top:20px; padding:14px 18px; background:var(--ink-50, #f4f7f7); border-left:3px solid var(--brand-500, #6DBBB9); border-radius:0 12px 12px 0;">
+              <i class="fas fa-user-md" aria-hidden="true" style="color:var(--brand-600, #2a9d9a); font-size:1.2rem;"></i>
+              <p style="font-size:0.86rem; color:var(--ink-600); line-height:1.55; margin:0;">
+                이 글은 <a href={`/doctors/${author.slug}`} style="font-weight:700; color:var(--brand-700, #1d7a78);">{author.title} {author.name}</a>
+                {author.education?.[0] ? <span> ({author.education[0]})</span> : null}이(가) 직접 작성·검수한 의료 정보입니다.
+              </p>
+            </aside>
+          ) : null}
 
           {post.cover_key ? (
             <img src={`/media/${post.cover_key}`} alt={post.title} style="width:100%; border-radius:16px; margin:40px 0;" />

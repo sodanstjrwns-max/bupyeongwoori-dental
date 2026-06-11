@@ -2,7 +2,7 @@ import { Layout } from '../components/Layout'
 import { CLINIC, OG_IMAGES } from '../lib/constants'
 import { TREATMENT_LIST, CORE_LIST, OTHER_LIST, getTreatment } from '../data/treatments'
 import { DOCTORS, getDoctor, doctorPhotoSrc } from '../data/doctors'
-import { breadcrumbSchema, faqSchema, serviceSchema, itemListSchema } from '../lib/schema'
+import { breadcrumbSchema, faqSchema, serviceSchema, itemListSchema, medicalWebPageSchema } from '../lib/schema'
 import { AREAS, TREATMENT_LOCAL } from '../data/areas'
 
 // =========================================================
@@ -248,6 +248,17 @@ export const TreatmentDetailPage = ({
           slug: t.slug,
           category: 'Dentistry',
         }),
+        // E-E-A-T: 의료 콘텐츠 명시 + 검수 의료진 연결 (담당 원장 1순위, 없으면 대표원장)
+        medicalWebPageSchema({
+          url: `https://${CLINIC.domain}/treatments/${t.slug}`,
+          name: `${t.name} | ${t.tagline}`,
+          description: t.metaDescription,
+          about: t.name,
+          reviewer: doctors[0]
+            ? { name: doctors[0].name, title: doctors[0].title, slug: doctors[0].slug }
+            : undefined,
+          speakableSelectors: ['.hero-title', '.hero-sub'],
+        }),
       ]}
     >
       {/* Hero */}
@@ -288,6 +299,16 @@ export const TreatmentDetailPage = ({
           <p data-reveal data-reveal-delay="1" style="font-size:1.15rem; line-height:2; color:var(--ink-700);">
             {t.overview}
           </p>
+          {/* E-E-A-T 가시적 검수 표시 */}
+          {doctors[0] ? (
+            <aside class="medical-review-badge" aria-label="의학적 검수 정보" data-reveal style="display:flex; align-items:center; gap:12px; margin-top:28px; padding:14px 18px; background:var(--ink-50, #f4f7f7); border-left:3px solid var(--brand-500, #6DBBB9); border-radius:0 12px 12px 0;">
+              <i class="fas fa-user-md" aria-hidden="true" style="color:var(--brand-600, #2a9d9a); font-size:1.2rem;"></i>
+              <p style="font-size:0.86rem; color:var(--ink-600); line-height:1.55; margin:0;">
+                이 페이지의 의료 정보는 <a href={`/doctors/${doctors[0].slug}`} style="font-weight:700; color:var(--brand-700, #1d7a78);">{doctors[0].title} {doctors[0].name}</a>
+                {doctors[0].education?.[0] ? <span> ({doctors[0].education[0]})</span> : null}이(가) 작성·감수했습니다.
+              </p>
+            </aside>
+          ) : null}
         </div>
       </section>
 

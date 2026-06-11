@@ -2,7 +2,7 @@ import { Layout } from '../components/Layout'
 import { CLINIC, OG_IMAGES } from '../lib/constants'
 import { GLOSSARY, GLOSSARY_CATEGORIES, getRelatedTerms, type GlossaryTerm } from '../data/glossary'
 import { TREATMENT_LIST } from '../data/treatments'
-import { breadcrumbSchema } from '../lib/schema'
+import { breadcrumbSchema, medicalWebPageSchema } from '../lib/schema'
 import { CtaSection } from '../components/CtaSection'
 import { InlineCta } from '../components/InlineCta'
 
@@ -173,6 +173,14 @@ export const GlossaryDetailPage = ({ term }: { term: GlossaryTerm }) => {
           inDefinedTermSet: `https://${CLINIC.domain}/glossary`,
           url: `https://${CLINIC.domain}/glossary/${term.slug}`,
         },
+        // E-E-A-T: 의학 용어 해설도 의료 콘텐츠 — 대표원장 감수 명시
+        medicalWebPageSchema({
+          url: `https://${CLINIC.domain}/glossary/${term.slug}`,
+          name: `${term.term} | 치과 백과사전`,
+          description: term.short ?? term.definition,
+          about: term.term,
+          speakableSelectors: ['.glossary-detail-title', '.glossary-detail-short'],
+        }),
       ]}
     >
       <article class="section" style="padding-top:120px;">

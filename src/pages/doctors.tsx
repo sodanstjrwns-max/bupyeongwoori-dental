@@ -121,7 +121,15 @@ export const DoctorDetailPage = ({ slug, cases = [], isLoggedIn = false }: { slu
       canonical={`https://${CLINIC.domain}/doctors/${d.slug}`}
       ogImage={doctorPhotoSrc(d.photo) || OG_IMAGES.doctors}
       jsonLd={[
-        doctorSchema({ name: d.name, title: d.title, slug: d.slug, education: d.education }),
+        doctorSchema({
+          name: d.name,
+          title: d.title,
+          slug: d.slug,
+          education: d.education,
+          photo: doctorPhotoSrc(d.photo),
+          // knowsAbout: 진료 slug → 한글 진료명으로 변환 (AI 검색엔진의 전문성 매핑용)
+          specialties: d.specialties.map((s) => getTreatment(s)?.name ?? s).filter(Boolean),
+        }),
         breadcrumbSchema([
           { name: '홈', url: '/' },
           { name: '의료진 소개', url: '/doctors' },

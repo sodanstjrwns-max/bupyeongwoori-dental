@@ -37,11 +37,15 @@ import {
 } from './lib/auth'
 import { getGlossaryTerm, GLOSSARY } from './data/glossary'
 import { CLINIC } from './lib/constants'
-import { TREATMENT_LIST } from './data/treatments'
+import { TREATMENT_LIST, getTreatment } from './data/treatments'
 import { pingIndexNow, INDEXNOW_KEY } from './lib/indexnow'
 import { autoFillBlogSeo, autoFillBaSeo, buildIndexNowUrls } from './lib/auto-seo'
 import { AreasIndexPage, AreaHubPage, AreaTreatmentPage } from './pages/areas'
 import { AREAS, getArea, TREATMENT_LOCAL } from './data/areas'
+import { SearchPage, searchStatic, type SearchResultItem } from './pages/search'
+import { NotFoundPage } from './pages/not-found'
+import { treatmentToMarkdown, glossaryToMarkdown, blogToMarkdown } from './lib/markdown-export'
+import { getDoctor } from './data/doctors'
 
 const app = new Hono<{ Bindings: Bindings }>()
 
@@ -122,7 +126,18 @@ app.get('/doctors/:slug', async (c) => {
 // Treatments
 app.get('/treatments', (c) => c.html(<TreatmentsListPage />))
 app.get('/treatments/:slug', async (c) => {
-  const slug = c.req.param('slug')
+  let slug = c.req.param('slug')
+  // AEO: 마크다운 버전 — /treatments/implant.md → LLM 친화 텍스트
+  if (slug.endsWith('.md')) {
+    const t = getTreatment(slug.slice(0, -3))
+    if (!t) return c.notFound()
+    const doc = t.doctorSlugs?.[0] ? getDoctor(t.doctorSlugs[0]) : undefined
+    return c.text(treatmentToMarkdown(t, doc?.name, doc?.title), 200, {
+      'Content-Type': 'text/markdown; charset=utf-8',
+      'Cache-Control': 'public, max-age=86400',
+      'Link': `<https://${CLINIC.domain}/treatments/${t.slug}>; rel="canonical"`,
+    })
+  }
   let cases: any[] = []
   let relatedPosts: any[] = []
   try {
@@ -453,6 +468,17 @@ app.get('/blog', async (c) => {
 
 app.get('/blog/:slug', async (c) => {
   const slug = c.req.param('slug')
+  // AEO: 마크다운 버전 — /blog/:slug.md
+  if (slug.endsWith('.md')) {
+    const post = await c.env.DB.prepare('SELECT * FROM blog_posts WHERE slug = ? AND is_published = 1 LIMIT 1').bind(slug.slice(0, -3)).first<any>()
+    if (!post) return c.notFound()
+    const author = post.author_slug ? getDoctor(post.author_slug) : undefined
+    return c.text(blogToMarkdown(post, author?.name, author?.title), 200, {
+      'Content-Type': 'text/markdown; charset=utf-8',
+      'Cache-Control': 'public, max-age=3600',
+      'Link': `<https://${CLINIC.domain}/blog/${post.slug}>; rel="canonical"`,
+    })
+  }
   const post = await c.env.DB.prepare('SELECT * FROM blog_posts WHERE slug = ? AND is_published = 1 LIMIT 1').bind(slug).first<any>()
   if (!post) return c.notFound()
   c.executionCtx?.waitUntil?.(c.env.DB.prepare('UPDATE blog_posts SET view_count = view_count + 1 WHERE id = ?').bind(post.id).run())
@@ -487,6 +513,16 @@ app.get('/glossary', (c) => {
 })
 app.get('/glossary/:slug', (c) => {
   const slug = c.req.param('slug')
+  // AEO: 마크다운 버전 — /glossary/implant.md
+  if (slug.endsWith('.md')) {
+    const term = getGlossaryTerm(slug.slice(0, -3))
+    if (!term) return c.notFound()
+    return c.text(glossaryToMarkdown(term), 200, {
+      'Content-Type': 'text/markdown; charset=utf-8',
+      'Cache-Control': 'public, max-age=86400',
+      'Link': `<https://${CLINIC.domain}/glossary/${term.slug}>; rel="canonical"`,
+    })
+  }
   const term = getGlossaryTerm(slug)
   if (!term) return c.notFound()
   return c.html(<GlossaryDetailPage term={term} />)
@@ -496,6 +532,36 @@ app.get('/glossary/:slug', (c) => {
 // FAQ
 // ============================================================
 app.get('/faq', (c) => c.html(<FaqAllPage />))
+
+// ============================================================
+// 통합 검색 — WebSite SearchAction 실동작 엔드포인트 (AEO/Sitelinks Search Box)
+// 정적(진료/용어/지역/FAQ) + DB(블로그/공지) 통합
+// ============================================================
+app.get('/search', async (c) => {
+  const q = (c.req.query('q') ?? '').trim().slice(0, 60)
+  let results: SearchResultItem[] = []
+  if (q) {
+    results = searchStatic(q, 30)
+    // DB 검색 (블로그 + 공지) — LIKE 기반, 실패해도 정적 결과는 유지
+    try {
+      const like = `%${q.replace(/[%_]/g, '')}%`
+      const blogs = (await c.env.DB.prepare(
+        'SELECT slug, title, COALESCE(excerpt, "") AS excerpt FROM blog_posts WHERE is_published = 1 AND (title LIKE ?1 OR excerpt LIKE ?1 OR tags LIKE ?1 OR content LIKE ?1) ORDER BY published_at DESC LIMIT 10'
+      ).bind(like).all()).results as any[]
+      for (const b of blogs) {
+        results.push({ type: '블로그', title: b.title, url: `/blog/${b.slug}`, snippet: b.excerpt || '부평우리치과 블로그' })
+      }
+      const notices = (await c.env.DB.prepare(
+        'SELECT id, title, COALESCE(content, "") AS content FROM notices WHERE is_published = 1 AND (title LIKE ?1 OR content LIKE ?1) ORDER BY published_at DESC LIMIT 5'
+      ).bind(like).all()).results as any[]
+      for (const n of notices) {
+        const text = String(n.content).replace(/<[^>]+>/g, '').slice(0, 110)
+        results.push({ type: '공지', title: n.title, url: `/notices/${n.id}`, snippet: text })
+      }
+    } catch {}
+  }
+  return c.html(<SearchPage q={q} results={results} />)
+})
 
 // ============================================================
 // Visit
@@ -571,6 +637,32 @@ app.get('/robots.txt', (c) => {
     'Disallow: /admin',
     'Disallow: /api',
     '',
+    '# 추가 AI 크롤러 명시 허용 (AEO — 답변엔진 노출 극대화)',
+    'User-agent: CCBot',
+    'Allow: /',
+    '',
+    'User-agent: Amazonbot',
+    'Allow: /',
+    '',
+    'User-agent: meta-externalagent',
+    'Allow: /',
+    '',
+    'User-agent: cohere-ai',
+    'Allow: /',
+    '',
+    'User-agent: DuckAssistBot',
+    'Allow: /',
+    '',
+    'User-agent: YouBot',
+    'Allow: /',
+    '',
+    'User-agent: MistralAI-User',
+    'Allow: /',
+    '',
+    '# LLM 안내 문서 (llmstxt.org)',
+    `# LLM-Index: https://${CLINIC.domain}/llms.txt`,
+    `# LLM-Full: https://${CLINIC.domain}/llms-full.txt`,
+    '',
     `Sitemap: https://${CLINIC.domain}/sitemap.xml`,
     `Sitemap: https://${CLINIC.domain}/sitemap-pages.xml`,
     `Sitemap: https://${CLINIC.domain}/sitemap-areas.xml`,
@@ -635,6 +727,16 @@ app.get('/llms.txt', async (c) => {
 - [공지사항](${base}/notices): 진료 시간·연휴·신규 도입 장비 안내
 - [치과 백과사전](${base}/glossary): 치과 용어 정의·해설
 - [자주 묻는 질문 FAQ](${base}/faq): 시술별 160+ Q&A
+- [통합 검색](${base}/search): 진료·용어·FAQ·블로그 통합 검색
+
+## 지역별 안내 (Local Pages)
+${AREAS.map((a) => `- [${a.name} 치과 안내](${base}/areas/${a.slug}): ${a.nameFull} — ${a.distance}`).join('\n')}
+
+## 머신 리더블 버전 (Markdown)
+- 진료 상세: \`${base}/treatments/{slug}.md\` (예: ${base}/treatments/implant.md)
+- 백과사전 용어: \`${base}/glossary/{slug}.md\`
+- 블로그 글: \`${base}/blog/{slug}.md\`
+- 전체 상세 본문: [llms-full.txt](${base}/llms-full.txt)
 
 ## 최신 블로그 글
 ${blogList || '- (현재 게시된 글이 없습니다)'}
@@ -649,6 +751,48 @@ ${noticeList || '- (현재 공지가 없습니다)'}
 - 의료 결정은 반드시 전문의 상담을 거쳐 주세요.
 `
   return c.text(txt, 200, { 'Content-Type': 'text/markdown; charset=utf-8' })
+})
+
+// ============================================================
+// llms-full.txt — 전체 콘텐츠 풀텍스트 (llmstxt.org 확장 규약)
+// LLM이 한 번의 fetch로 사이트 전체 지식을 흡수하도록 제공
+// ============================================================
+app.get('/llms-full.txt', async (c) => {
+  const blocks: string[] = [
+    `# ${CLINIC.name} — 전체 콘텐츠 (llms-full.txt)`,
+    '',
+    `> 부평역 26번 출구 도보 1분, 14년 한 자리를 지켜온 치과. 이 문서는 ${CLINIC.name}의 주요 의료 정보를 LLM이 읽기 쉬운 형태로 제공합니다.`,
+    '',
+    `주소: ${CLINIC.address} | 전화: ${CLINIC.phone} | 공식 사이트: https://${CLINIC.domain}`,
+    '',
+    '---',
+    '',
+  ]
+
+  // 1) 진료과목 전체 (정적 데이터 — FAQ 포함 풀텍스트)
+  for (const t of TREATMENT_LIST) {
+    const doc = t.doctorSlugs?.[0] ? getDoctor(t.doctorSlugs[0]) : undefined
+    blocks.push(treatmentToMarkdown(t, doc?.name, doc?.title), '', '---', '')
+  }
+
+  // 2) 최신 블로그 20개 (DB)
+  try {
+    const blogs = (await c.env.DB.prepare(
+      'SELECT slug, title, excerpt, content, category, published_at, updated_at, author_slug FROM blog_posts WHERE is_published = 1 ORDER BY published_at DESC LIMIT 20'
+    ).all()).results as any[]
+    if (blogs.length > 0) {
+      blocks.push('# 블로그 최신 글', '')
+      for (const b of blogs) {
+        const author = b.author_slug ? getDoctor(b.author_slug) : undefined
+        blocks.push(blogToMarkdown(b, author?.name, author?.title), '', '---', '')
+      }
+    }
+  } catch {}
+
+  return c.text(blocks.join('\n'), 200, {
+    'Content-Type': 'text/markdown; charset=utf-8',
+    'Cache-Control': 'public, max-age=21600',
+  })
 })
 
 // ============================================================
@@ -831,6 +975,7 @@ app.get('/sitemap-pages.xml', (c) => {
     { loc: '/glossary', lastmod: todayIso, changefreq: 'monthly', priority: '0.7' },
     { loc: '/faq', lastmod: todayIso, changefreq: 'monthly', priority: '0.8' },
     { loc: '/visit', lastmod: todayIso, changefreq: 'monthly', priority: '0.8' },
+    { loc: '/search', lastmod: todayIso, changefreq: 'monthly', priority: '0.5' },
   ]
   // 진료 상세 8종 — 핵심 SEO 페이지
   for (const t of TREATMENT_LIST) {
@@ -1632,15 +1777,9 @@ app.get('/admin/og-preview', async (c) => {
 // ============================================================
 // 404
 // ============================================================
-app.notFound((c) =>
-  c.html(
-    <PlaceholderPage
-      title="페이지를 찾을 수 없습니다"
-      phase="404"
-      description="주소를 다시 확인해 주세요."
-    />,
-    404
-  )
-)
+app.notFound((c) => {
+  const path = new URL(c.req.url).pathname
+  return c.html(<NotFoundPage path={path} />, 404)
+})
 
 export default app

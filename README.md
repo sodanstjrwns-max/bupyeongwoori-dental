@@ -37,6 +37,9 @@
 | `/sitemap-ba.xml` | 비포애프터 (DB 자동) — `is_published=1` 자동 등록 |
 | `/sitemap-notices.xml` | 공지사항 (DB 자동) — `is_published=1` 자동 등록 |
 | `/robots.txt` · `/manifest.webmanifest` | SEO/PWA |
+| `/search?q=` | **통합 검색** (진료+용어 582+지역+FAQ+블로그+공지) — WebSite SearchAction 실동작 |
+| `/llms.txt` · `/llms-full.txt` | **AI/LLM 인덱스** — full은 진료 8종 풀텍스트 + 최신 블로그 20개 마크다운 |
+| `/treatments/:slug.md` · `/glossary/:slug.md` · `/blog/:slug.md` | **마크다운 버전** — LLM 크롤러 전용 (canonical Link 헤더 포함) |
 | `/static/{INDEXNOW_KEY}.txt` | IndexNow 인증 키 파일 |
 | `/media/:key` | R2 이미지 프록시 |
 
@@ -95,4 +98,20 @@
 - **Tech Stack**: Hono + TypeScript + JSX SSR + Pretendard + Vanilla JS(CDN) + Cloudflare D1/R2
 - **Build**: `npm run build` → `dist/_worker.js`
 - **Local Start**: `pm2 start ecosystem.config.cjs` (symlink trick으로 wrangler d1 CLI ↔ pages dev 간 DB 공유)
-- **Last Updated**: 2026-05-26 (🚀 **지역×진료 슈퍼 SEO 풀세트** — 72개 자동 랜딩 페이지, MedicalBusiness+GeoCoordinates+Service JSON-LD, 도어웨이 회피, 내부 링크 강화, sitemap-areas.xml 신설, IndexNow 75개 URL 발사)
+- **Last Updated**: 2026-06-11 (🧠 **진짜 SEO/AEO 머신 업그레이드** — 아래 상세)
+
+## 🧠 SEO/AEO 머신 업그레이드 (2026-06-11)
+1. **통합 검색 `/search`** — WebSite SearchAction JSON-LD가 가리키던 엔드포인트 실제 구현 (구글 Sitelinks Search Box 자격). 정적(진료/용어 582/지역/FAQ) + DB(블로그/공지) 통합. 검색 결과는 noindex(씬콘텐츠 방지), 검색 홈만 색인.
+2. **E-E-A-T 의학 검수 시스템** — `MedicalWebPage + reviewedBy(Physician)` 스키마를 진료 8종/용어 582/블로그 전체에 자동 주입 + 본문에 가시적 "의학 감수 배지" 표시 (구글 품질평가 가이드라인의 YMYL 책임자 명시 충족).
+3. **스키마 그래프 통일** — 모든 publisher/provider/worksFor가 `#clinic` @id로, 의료진은 `/doctors/:slug#person`으로 연결되는 단일 지식그래프. Physician에 `knowsAbout`(진료명)·`image`·`medicalSpecialty` 추가.
+4. **AEO 마크다운 레이어** — `/treatments/:slug.md`, `/glossary/:slug.md`, `/blog/:slug.md` (LLM 크롤러 전용 텍스트, 출처/검수/연락처 풋터 포함) + `/llms-full.txt` (진료 전체 + 블로그 20개 원솧 문서, ~100KB).
+5. **robots.txt AI봇 확장** — CCBot·Amazonbot·meta-externalagent·cohere-ai·DuckAssistBot·YouBot·MistralAI-User 명시 허용 + LLM-Index/LLM-Full 주석 안내.
+6. **Freshness 시그널** — 블로그 `dateModified`가 실제 `updated_at` 반영 (기존은 발행일 고정). 수정일이 본문에도 `<time datetime>`으로 표시.
+7. **커스텀 404** — 죽은 링크 유입을 검색창 + 핵심 페이지 칩으로 회수 (링크 에쿼티 보존).
+8. **내비/llms.txt 강화** — 통합 검색 메뉴 추가, llms.txt에 지역 허브 8개 + 머신리더블 .md 경로 안내 추가.
+
+### 배포 후 체크리스트 (운영자용)
+- [ ] Google Search Console에서 `/search?q=test` 크롤 확인
+- [ ] 리치 결과 테스트: `https://search.google.com/test/rich-results?url=https://wooridc.kr/treatments/implant` → FAQ + Breadcrumb + MedicalWebPage 확인
+- [ ] `curl https://wooridc.kr/llms-full.txt | head` 정상 응답 확인
+- [ ] 네이버 플레이스 실제 리뷰 수 확인 후 `src/lib/schema.ts`의 `REAL_REVIEW_DATA.reviewCount` 입력 → 별점 리치스니펫 자동 활성화

@@ -1,13 +1,14 @@
 /**
  * IndexNow API 통합
  * - Bing, Yandex, Seznam 등 IndexNow 지원 검색엔진에 즉시 색인 요청
- * - 키 파일: /static/{INDEXNOW_KEY}.txt 에 동일한 키 텍스트 노출 필요
+ * - 키 파일: 사이트 루트 /{INDEXNOW_KEY}.txt 에 동일한 키 텍스트 노출 필요
+ *   (키 파일이 /static/ 하위에 있으면 /static/* URL만 제출 가능 — 루트 필수)
  * - 호출 비동기(fire-and-forget) — 관리자 응답 지연 없음
  */
 
 export const INDEXNOW_KEY = '900093ba7a44ff442bf2cf6f8a6ef936'
 const HOST = 'wooridc.kr'
-const KEY_LOCATION = `https://${HOST}/static/${INDEXNOW_KEY}.txt`
+const KEY_LOCATION = `https://${HOST}/${INDEXNOW_KEY}.txt`
 // IndexNow 통합 엔드포인트 (Bing이 Yandex 등으로 자동 전파)
 const INDEXNOW_ENDPOINT = 'https://api.indexnow.org/IndexNow'
 

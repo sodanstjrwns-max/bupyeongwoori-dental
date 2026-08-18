@@ -120,6 +120,16 @@ export const VisitPage = () => {
                 </a>
               </div>
 
+              {/* E5: 응답 기대 설정 — 환자가 "언제 답이 올지" 알 수 있게 */}
+              <aside id="response-expectation" style="margin-top:16px; padding:14px 16px; background:var(--paper); border-radius:12px; font-size:.88rem; color:var(--ink-700); line-height:1.7;">
+                <strong style="display:block; margin-bottom:4px; color:var(--ink-900);"><i class="fas fa-clock" style="margin-right:6px; color:var(--brand, #14b8a6);"></i>얼마나 빨리 답변받을 수 있나요?</strong>
+                <ul style="margin:0; padding-left:18px;">
+                  <li>{CLINIC.responseExpectation.kakao}</li>
+                  <li>{CLINIC.responseExpectation.phone}</li>
+                  <li>{CLINIC.responseExpectation.afterHours}</li>
+                </ul>
+              </aside>
+
               <div style="margin-top:24px; padding-top:20px; border-top:1px solid var(--ink-100); display:flex; gap:14px; align-items:center; flex-wrap:wrap;">
                 <span style="font-size:.85rem; color:var(--ink-500); font-weight:600; letter-spacing:.05em;">SNS</span>
                 <a href={CLINIC.socialLinks.blog} target="_blank" rel="noopener" aria-label="네이버 블로그" title="네이버 블로그" style="width:38px; height:38px; border-radius:50%; background:var(--paper); display:inline-flex; align-items:center; justify-content:center; color:var(--ink-700); transition:all .2s;"><i class="fas fa-blog"></i></a>

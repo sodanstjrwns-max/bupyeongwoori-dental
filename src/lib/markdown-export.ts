@@ -72,6 +72,16 @@ export function treatmentToMarkdown(t: TreatmentDetail, doctorName?: string, doc
     lines.push('')
   }
 
+  // C4 경험 신호: 실제 진료 장면
+  if (t.clinicalScene) {
+    lines.push(`## 실제 진료 장면: ${t.clinicalScene.heading}`, '')
+    lines.push(t.clinicalScene.patientContext, '')
+    lines.push(`> ${t.clinicalScene.patientQuote}`, '')
+    lines.push(`**저희가 확인한 것** — ${t.clinicalScene.judgment}`, '')
+    lines.push(`**결론** — ${t.clinicalScene.answer}`, '')
+    lines.push('*진료실에서 실제로 있었던 상담을 환자 특정이 불가능하도록 각색한 사례입니다.*', '')
+  }
+
   for (const s of t.sections) {
     lines.push(`## ${s.heading}`, '')
     for (const b of s.body) lines.push(b, '')

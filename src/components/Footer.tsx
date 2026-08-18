@@ -87,6 +87,7 @@ export const Footer = () => {
             <div><strong style="color:rgba(255,255,255,0.8);">{CLINIC.business.name}</strong> · 대표원장 {CLINIC.business.representative}</div>
             <div>주소 : {CLINIC.address}</div>
             <div>대표전화 : <a href={`tel:${CLINIC.phone}`} style="display:inline;">{CLINIC.phone}</a> · 이메일 : <a href={`mailto:${CLINIC.email}`} style="display:inline;">{CLINIC.email}</a></div>
+            <div><i class="fas fa-clock" style="margin-right:4px;"></i>{CLINIC.responseExpectation.kakao} {CLINIC.responseExpectation.afterHours}</div>
             <div>사업자등록번호 : {CLINIC.business.registrationNumber}</div>
           </div>
         </div>

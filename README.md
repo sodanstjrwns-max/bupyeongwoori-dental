@@ -119,8 +119,18 @@
 6. **Speakable 확대** — 홈/FAQ에 SpeakableSpecification 추가 (음성검색 AEO)
 7. **CWV 튜닝** — 자체 CSS preload + dns-prefetch + FontAwesome 비동기 로딩(media=print 트릭) → LCP/FCP 개선이 랭킹 시그널로
 
+## 🏆 SEO/AEO 3차 업그레이드 — Patient Grader 37항목 대응 (2026-08-18)
+> PF 병원 14곳 감점분석 지시서(Patient Grader, patient-grader.pages.dev)의 채점 기준을 wooridc.kr에 선제 적용
+
+1. **A3 정직한 lastmod** — sitemap-pages/areas/glossary의 `todayIso`(매일 갱신 = 거짓 lastmod, A3 0점 패턴) 제거 → 콘텐츠별 실제 수정일 상수(`PAGES_LASTMOD`/`AREAS_LASTMOD`/`GLOSSARY_LASTMOD`)로 교체. **콘텐츠를 실제로 수정한 배포에서만 해당 상수를 갱신할 것**
+2. **E5 응답 기대 설정** — `CLINIC.responseExpectation` 신설: "카카오톡 문의는 진료시간 내 평균 30분 이내 답변" 문구를 플로팅 CTA·내원안내(`#response-expectation`)·푸터 3곳에 노출. 문의 채널 4종(전화·카톡·네이버예약·지도) 유지
+3. **C4 경험 신호: 실제 진료 장면** — bdbddc 만점 포맷(환자 등장 → 실제 질문 인용 → 판단 기준 → 결론 직답)을 `TreatmentDetail.clinicalScene`으로 구조화, 임플란트·심미보철·교정·사랑니 4종에 적용. HTML(`#clinical-scene` REAL CASE 섹션) + `.md` AEO 레이어 동시 노출 — C3(직답)·C4(경험)·D2(환자 주어)·D3(비클리셰) 동시 대응
+4. **D5 전문용어 병기** — 치료 데이터 내 첫 등장 위치에 환자 언어 병기: 보철물(씌우는 치아)·골유착(뼈와 붙는 과정)·상악동(위턱 공간)·교합(윗니 아랫니 맞물림)·교합력(무는 힘) 등 — "문맥당 1회" 원칙으로 읽기 피로(D8) 방지
+
 ### 배포 후 체크리스트 (운영자용)
 - [ ] Google Search Console에서 `/search?q=test` 크롤 확인
 - [ ] 리치 결과 테스트: `https://search.google.com/test/rich-results?url=https://wooridc.kr/treatments/implant` → FAQ + Breadcrumb + MedicalWebPage 확인
 - [ ] `curl https://wooridc.kr/llms-full.txt | head` 정상 응답 확인
 - [ ] 네이버 플레이스 실제 리뷰 수 확인 후 `src/lib/schema.ts`의 `REAL_REVIEW_DATA.reviewCount` 입력 → 별점 리치스니펫 자동 활성화
+- [ ] (3차) 진료장면(clinicalScene) 4종의 사례 내용을 실제 진료 경험에 맞게 검수·수정 — 현재는 전형적 상담 시나리오 기반 초안
+- [ ] (3차) 콘텐츠 수정 배포 시 `src/index.tsx`의 `PAGES_LASTMOD` 갱신 (수정 없는 재배포에는 건드리지 않기)

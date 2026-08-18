@@ -31,7 +31,10 @@ export const FloatingCta = () => {
           title="카카오톡 상담"
         >
           <span class="floating-cta-item-icon"><i class="fas fa-comment"></i></span>
-          <span class="floating-cta-item-label">카카오톡 상담</span>
+          <span class="floating-cta-item-label">
+            카카오톡 상담
+            <small style="display:block; font-size:.68rem; font-weight:500; opacity:.85;">{CLINIC.responseExpectation.kakaoShort}</small>
+          </span>
         </a>
         <a
           href={CLINIC.socialLinks.naverBooking}

@@ -858,7 +858,7 @@ function toIsoLastmod(raw: string | null | undefined, fallback?: string): string
   return fb
 }
 
-/** 오늘 자정 KST의 ISO 문자열 (정적 페이지 default lastmod) */
+/** 오늘 자정 KST의 ISO 문자열 (DB fallback 전용 — 정적 페이지에 쓰지 말 것!) */
 function todayIsoKst(): string {
   const d = new Date()
   const yyyy = d.getFullYear()
@@ -866,6 +866,19 @@ function todayIsoKst(): string {
   const dd = String(d.getDate()).padStart(2, '0')
   return `${yyyy}-${mm}-${dd}T00:00:00+09:00`
 }
+
+// ============================================================
+// 정직한 lastmod 원칙 (Patient Grader A3 대응)
+// 모든 정적 URL에 "오늘 날짜"를 찍는 것은 거짓 lastmod → A3 0점 패턴.
+// 아래 상수는 해당 콘텐츠를 실제로 수정한 배포일에만 갱신한다.
+// (콘텐츠 수정 없이 재배포할 때는 절대 건드리지 말 것)
+// ============================================================
+/** 핵심 정적 페이지·진료 상세 — 3차 업글(D5 용어 병기 + C4 진료장면)로 콘텐츠 수정 */
+const PAGES_LASTMOD = '2026-08-18T12:00:00+09:00'
+/** 지역×진료 랜딩 — 2026-05-26 생성 이후 콘텐츠 변경 없음 */
+const AREAS_LASTMOD = '2026-05-26T12:00:00+09:00'
+/** 치과 백과사전 582 용어 — 2026-04-20 마지막 시드 이후 변경 없음 */
+const GLOSSARY_LASTMOD = '2026-04-20T12:00:00+09:00'
 
 // ============================================================
 // Sitemap Index — 조건부 등록 (빈 sitemap 자동 제외)
@@ -910,11 +923,11 @@ app.get('/sitemap.xml', async (c) => {
     console.error('Sitemap index lastmod error:', err)
   }
 
-  // 항상 등록 (정적 콘텐츠)
+  // 항상 등록 (정적 콘텐츠) — 정직한 lastmod: 실제 콘텐츠 수정일
   const children: string[] = [
-    `  <sitemap><loc>${base}/sitemap-pages.xml</loc><lastmod>${todayIso}</lastmod></sitemap>`,
-    `  <sitemap><loc>${base}/sitemap-areas.xml</loc><lastmod>${todayIso}</lastmod></sitemap>`,
-    `  <sitemap><loc>${base}/sitemap-glossary.xml</loc><lastmod>${todayIso}</lastmod></sitemap>`,
+    `  <sitemap><loc>${base}/sitemap-pages.xml</loc><lastmod>${PAGES_LASTMOD}</lastmod></sitemap>`,
+    `  <sitemap><loc>${base}/sitemap-areas.xml</loc><lastmod>${AREAS_LASTMOD}</lastmod></sitemap>`,
+    `  <sitemap><loc>${base}/sitemap-glossary.xml</loc><lastmod>${GLOSSARY_LASTMOD}</lastmod></sitemap>`,
   ]
   // 조건부 등록 (DB 의존, 데이터 있을 때만)
   if (blogCount > 0) {
@@ -945,16 +958,16 @@ ${children.join('\n')}
 // ============================================================
 app.get('/sitemap-areas.xml', (c) => {
   const base = `https://${CLINIC.domain}`
-  const todayIso = todayIsoKst()
+  // 정직한 lastmod: 지역 콘텐츠 실제 수정일 (매일 갱신 X)
   const entries: SitemapEntry[] = [
-    { loc: '/areas', lastmod: todayIso, changefreq: 'weekly', priority: '0.9' },
+    { loc: '/areas', lastmod: AREAS_LASTMOD, changefreq: 'monthly', priority: '0.9' },
   ]
   // 지역 허브 페이지 (8개) — priority 0.76~0.95
   for (const a of AREAS) {
     entries.push({
       loc: `/areas/${a.slug}`,
-      lastmod: todayIso,
-      changefreq: 'weekly',
+      lastmod: AREAS_LASTMOD,
+      changefreq: 'monthly',
       priority: (Math.max(0.7, a.priority * 0.95)).toFixed(2),
     })
   }
@@ -963,8 +976,8 @@ app.get('/sitemap-areas.xml', (c) => {
     for (const tSlug of Object.keys(TREATMENT_LOCAL)) {
       entries.push({
         loc: `/areas/${a.slug}/${tSlug}`,
-        lastmod: todayIso,
-        changefreq: 'weekly',
+        lastmod: AREAS_LASTMOD,
+        changefreq: 'monthly',
         priority: (Math.max(0.7, a.priority * 0.9)).toFixed(2),
       })
     }
@@ -978,24 +991,24 @@ app.get('/sitemap-areas.xml', (c) => {
 // ============================================================
 app.get('/sitemap-pages.xml', (c) => {
   const base = `https://${CLINIC.domain}`
-  const todayIso = todayIsoKst()
+  // 정직한 lastmod: 실제 콘텐츠 수정일 (거짓 lastmod = Patient Grader A3 0점)
   const entries: SitemapEntry[] = [
-    { loc: '/', lastmod: todayIso, changefreq: 'daily', priority: '1.0' },
-    { loc: '/mission', lastmod: todayIso, changefreq: 'monthly', priority: '0.8' },
-    { loc: '/doctors', lastmod: todayIso, changefreq: 'monthly', priority: '0.9' },
-    { loc: '/doctors/kim-jaein', lastmod: todayIso, changefreq: 'monthly', priority: '0.9' },
-    { loc: '/treatments', lastmod: todayIso, changefreq: 'monthly', priority: '0.9' },
-    { loc: '/before-after', lastmod: todayIso, changefreq: 'weekly', priority: '0.8' },
-    { loc: '/blog', lastmod: todayIso, changefreq: 'daily', priority: '0.9' },
-    { loc: '/notices', lastmod: todayIso, changefreq: 'daily', priority: '0.8' },
-    { loc: '/glossary', lastmod: todayIso, changefreq: 'monthly', priority: '0.7' },
-    { loc: '/faq', lastmod: todayIso, changefreq: 'monthly', priority: '0.8' },
-    { loc: '/visit', lastmod: todayIso, changefreq: 'monthly', priority: '0.8' },
-    { loc: '/search', lastmod: todayIso, changefreq: 'monthly', priority: '0.5' },
+    { loc: '/', lastmod: PAGES_LASTMOD, changefreq: 'weekly', priority: '1.0' },
+    { loc: '/mission', lastmod: PAGES_LASTMOD, changefreq: 'monthly', priority: '0.8' },
+    { loc: '/doctors', lastmod: PAGES_LASTMOD, changefreq: 'monthly', priority: '0.9' },
+    { loc: '/doctors/kim-jaein', lastmod: PAGES_LASTMOD, changefreq: 'monthly', priority: '0.9' },
+    { loc: '/treatments', lastmod: PAGES_LASTMOD, changefreq: 'monthly', priority: '0.9' },
+    { loc: '/before-after', lastmod: PAGES_LASTMOD, changefreq: 'weekly', priority: '0.8' },
+    { loc: '/blog', lastmod: PAGES_LASTMOD, changefreq: 'daily', priority: '0.9' },
+    { loc: '/notices', lastmod: PAGES_LASTMOD, changefreq: 'weekly', priority: '0.8' },
+    { loc: '/glossary', lastmod: GLOSSARY_LASTMOD, changefreq: 'monthly', priority: '0.7' },
+    { loc: '/faq', lastmod: PAGES_LASTMOD, changefreq: 'monthly', priority: '0.8' },
+    { loc: '/visit', lastmod: PAGES_LASTMOD, changefreq: 'monthly', priority: '0.8' },
+    { loc: '/search', lastmod: PAGES_LASTMOD, changefreq: 'monthly', priority: '0.5' },
   ]
-  // 진료 상세 8종 — 핵심 SEO 페이지
+  // 진료 상세 8종 — 핵심 SEO 페이지 (3차 업글에서 용어 병기·진료장면 추가 = 실제 수정)
   for (const t of TREATMENT_LIST) {
-    entries.push({ loc: `/treatments/${t.slug}`, lastmod: todayIso, changefreq: 'monthly', priority: '0.95' })
+    entries.push({ loc: `/treatments/${t.slug}`, lastmod: PAGES_LASTMOD, changefreq: 'monthly', priority: '0.95' })
   }
   return c.text(buildUrlsetXml(base, entries), 200, sitemapXmlHeaders)
 })
@@ -1006,10 +1019,10 @@ app.get('/sitemap-pages.xml', (c) => {
 // ============================================================
 app.get('/sitemap-glossary.xml', (c) => {
   const base = `https://${CLINIC.domain}`
-  const todayIso = todayIsoKst()
+  // 정직한 lastmod: 용어집 마지막 실제 수정일 (2026-04-20 시드 완료)
   const entries: SitemapEntry[] = []
   for (const g of GLOSSARY) {
-    entries.push({ loc: `/glossary/${g.slug}`, lastmod: todayIso, changefreq: 'monthly', priority: '0.6' })
+    entries.push({ loc: `/glossary/${g.slug}`, lastmod: GLOSSARY_LASTMOD, changefreq: 'yearly', priority: '0.6' })
   }
   return c.text(buildUrlsetXml(base, entries), 200, sitemapXmlHeaders)
 })

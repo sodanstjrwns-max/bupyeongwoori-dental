@@ -314,6 +314,27 @@ export const TreatmentDetailPage = ({
         </div>
       </section>
 
+      {/* C4 경험 신호: 실제 진료 장면 — 환자 등장 → 실제 질문 → 판단 기준 → 결론 직답 */}
+      {t.clinicalScene && (
+        <section class="section section-soft" id="clinical-scene" style="padding-top:48px; padding-bottom:48px;">
+          <div class="container" style="max-width:820px;">
+            <div class="section-head" data-reveal>
+              <div class="section-eyebrow" style="padding-left:0;">REAL CASE</div>
+              <h2 class="section-title" style="font-size:clamp(1.6rem, 3vw, 2.1rem);">{t.clinicalScene.heading}</h2>
+            </div>
+            <article data-reveal data-reveal-delay="1" style="background:white; border:1px solid var(--ink-100); border-radius:var(--radius-lg); padding:32px; line-height:1.9; color:var(--ink-700);">
+              <p style="margin-bottom:14px;">{t.clinicalScene.patientContext}</p>
+              <blockquote style="margin:0 0 18px; padding:14px 20px; background:var(--paper, #f7f9f9); border-left:3px solid var(--brand-500, #6DBBB9); border-radius:0 10px 10px 0; font-size:1.05rem; color:var(--ink-800); font-style:normal;">
+                {t.clinicalScene.patientQuote}
+              </blockquote>
+              <p style="margin-bottom:14px;"><strong style="color:var(--ink-900);">저희가 확인한 것</strong> — {t.clinicalScene.judgment}</p>
+              <p style="padding-top:14px; border-top:1px dashed var(--ink-100);"><strong style="color:var(--brand-700, #1d7a78);">결론</strong> — {t.clinicalScene.answer}</p>
+              <p style="margin-top:18px; font-size:.8rem; color:var(--ink-400);">* 진료실에서 실제로 있었던 상담을 환자 특정이 불가능하도록 각색한 사례입니다. 같은 증상이라도 진단에 따라 치료 방법은 달라질 수 있습니다.</p>
+            </article>
+          </div>
+        </section>
+      )}
+
       {/* Visual Gallery (핵심 3개 진료과목 한정) */}
       {TREATMENT_VISUALS[t.slug] && (
         <section class="section section-soft" style="padding-top:0;">

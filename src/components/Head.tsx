@@ -88,10 +88,7 @@ export const Head = (props: HeadProps) => {
           {(articleMeta.tags ?? []).map((t, i) => (
             <meta key={i} property="article:tag" content={t} />
           ))}
-          {/* GA4 */}
-      <script async src="https://www.googletagmanager.com/gtag/js?id=G-75WDFE71VL"></script>
-      <script dangerouslySetInnerHTML={{ __html: "window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-75WDFE71VL',{anonymize_ip:true});" }} />
-    </>
+        </>
       ) : null}
 
       {/* Twitter */}
@@ -132,6 +129,9 @@ export const Head = (props: HeadProps) => {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }}
         />
       ))}
+      {/* GA4 */}
+      <script async src="https://www.googletagmanager.com/gtag/js?id=G-75WDFE71VL"></script>
+      <script dangerouslySetInnerHTML={{ __html: "window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-75WDFE71VL',{anonymize_ip:true});" }} />
     </>
   )
 }

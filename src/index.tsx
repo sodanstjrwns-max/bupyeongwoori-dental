@@ -46,6 +46,7 @@ import { SearchPage, searchStatic, type SearchResultItem } from './pages/search'
 import { NotFoundPage } from './pages/not-found'
 import { treatmentToMarkdown, glossaryToMarkdown, blogToMarkdown, faqToMarkdown } from './lib/markdown-export'
 import { getDoctor } from './data/doctors'
+import { fetchSiteStats, renderStatsPage } from './lib/stats'
 
 const app = new Hono<{ Bindings: Bindings }>()
 
@@ -1458,6 +1459,9 @@ app.get('/admin', async (c) => {
 })
 
 // Users
+// 사이트 통계 (중앙 대시보드 연동)
+app.get('/admin/stats', async (c) => c.html(renderStatsPage(await fetchSiteStats())))
+
 app.get('/admin/users', async (c) => {
   const users = (await c.env.DB.prepare('SELECT id, email, name, phone, role, created_at FROM users ORDER BY created_at DESC LIMIT 200').all()).results as any[]
   return c.html(<AdminUsersPage users={users} />)

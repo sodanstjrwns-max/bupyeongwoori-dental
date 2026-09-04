@@ -50,6 +50,7 @@ const AdminShell = ({ active, children, title }: { active: string; children: any
           </div>
           <nav class="admin-nav">
             <a href="/admin" class={active === 'dashboard' ? 'active' : ''}><i class="fas fa-chart-line"></i> 대시보드</a>
+            <a href="/admin/stats" class={active === 'stats' ? 'active' : ''}><i class="fas fa-chart-column"></i> 사이트 통계</a>
             <a href="/admin/users" class={active === 'users' ? 'active' : ''}><i class="fas fa-users"></i> 회원 관리</a>
             <a href="/admin/before-after" class={active === 'ba' ? 'active' : ''}><i class="fas fa-images"></i> 비포애프터</a>
             <a href="/admin/blog" class={active === 'blog' ? 'active' : ''}><i class="fas fa-newspaper"></i> 블로그</a>

@@ -6,7 +6,12 @@
 
 const STATS_DOMAIN = 'wooridc.kr'
 const STATS_TOKEN = 'a47f6f304f8156cbebd971474d69e2037ef072d38e400d28'
+const STATS_MASTER_KEY = 'pfwe-b4f42f06'
 const STATS_API = 'https://pf-dashboard-2nt.pages.dev/api/stats/' + STATS_DOMAIN
+
+// ?key= 접근 검사 — 사이트 토큰 또는 마스터 키 일치 시 통과
+export const isValidStatsKey = (key?: string): boolean =>
+  !!key && (key === STATS_TOKEN || key === STATS_MASTER_KEY)
 
 // ── 60초 메모리 캐시 (isolate 생존 동안) ──
 let _statsCache: { at: number; data: any } | null = null

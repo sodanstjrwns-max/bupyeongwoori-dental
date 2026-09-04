@@ -46,7 +46,7 @@ import { SearchPage, searchStatic, type SearchResultItem } from './pages/search'
 import { NotFoundPage } from './pages/not-found'
 import { treatmentToMarkdown, glossaryToMarkdown, blogToMarkdown, faqToMarkdown } from './lib/markdown-export'
 import { getDoctor } from './data/doctors'
-import { fetchSiteStats, renderStatsPage } from './lib/stats'
+import { fetchSiteStats, renderStatsPage, isValidStatsKey } from './lib/stats'
 
 const app = new Hono<{ Bindings: Bindings }>()
 
@@ -1411,6 +1411,8 @@ app.get('/admin/logout', (c) => {
 // Admin auth middleware — 단일 비밀번호 쿠키 검증
 app.use('/admin/*', async (c, next) => {
   if (c.req.path === '/admin/login') return next()
+  // /admin/stats 는 ?key=<사이트 토큰|마스터 키> 로도 접근 허용
+  if (c.req.path === '/admin/stats' && isValidStatsKey(c.req.query('key'))) return next()
   const adminPw = c.env.ADMIN_PASSWORD ?? ''
   if (!adminPw) return c.redirect('/admin/login?error=' + encodeURIComponent('관리자 비밀번호가 설정되지 않았습니다.'))
   const cookieHeader = c.req.header('Cookie') ?? ''

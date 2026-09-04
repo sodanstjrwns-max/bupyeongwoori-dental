@@ -1,7 +1,8 @@
 import { Layout } from '../components/Layout'
 import { CLINIC, CORE_TREATMENTS, EQUIPMENTS, OG_IMAGES } from '../lib/constants'
 import { DOCTORS, doctorPhotoSrc } from '../data/doctors'
-import { dentistSchema, websiteSchema } from '../lib/schema'
+import { breadcrumbSchema, dentistSchema, faqSchema, websiteSchema } from '../lib/schema'
+import { CORE_LIST } from '../data/treatments'
 
 export const HomePage = () => {
   return (
@@ -13,6 +14,10 @@ export const HomePage = () => {
       jsonLd={[
         dentistSchema(),
         websiteSchema(),
+        // 홈 BreadcrumbList — 사이트 계층 루트 명시 (AEO)
+        breadcrumbSchema([{ name: '홈', url: '/' }]),
+        // 홈 FAQPage — 핵심 진료(임플란트·심미보철·교정) 대표 질문 발췌 (AEO)
+        faqSchema(CORE_LIST.flatMap((t) => t.faqs.slice(0, 2)).map((f) => ({ q: f.q, a: f.a }))),
         // 음성검색 AEO — 시리/구글어시스턴트가 읽을 핵심 영역 지정
         {
           '@context': 'https://schema.org',

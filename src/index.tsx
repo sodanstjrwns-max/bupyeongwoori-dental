@@ -1814,6 +1814,28 @@ app.get('/admin/og-preview', async (c) => {
   return c.html(<AdminOgPreviewPage pages={results} />)
 })
 
+// ── 실예약 로컬 통계 (중앙 대시보드 수집용 — 건수만, 개인정보 없음) ──
+// ?key=<사이트 토큰|마스터 키> 필수. 불일치 시 404.
+app.get('/api/local-stats', async (c) => {
+  if (!isValidStatsKey(c.req.query('key'))) return c.notFound()
+  try {
+    const count = async (table: string) => {
+      const cur = await c.env.DB.prepare(
+        `SELECT COUNT(*) AS n FROM ${table} WHERE created_at >= datetime('now','-28 days')`
+      ).first<{ n: number }>()
+      const prev = await c.env.DB.prepare(
+        `SELECT COUNT(*) AS n FROM ${table} WHERE created_at >= datetime('now','-56 days') AND created_at < datetime('now','-28 days')`
+      ).first<{ n: number }>()
+      return { name: table, cur: Number(cur?.n || 0), prev: Number(prev?.n || 0) }
+    }
+    const tables = [await count('contact_logs')]
+    const total = tables.reduce((a, t) => ({ cur: a.cur + t.cur, prev: a.prev + t.prev }), { cur: 0, prev: 0 })
+    return c.json({ supported: true, tables, total })
+  } catch {
+    return c.json({ supported: false })
+  }
+})
+
 // ============================================================
 // 404
 // ============================================================

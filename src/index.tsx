@@ -12,7 +12,7 @@ import { BlogListPage, BlogDetailPage } from './pages/blog'
 import { NoticesListPage, NoticeDetailPage } from './pages/notices'
 import { GlossaryListPage, GlossaryDetailPage } from './pages/glossary'
 import { FaqAllPage } from './pages/faq'
-import { VisitPage } from './pages/visit'
+import { VisitPage, FEE_SEED, type FeeCategory } from './pages/visit'
 import {
   AdminLoginPage,
   AdminDashboard,
@@ -24,6 +24,8 @@ import {
   AdminNoticesListPage,
   AdminNoticeFormPage,
   AdminOgPreviewPage,
+  AdminFeesPage,
+  type FeeEditGroup,
 } from './pages/admin'
 import {
   type Bindings,
@@ -582,7 +584,75 @@ app.get('/search', async (c) => {
 // ============================================================
 // Visit
 // ============================================================
-app.get('/visit', (c) => c.html(<VisitPage />))
+// ===== 비급여 수가(fees) 로더 =====
+// DB(fees)를 sort_group 단위로 묶어 FeeCategory[]로 복원.
+// publishedOnly=true 면 공개 항목만. 실패/빈 결과면 null → 호출부에서 하드코딩 시드(FEE_SEED) 폴백.
+async function loadFeeCategories(db: any, publishedOnly: boolean): Promise<FeeCategory[] | null> {
+  if (!db) return null
+  try {
+    const where = publishedOnly ? 'WHERE is_published = 1' : ''
+    const { results } = await db
+      .prepare(
+        `SELECT category, name, price, is_published, sort_group, sort_order
+         FROM fees ${where} ORDER BY sort_group ASC, sort_order ASC, id ASC`
+      )
+      .all()
+    if (!results || !results.length) return null
+    const map = new Map<number, FeeCategory>()
+    for (const r of results as any[]) {
+      let cat = map.get(r.sort_group)
+      if (!cat) {
+        cat = { cat: r.category, items: [] }
+        map.set(r.sort_group, cat)
+      }
+      cat.items.push({ name: r.name, price: r.price })
+    }
+    return [...map.values()]
+  } catch (e) {
+    console.error('loadFeeCategories error', e)
+    return null
+  }
+}
+
+// 관리자 편집기용: 비공개 포함 전체 행 + 항목별 is_published 유지. 실패/빈 결과면 시드.
+async function loadFeeGroupsForAdmin(db: any): Promise<FeeEditGroup[]> {
+  if (!db) return seedFeeGroups()
+  try {
+    const { results } = await db
+      .prepare(
+        `SELECT category, name, price, is_published, sort_group, sort_order
+         FROM fees ORDER BY sort_group ASC, sort_order ASC, id ASC`
+      )
+      .all()
+    if (!results || !results.length) return seedFeeGroups()
+    const map = new Map<number, FeeEditGroup>()
+    for (const r of results as any[]) {
+      let g = map.get(r.sort_group)
+      if (!g) {
+        g = { cat: r.category, items: [] }
+        map.set(r.sort_group, g)
+      }
+      g.items.push({ name: r.name, price: r.price, is_published: r.is_published })
+    }
+    return [...map.values()]
+  } catch (e) {
+    console.error('loadFeeGroupsForAdmin error', e)
+    return seedFeeGroups()
+  }
+}
+
+// 하드코딩 시드(FEE_SEED) → 편집기 그룹 (전 항목 공개)
+function seedFeeGroups(): FeeEditGroup[] {
+  return FEE_SEED.map((cat) => ({
+    cat: cat.cat,
+    items: cat.items.map((it) => ({ name: it.name, price: it.price, is_published: 1 })),
+  }))
+}
+
+app.get('/visit', async (c) => {
+  const cats = await loadFeeCategories(c.env.DB, true)
+  return c.html(<VisitPage priceCategories={cats || undefined} />)
+})
 
 // ============================================================
 // IndexNow 키 파일 — 루트 위치 필수 (루트 키 = 사이트 전체 URL 제출 권한)
@@ -1467,6 +1537,44 @@ app.get('/admin/stats', async (c) => c.html(renderStatsPage(await fetchSiteStats
 app.get('/admin/users', async (c) => {
   const users = (await c.env.DB.prepare('SELECT id, email, name, phone, role, created_at FROM users ORDER BY created_at DESC LIMIT 200').all()).results as any[]
   return c.html(<AdminUsersPage users={users} />)
+})
+
+// 비급여 수가 관리 (편집기) — /admin/* 미들웨어로 게이트됨(미인증 302)
+app.get('/admin/fees', async (c) => {
+  const groups = await loadFeeGroupsForAdmin(c.env.DB)
+  return c.html(<AdminFeesPage groups={groups} />)
+})
+
+// 비급여 수가 저장 — 전체 교체(delete-all + insert) 단일 트랜잭션(batch)
+// /admin/* 미들웨어로 게이트됨(미인증 302 리다이렉트)
+app.post('/admin/api/fees', async (c) => {
+  if (!c.env.DB) return c.json({ error: 'no db' }, 503)
+  let body: any
+  try { body = await c.req.json() } catch { return c.json({ error: 'bad json' }, 400) }
+  const groups = Array.isArray(body?.groups) ? body.groups : []
+  const ins = c.env.DB.prepare(
+    'INSERT INTO fees (category, name, price, is_published, sort_group, sort_order) VALUES (?,?,?,?,?,?)'
+  )
+  const stmts: any[] = [c.env.DB.prepare('DELETE FROM fees')]
+  groups.forEach((g: any, gi: number) => {
+    const cat = String(g?.cat ?? '').trim()
+    if (!cat) return
+    const items = Array.isArray(g?.items) ? g.items : []
+    items.forEach((it: any, ii: number) => {
+      const name = String(it?.name ?? '').trim()
+      if (!name) return
+      const price = String(it?.price ?? '').trim()
+      const pub = it?.is_published === 0 || it?.is_published === false ? 0 : 1
+      stmts.push(ins.bind(cat, name, price, pub, gi + 1, ii))
+    })
+  })
+  try {
+    await c.env.DB.batch(stmts)
+    return c.json({ ok: true, count: stmts.length - 1 })
+  } catch (e: any) {
+    console.error('save fees error', e)
+    return c.json({ error: 'save failed' }, 500)
+  }
 })
 
 // Before-After CRUD

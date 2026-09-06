@@ -2,62 +2,69 @@ import { Layout } from '../components/Layout'
 import { CLINIC, OG_IMAGES } from '../lib/constants'
 import { breadcrumbSchema, dentistSchema } from '../lib/schema'
 
-export const VisitPage = () => {
-  const priceRows = [
-    { cat: '인레이', items: [
-      { name: 'Ceramic Inlay (세라믹 인레이)', price: '250,000원' },
-    ]},
-    { cat: '레진', items: [
-      { name: '전치부 레진', price: '200,000원' },
-      { name: '구치부 레진', price: '100,000원' },
-      { name: 'C/A (치경부 마모 수복)', price: '70,000원' },
-      { name: 'Diastema (치아 사이 공간 수복)', price: '200,000원' },
-      { name: '레진 빌드업', price: '300,000원' },
-    ]},
-    { cat: '보존', items: [
-      { name: 'Core (코어)', price: '50,000원' },
-      { name: 'Casting Post (캐스팅 포스트)', price: '200,000원' },
-      { name: 'Post (포스트)', price: '150,000원' },
-    ]},
-    { cat: '크라운', items: [
-      { name: 'Zirconia 전치부 (앞니 지르코니아)', price: '600,000원' },
-      { name: 'Zirconia (지르코니아)', price: '450,000원' },
-      { name: 'PFM (도재금속관)', price: '420,000원' },
-    ]},
-    { cat: '임플란트', items: [
-      { name: 'Straumann (스트라우만, 스위스)', price: '1,300,000원' },
-      { name: 'SIC (스위스)', price: '990,000원' },
-      { name: 'Osstem / Point (오스템 / 포인트)', price: '580,000원' },
-      { name: 'MEGAGEN (메가젠)', price: '690,000원' },
-      { name: 'Neo (CUS ZIR)', price: '500,000원' },
-      { name: '기본 뼈이식', price: '300,000원 ~' },
-      { name: '상악동 수술', price: '500,000원 ~' },
-    ]},
-    { cat: '임플란트 보철물', items: [
-      { name: 'Zirconia Crown 변경 시', price: '500,000원' },
-      { name: 'Pontic (Zirconia)', price: '400,000원' },
-      { name: 'Pontic (PFM)', price: '300,000원' },
-    ]},
-    { cat: '틀니', items: [
-      { name: 'RPD (부분 틀니)', price: '1,500,000원' },
-      { name: 'FULL (전체 틀니)', price: '2,000,000원' },
-    ]},
-    { cat: '교정', items: [
-      { name: '교정 진단', price: '100,000원' },
-      { name: 'Metal Crown (교정용 메탈 크라운)', price: '100,000원' },
-      { name: 'Clippy-C (클리피 씨, 자가결찰)', price: '3,200,000원' },
-      { name: '인비절라인 (Invisalign)', price: '6,500,000원' },
-      { name: '투명 교정', price: '4,500,000원 ~' },
-      { name: '설측 교정', price: '5,000,000원 ~' },
-      { name: '미니스크류', price: '100,000원' },
-      { name: '일반 월 조정료', price: '50,000원' },
-      { name: '인비절라인 / 인코그니토 월 조정료', price: '70,000원' },
-      { name: '유지장치 (리테이너)', price: '400,000원' },
-    ]},
-    { cat: '기타', items: [
-      { name: '나이트가드 (Night Guard)', price: '400,000원' },
-    ]},
-  ]
+// 비급여 수가 데이터 구조 (관리자 편집기 · DB 폴백 공용)
+export type FeeItem = { name: string; price: string }
+export type FeeCategory = { cat: string; items: FeeItem[] }
+
+// 하드코딩 시드 — DB(fees)가 비었거나 조회 실패 시 폴백. 절대 빈 화면이 되지 않도록.
+export const FEE_SEED: FeeCategory[] = [
+  { cat: '인레이', items: [
+    { name: 'Ceramic Inlay (세라믹 인레이)', price: '250,000원' },
+  ]},
+  { cat: '레진', items: [
+    { name: '전치부 레진', price: '200,000원' },
+    { name: '구치부 레진', price: '100,000원' },
+    { name: 'C/A (치경부 마모 수복)', price: '70,000원' },
+    { name: 'Diastema (치아 사이 공간 수복)', price: '200,000원' },
+    { name: '레진 빌드업', price: '300,000원' },
+  ]},
+  { cat: '보존', items: [
+    { name: 'Core (코어)', price: '50,000원' },
+    { name: 'Casting Post (캐스팅 포스트)', price: '200,000원' },
+    { name: 'Post (포스트)', price: '150,000원' },
+  ]},
+  { cat: '크라운', items: [
+    { name: 'Zirconia 전치부 (앞니 지르코니아)', price: '600,000원' },
+    { name: 'Zirconia (지르코니아)', price: '450,000원' },
+    { name: 'PFM (도재금속관)', price: '420,000원' },
+  ]},
+  { cat: '임플란트', items: [
+    { name: 'Straumann (스트라우만, 스위스)', price: '1,300,000원' },
+    { name: 'SIC (스위스)', price: '990,000원' },
+    { name: 'Osstem / Point (오스템 / 포인트)', price: '580,000원' },
+    { name: 'MEGAGEN (메가젠)', price: '690,000원' },
+    { name: 'Neo (CUS ZIR)', price: '500,000원' },
+    { name: '기본 뼈이식', price: '300,000원 ~' },
+    { name: '상악동 수술', price: '500,000원 ~' },
+  ]},
+  { cat: '임플란트 보철물', items: [
+    { name: 'Zirconia Crown 변경 시', price: '500,000원' },
+    { name: 'Pontic (Zirconia)', price: '400,000원' },
+    { name: 'Pontic (PFM)', price: '300,000원' },
+  ]},
+  { cat: '틀니', items: [
+    { name: 'RPD (부분 틀니)', price: '1,500,000원' },
+    { name: 'FULL (전체 틀니)', price: '2,000,000원' },
+  ]},
+  { cat: '교정', items: [
+    { name: '교정 진단', price: '100,000원' },
+    { name: 'Metal Crown (교정용 메탈 크라운)', price: '100,000원' },
+    { name: 'Clippy-C (클리피 씨, 자가결찰)', price: '3,200,000원' },
+    { name: '인비절라인 (Invisalign)', price: '6,500,000원' },
+    { name: '투명 교정', price: '4,500,000원 ~' },
+    { name: '설측 교정', price: '5,000,000원 ~' },
+    { name: '미니스크류', price: '100,000원' },
+    { name: '일반 월 조정료', price: '50,000원' },
+    { name: '인비절라인 / 인코그니토 월 조정료', price: '70,000원' },
+    { name: '유지장치 (리테이너)', price: '400,000원' },
+  ]},
+  { cat: '기타', items: [
+    { name: '나이트가드 (Night Guard)', price: '400,000원' },
+  ]},
+]
+
+export const VisitPage = ({ priceCategories }: { priceCategories?: FeeCategory[] } = {}) => {
+  const priceRows = priceCategories && priceCategories.length ? priceCategories : FEE_SEED
 
   return (
     <Layout

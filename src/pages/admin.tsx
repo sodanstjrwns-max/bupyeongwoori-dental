@@ -55,6 +55,7 @@ const AdminShell = ({ active, children, title }: { active: string; children: any
             <a href="/admin/before-after" class={active === 'ba' ? 'active' : ''}><i class="fas fa-images"></i> 비포애프터</a>
             <a href="/admin/blog" class={active === 'blog' ? 'active' : ''}><i class="fas fa-newspaper"></i> 블로그</a>
             <a href="/admin/notices" class={active === 'notices' ? 'active' : ''}><i class="fas fa-bullhorn"></i> 공지사항</a>
+            <a href="/admin/fees" class={active === 'fees' ? 'active' : ''}><i class="fas fa-won-sign"></i> 수가 관리</a>
             <a href="/admin/og-preview" class={active === 'og' ? 'active' : ''}><i class="fas fa-share-nodes"></i> OG 미리보기</a>
             <a href="/" target="_blank" style="margin-top:20px; border-top:1px solid var(--ink-100); padding-top:20px;"><i class="fas fa-arrow-up-right-from-square"></i> 사이트 보기</a>
             <a href="/admin/logout"><i class="fas fa-right-from-bracket"></i> 로그아웃</a>
@@ -777,3 +778,110 @@ export const AdminOgPreviewPage = ({ pages }: { pages: OgPagePreview[] }) => {
     </AdminShell>
   )
 }
+
+// ============================================================
+// 비급여 수가 관리 (편집기 + 항목별 공개/비공개 토글)
+// ============================================================
+export type FeeEditItem = { name: string; price: string; is_published?: number }
+export type FeeEditGroup = { cat: string; items: FeeEditItem[] }
+
+const FEES_ADMIN_CSS = `
+.fadm{max-width:1000px}
+.fadm .lead{color:var(--ink-500);font-size:.9rem;margin:0 0 20px;line-height:1.7}
+.fadm .grp{border:1px solid var(--ink-100);border-radius:12px;margin-bottom:16px;overflow:hidden;background:#fff}
+.fadm .grp-head{display:flex;gap:8px;align-items:center;background:var(--paper);padding:10px 12px;flex-wrap:wrap}
+.fadm .grp-head input{padding:8px 10px;border:1px solid var(--ink-200);border-radius:8px;font-size:.95rem;font-family:inherit}
+.fadm .grp-head .cat{font-weight:700;flex:1;min-width:200px}
+.fadm table{width:100%;border-collapse:collapse;font-size:.9rem}
+.fadm th{text-align:left;padding:8px;border-bottom:2px solid var(--ink-100);font-size:.72rem;color:var(--ink-400);letter-spacing:.04em}
+.fadm td{padding:6px 8px;border-bottom:1px solid var(--ink-50, #f2f2f2);vertical-align:middle}
+.fadm td input[type=text]{width:100%;padding:7px 9px;border:1px solid var(--ink-200);border-radius:7px;font-size:.9rem;font-family:inherit}
+.fadm .col-name{width:52%}.fadm .col-price{width:28%}.fadm .col-pub{width:70px;text-align:center}.fadm .col-x{width:44px;text-align:center}
+.fadm .rowdel{background:none;border:none;color:#c0392b;cursor:pointer;font-size:1rem}
+.fadm .grp-foot{padding:10px 12px;background:#fcfbfa}
+.fadm .lil{font-size:.8rem;padding:7px 12px;border:1px dashed var(--ink-200);border-radius:8px;background:#fff;cursor:pointer;color:var(--ink-700)}
+.fadm .savebar{position:sticky;bottom:0;background:#fff;border-top:1px solid var(--ink-100);padding:14px 0;display:flex;gap:12px;align-items:center;justify-content:flex-end;flex-wrap:wrap;margin-top:12px}
+.fadm .hint{color:var(--ink-400);font-size:.82rem}
+.fadm .hidden-row{opacity:.45}
+`
+
+export const AdminFeesPage = ({ groups }: { groups: FeeEditGroup[] }) => (
+  <AdminShell active="fees" title="수가 관리">
+    <style dangerouslySetInnerHTML={{ __html: FEES_ADMIN_CSS }} />
+    <div class="admin-card fadm">
+      <p class="lead">
+        비급여 진료비를 직접 수정하고, 항목별로 <strong>공개/비공개</strong>를 정할 수 있습니다.
+        비공개(체크 해제) 항목은 공개 페이지(<a href="/visit#pricing" target="_blank" style="color:var(--brand,#14b8a6);">내원 안내 · 수가</a>)에서 숨겨지며 이 화면에서는 계속 편집됩니다.
+        저장하면 즉시 반영됩니다.
+      </p>
+      <div id="f-groups"></div>
+      <button type="button" id="f-addgroup" class="lil" style="margin:6px 0 10px"><i class="fas fa-plus"></i> 분류 추가</button>
+      <div class="savebar">
+        <span id="f-status" class="hint"></span>
+        <button type="button" id="f-save" class="btn btn-primary"><i class="fas fa-floppy-disk"></i> 저장</button>
+      </div>
+    </div>
+    <script dangerouslySetInnerHTML={{ __html: `
+      var GROUPS = ${JSON.stringify(groups)};
+      var wrap = document.getElementById('f-groups');
+      function q(s){ return (s==null?'':String(s)).replace(/"/g,'&quot;'); }
+      function itemRow(it){
+        var tr = document.createElement('tr');
+        if(it.is_published===0) tr.className='hidden-row';
+        tr.innerHTML =
+          '<td class="col-name"><input type="text" data-k="name" value="'+q(it.name)+'" placeholder="항목명"></td>'+
+          '<td class="col-price"><input type="text" data-k="price" value="'+q(it.price)+'" placeholder="예: 250,000원"></td>'+
+          '<td class="col-pub"><input type="checkbox" data-k="pub" '+(it.is_published===0?'':'checked')+' title="공개"></td>'+
+          '<td class="col-x"><button type="button" class="rowdel" title="행 삭제"><i class="fas fa-trash"></i></button></td>';
+        tr.querySelector('[data-k=pub]').addEventListener('change', function(e){ tr.className = e.target.checked ? '' : 'hidden-row'; });
+        tr.querySelector('.rowdel').addEventListener('click', function(){ tr.remove(); });
+        return tr;
+      }
+      function groupBlock(g){
+        var box = document.createElement('div'); box.className='grp';
+        box.innerHTML =
+          '<div class="grp-head">'+
+            '<input class="cat" data-k="cat" type="text" placeholder="분류명 (예: 임플란트)" value="'+q(g.cat)+'">'+
+            '<button type="button" class="rowdel grpdel" title="분류 삭제"><i class="fas fa-trash"></i></button>'+
+          '</div>'+
+          '<table><thead><tr><th>항목</th><th>안내 수가</th><th style="text-align:center">공개</th><th></th></tr></thead><tbody></tbody></table>'+
+          '<div class="grp-foot"><button type="button" class="lil addrow"><i class="fas fa-plus"></i> 항목 추가</button></div>';
+        var tb = box.querySelector('tbody');
+        (g.items||[]).forEach(function(it){ tb.appendChild(itemRow(it)); });
+        box.querySelector('.addrow').addEventListener('click', function(){ tb.appendChild(itemRow({name:'',price:'',is_published:1})); });
+        box.querySelector('.grpdel').addEventListener('click', function(){ if(confirm('이 분류 전체를 삭제할까요?')) box.remove(); });
+        return box;
+      }
+      (GROUPS||[]).forEach(function(g){ wrap.appendChild(groupBlock(g)); });
+      document.getElementById('f-addgroup').addEventListener('click', function(){ wrap.appendChild(groupBlock({cat:'새 분류',items:[]})); });
+      function collect(){
+        var groups=[];
+        wrap.querySelectorAll('.grp').forEach(function(box){
+          var cat = box.querySelector('[data-k=cat]').value.trim();
+          var items=[];
+          box.querySelectorAll('tbody tr').forEach(function(tr){
+            var name = tr.querySelector('[data-k=name]').value.trim();
+            if(!name) return;
+            items.push({
+              name: name,
+              price: tr.querySelector('[data-k=price]').value.trim(),
+              is_published: tr.querySelector('[data-k=pub]').checked ? 1 : 0
+            });
+          });
+          if(cat && items.length) groups.push({cat:cat, items:items});
+        });
+        return { groups: groups };
+      }
+      document.getElementById('f-save').addEventListener('click', async function(){
+        var btn=this, st=document.getElementById('f-status');
+        btn.disabled=true; st.textContent='저장 중...';
+        try{
+          var r = await fetch('/admin/api/fees',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(collect())});
+          var j = await r.json();
+          st.textContent = j.ok ? ('✓ 저장됨 ('+j.count+'개 항목)') : ('✗ '+(j.error||'실패'));
+        }catch(e){ st.textContent='✗ 네트워크 오류'; }
+        btn.disabled=false;
+      });
+    ` }} />
+  </AdminShell>
+)

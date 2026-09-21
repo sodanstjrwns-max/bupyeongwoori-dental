@@ -81,7 +81,7 @@ export const SearchPage = ({ q, results }: { q: string; results: SearchResultIte
       title={hasQuery ? `'${q}' 검색 결과` : '통합 검색'}
       description={`부평우리치과 통합 검색 — 진료과목·치과 백과사전 ${GLOSSARY.length}개 용어·FAQ·블로그·공지사항을 한 번에 검색하세요.`}
       canonical={hasQuery ? undefined : `${base}/search`}
-      noindex={hasQuery /* 검색 결과 페이지는 색인 제외(씬 콘텐츠 방지), 검색 홈만 색인 */}
+      noindex={true /* 검색 홈·결과 모두 색인 제외(씬 콘텐츠, GSC 2026-09) — SearchAction 엔드포인트 역할만 유지 */}
       jsonLd={[breadcrumbSchema([{ name: '홈', url: '/' }, { name: '검색', url: '/search' }])]}
     >
       <section class="page-hero" id="search-hero">

@@ -729,7 +729,6 @@ const AUTO: AutoTerm[] = [
   { slug: 'triple-tray', term: '트리플 트레이', termEn: 'Triple Tray', category: 'device', definition: '상·하악 인상을 한 번에 뜰 수 있는 양면 트레이.' },
 
   // 진단/검사
-  { slug: 'vitality-test', term: '치수 생활력 검사', termEn: 'Pulp Vitality Test', category: 'procedure', definition: '치아 신경이 살아있는지 확인하는 검사(냉검사·전기검사).' },
   { slug: 'percussion-test', term: '타진 검사', termEn: 'Percussion Test', category: 'procedure', definition: '치아를 두드려 염증 여부를 확인하는 진단.' },
   { slug: 'caries-detection', term: '충치 감지기', termEn: 'Caries Detector', category: 'device', definition: '형광/레이저로 초기 충치를 감지하는 장비(예: 디아그노덴트).' },
   { slug: 'diagnodent', term: '디아그노덴트', termEn: 'DIAGNOdent', category: 'device', definition: 'KaVo사의 레이저 충치 진단 장비.' },
@@ -959,7 +958,6 @@ const EXTRA_AUTO: AutoTerm[] = [
   { slug: 'dsd', term: '디지털 스마일 디자인', termEn: 'Digital Smile Design', category: 'esthetic', definition: '사진과 소프트웨어로 미소를 디지털 설계하는 기법.' },
 
   // 기타 질환/개념
-  { slug: 'dry-mouth', term: '구강건조증', termEn: 'Xerostomia', category: 'pathology', definition: '침 분비 감소로 입이 마르는 증상.' },
   { slug: 'halitosis', term: '구취', termEn: 'Halitosis', category: 'pathology', definition: '입에서 나는 불쾌한 냄새.' },
   { slug: 'burning-mouth', term: '구강작열감 증후군', termEn: 'Burning Mouth Syndrome', category: 'pathology', definition: '특별한 병변 없이 입안이 화끈거리는 증상.' },
   { slug: 'trigeminal-neuralgia', term: '삼차신경통', termEn: 'Trigeminal Neuralgia', category: 'pathology', definition: '삼차신경에 발작적 극심한 통증이 생기는 질환.' },
@@ -1016,6 +1014,17 @@ const EXTRA_AUTO: AutoTerm[] = [
 ]
 
 // 자동 생성을 SEED와 합쳐서 최종 목록 구성
+// ============================================================
+// 중복 slug alias — 제목이 완전히 같은 용어 페이지가 두 URL로 존재해
+// GSC 에서 "중복 페이지" 로 미색인되던 항목. 대표 slug 로 301 리다이렉트하며
+// GLOSSARY 목록·사이트맵에서는 제외한다. (2026-09-21)
+// ============================================================
+export const GLOSSARY_ALIASES: Record<string, string> = {
+  'dry-mouth': 'xerostomia',            // 구강건조증 (Xerostomia)
+  'vitality-test': 'pulp-vitality-test', // 치수 생활력 검사 (Pulp Vitality Test)
+}
+export const resolveGlossaryAlias = (slug: string): string | undefined => GLOSSARY_ALIASES[slug]
+
 export const GLOSSARY: GlossaryTerm[] = (() => {
   const all: GlossaryTerm[] = [...SEEDS]
   const existing = new Set(SEEDS.map((s) => s.slug))
@@ -1037,6 +1046,9 @@ export const GLOSSARY: GlossaryTerm[] = (() => {
   }
   merge(AUTO)
   merge(EXTRA_AUTO)
+
+  // alias slug 는 대표 slug 로 301 처리하므로 목록에서 제외
+  for (let i = all.length - 1; i >= 0; i--) if (all[i].slug in GLOSSARY_ALIASES) all.splice(i, 1)
 
   // 레거시 호환 alias 필드 주입 (short, treatments, related)
   for (const t of all) {

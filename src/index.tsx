@@ -37,7 +37,7 @@ import {
   isValidEmail,
   normalizePhone,
 } from './lib/auth'
-import { getGlossaryTerm, GLOSSARY } from './data/glossary'
+import { getGlossaryTerm, GLOSSARY, resolveGlossaryAlias } from './data/glossary'
 import { CLINIC } from './lib/constants'
 import { TREATMENT_LIST, getTreatment } from './data/treatments'
 import { pingIndexNow, INDEXNOW_KEY } from './lib/indexnow'
@@ -51,6 +51,20 @@ import { getDoctor } from './data/doctors'
 import { fetchSiteStats, renderStatsPage, isValidStatsKey } from './lib/stats'
 
 const app = new Hono<{ Bindings: Bindings }>()
+
+// ============================================================
+// canonical host 통일 — www.wooridc.kr → wooridc.kr (301)
+// www 호스트가 200 으로 같은 페이지를 서빙하면 GSC 에서 중복 호스트로 잡힌다.
+// *.pages.dev 등 다른 호스트는 건드리지 않는다 (www. 로 시작하는 경우만).
+// ============================================================
+app.use('*', async (c, next) => {
+  const url = new URL(c.req.url)
+  if (url.hostname.startsWith('www.')) {
+    const path = url.pathname.length > 1 ? url.pathname.replace(/\/+$/, '') : url.pathname
+    return c.redirect(`https://${CLINIC.domain}${path}${url.search}`, 301)
+  }
+  await next()
+})
 
 // ============================================================
 // Trailing slash 정규화 — /blog/ → /blog (301)
@@ -519,6 +533,9 @@ app.get('/glossary', (c) => {
 })
 app.get('/glossary/:slug', (c) => {
   const slug = c.req.param('slug')
+  // 중복 slug(alias) → 대표 slug 301 (.md 변형 포함)
+  const aliasTarget = resolveGlossaryAlias(slug.endsWith('.md') ? slug.slice(0, -3) : slug)
+  if (aliasTarget) return c.redirect(`/glossary/${aliasTarget}${slug.endsWith('.md') ? '.md' : ''}`, 301)
   // AEO: 마크다운 버전 — /glossary/implant.md
   if (slug.endsWith('.md')) {
     const term = getGlossaryTerm(slug.slice(0, -3))
@@ -1080,7 +1097,6 @@ app.get('/sitemap-pages.xml', (c) => {
     { loc: '/glossary', lastmod: GLOSSARY_LASTMOD, changefreq: 'monthly', priority: '0.7' },
     { loc: '/faq', lastmod: PAGES_LASTMOD, changefreq: 'monthly', priority: '0.8' },
     { loc: '/visit', lastmod: PAGES_LASTMOD, changefreq: 'monthly', priority: '0.8' },
-    { loc: '/search', lastmod: PAGES_LASTMOD, changefreq: 'monthly', priority: '0.5' },
   ]
   // 진료 상세 8종 — 핵심 SEO 페이지 (3차 업글에서 용어 병기·진료장면 추가 = 실제 수정)
   for (const t of TREATMENT_LIST) {

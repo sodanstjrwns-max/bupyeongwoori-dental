@@ -1,4 +1,5 @@
 import { Hono } from 'hono'
+import { CONTENT_DATES, toKstNoonIso } from './lib/content-dates'
 import { cors } from 'hono/cors'
 import { HomePage } from './pages/home'
 import { MissionPage } from './pages/mission'
@@ -38,7 +39,7 @@ import {
   normalizePhone,
 } from './lib/auth'
 import { getGlossaryTerm, GLOSSARY, resolveGlossaryAlias } from './data/glossary'
-import { CLINIC } from './lib/constants'
+import { CLINIC, hoursSummary } from './lib/constants'
 import { TREATMENT_LIST, getTreatment } from './data/treatments'
 import { pingIndexNow, INDEXNOW_KEY } from './lib/indexnow'
 import { autoFillBlogSeo, autoFillBaSeo, buildIndexNowUrls } from './lib/auto-seo'
@@ -722,6 +723,16 @@ app.get('/robots.txt', (c) => {
     'User-agent: Claude-Web',
     'Allow: /',
     '',
+    'User-agent: Claude-SearchBot',
+    'Allow: /',
+    'Disallow: /admin',
+    'Disallow: /api',
+    '',
+    'User-agent: Claude-User',
+    'Allow: /',
+    'Disallow: /admin',
+    'Disallow: /api',
+    '',
     'User-agent: anthropic-ai',
     'Allow: /',
     '',
@@ -748,6 +759,16 @@ app.get('/robots.txt', (c) => {
     'Allow: /',
     '',
     'User-agent: Yeti',
+    'Allow: /',
+    'Disallow: /admin',
+    'Disallow: /api',
+    '',
+    'User-agent: Daum',
+    'Allow: /',
+    'Disallow: /admin',
+    'Disallow: /api',
+    '',
+    'User-agent: Daumoa',
     'Allow: /',
     'Disallow: /admin',
     'Disallow: /api',
@@ -816,7 +837,7 @@ app.get('/llms.txt', async (c) => {
 - **카카오톡 상담**: ${CLINIC.socialLinks.kakao}
 - **네이버 예약**: ${CLINIC.socialLinks.naverBooking}
 - **네이버 블로그**: ${CLINIC.socialLinks.blog}
-- **진료시간**: 평일 10:00~19:00 / 토요일 10:00~14:00 / 일요일·공휴일 휴진
+- **진료시간**: ${hoursSummary()} / ${CLINIC.lunch}
 - **대표원장**: 김재인 (고려대학교 임상치의학대학원 임상치의학 박사, 통합치의학과 전문의)
 
 ## 주요 페이지
@@ -848,9 +869,8 @@ app.get('/llms.txt', async (c) => {
 ${AREAS.map((a) => `- [${a.name} 치과 안내](${base}/areas/${a.slug}): ${a.nameFull} — ${a.distance}`).join('\n')}
 
 ## 머신 리더블 버전 (Markdown)
-- 진료 상세: \`${base}/treatments/{slug}.md\` (예: ${base}/treatments/implant.md)
-- 백과사전 용어: \`${base}/glossary/{slug}.md\`
-- 블로그 글: \`${base}/blog/{slug}.md\`
+${TREATMENT_LIST.map((t) => `- [${t.name} (마크다운)](${base}/treatments/${t.slug}.md)`).join('\n')}
+- 백과사전 용어·블로그 글: 각 페이지 주소 끝에 .md 를 붙이면 마크다운 버전을 제공합니다.
 - FAQ 전체 (160+ Q&A): [faq.md](${base}/faq.md)
 - 전체 상세 본문: [llms-full.txt](${base}/llms-full.txt)
 
@@ -880,6 +900,7 @@ app.get('/llms-full.txt', async (c) => {
     `> 부평역 26번 출구 도보 1분, 14년 한 자리를 지켜온 치과. 이 문서는 ${CLINIC.name}의 주요 의료 정보를 LLM이 읽기 쉬운 형태로 제공합니다.`,
     '',
     `주소: ${CLINIC.address} | 전화: ${CLINIC.phone} | 공식 사이트: https://${CLINIC.domain}`,
+    `진료시간: ${hoursSummary()} / ${CLINIC.lunch}`,
     '',
     '---',
     '',
@@ -974,11 +995,12 @@ function todayIsoKst(): string {
 // (콘텐츠 수정 없이 재배포할 때는 절대 건드리지 말 것)
 // ============================================================
 /** 핵심 정적 페이지·진료 상세 — 3차 업글(D5 용어 병기 + C4 진료장면)로 콘텐츠 수정 */
-const PAGES_LASTMOD = '2026-08-18T12:00:00+09:00'
+// 값은 src/lib/content-dates.ts 단일 출처 (스키마 lastReviewed·화면 감수 줄과 동일)
+const PAGES_LASTMOD = toKstNoonIso(CONTENT_DATES.treatments)
 /** 지역×진료 랜딩 — 2026-05-26 생성 이후 콘텐츠 변경 없음 */
-const AREAS_LASTMOD = '2026-05-26T12:00:00+09:00'
+const AREAS_LASTMOD = toKstNoonIso(CONTENT_DATES.areas)
 /** 치과 백과사전 582 용어 — 2026-04-20 마지막 시드 이후 변경 없음 */
-const GLOSSARY_LASTMOD = '2026-04-20T12:00:00+09:00'
+const GLOSSARY_LASTMOD = toKstNoonIso(CONTENT_DATES.glossary)
 
 // ============================================================
 // Sitemap Index — 조건부 등록 (빈 sitemap 자동 제외)

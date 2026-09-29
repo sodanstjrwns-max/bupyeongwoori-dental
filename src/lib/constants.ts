@@ -2,6 +2,33 @@
 // 부평우리치과 - 전역 상수/설정
 // ============================================================
 
+// ============================================================
+// 진료시간 — 단일 출처 (Single Source of Truth)
+// 방문 안내 표·Dentist 스키마 openingHoursSpecification·llms.txt·llms-full.txt·홈/지역 요약 문구가
+// 전부 여기서 파생된다. 시간이 바뀌면 이 배열만 고친다.
+// ============================================================
+export const HOURS = [
+  { day: '월요일', short: '월', en: 'Monday', opens: '10:00', closes: '20:00' },
+  { day: '화요일', short: '화', en: 'Tuesday', opens: '10:00', closes: '18:00' },
+  { day: '수요일', short: '수', en: 'Wednesday', opens: '10:00', closes: '21:00' },
+  { day: '목요일', short: '목', en: 'Thursday', opens: '10:00', closes: '18:00' },
+  { day: '금요일', short: '금', en: 'Friday', opens: '10:00', closes: '18:00' },
+  { day: '토요일', short: '토', en: 'Saturday', opens: '09:30', closes: '13:30' },
+  { day: '일요일', short: '일', en: 'Sunday', opens: null, closes: null },
+] as const
+
+/** 연속된 같은 시간대 요일을 묶은 요약 — 예: "월 10:00–20:00 · 화 10:00–18:00 · … · 일 휴진" */
+export const hoursSummary = (): string => {
+  const groups: { days: string[]; label: string }[] = []
+  for (const h of HOURS) {
+    const label = h.opens ? `${h.opens}–${h.closes}` : '휴진'
+    const last = groups[groups.length - 1]
+    if (last && last.label === label) last.days.push(h.short)
+    else groups.push({ days: [h.short], label })
+  }
+  return groups.map((g) => `${g.days.join('·')} ${g.label}`).join(' · ')
+}
+
 export const CLINIC = {
   name: '부평우리치과',
   fullName: '부평우리치과의원 인천부평본점',
@@ -27,15 +54,8 @@ export const CLINIC = {
     naverBooking: 'https://naver.me/xMj67GgD', // 네이버 플레이스 → 예약 진입
     kakao: 'http://pf.kakao.com/_RGexmxd', // 카카오톡 채널 상담
   },
-  hours: [
-    { day: '월요일', time: '10:00 - 20:00', isOpen: true },
-    { day: '화요일', time: '10:00 - 18:00', isOpen: true },
-    { day: '수요일', time: '10:00 - 21:00', isOpen: true },
-    { day: '목요일', time: '10:00 - 18:00', isOpen: true },
-    { day: '금요일', time: '10:00 - 18:00', isOpen: true },
-    { day: '토요일', time: '09:30 - 13:30', isOpen: true },
-    { day: '일요일', time: '휴진', isOpen: false },
-  ],
+  // 진료시간 — HOURS(위) 단일 출처에서 파생. 화면·스키마·llms.txt 가 모두 같은 값을 쓴다.
+  hours: HOURS.map((h) => ({ day: h.day, time: h.opens ? `${h.opens} - ${h.closes}` : '휴진', isOpen: Boolean(h.opens) })),
   lunch: '점심시간 13:00 - 14:00 (토요일 점심시간 없음)',
   // 문의 응답 기대 설정 (E5) — 환자가 "언제 답이 올지" 알 수 있게
   responseExpectation: {
@@ -45,12 +65,16 @@ export const CLINIC = {
     afterHours: '진료시간 외 문의는 다음 진료일 오전 중 순서대로 답변드립니다.',
   },
   // 사업자 정보 (추후 제출 예정 - 임시)
+  // registrationNumber 가 비어 있거나 '---' 같은 자리표시자면 푸터에서 해당 줄을 숨긴다(hasRealBizNumber).
   business: {
     name: '부평우리치과의원',
     representative: '김재인',
     registrationNumber: '---',
   },
 } as const
+
+/** 사업자등록번호가 실제 값(숫자 포함)인지 — 자리표시자('---' 등)면 false */
+export const hasRealBizNumber = (): boolean => /\d{3}-?\d{2}-?\d{5}/.test(String(CLINIC.business.registrationNumber ?? ''))
 
 // 핵심 진료 3가지 (상세 페이지)
 export const CORE_TREATMENTS = [

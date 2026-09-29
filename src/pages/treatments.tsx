@@ -3,6 +3,7 @@ import { CLINIC, OG_IMAGES } from '../lib/constants'
 import { TREATMENT_LIST, CORE_LIST, OTHER_LIST, getTreatment } from '../data/treatments'
 import { DOCTORS, getDoctor, doctorPhotoSrc } from '../data/doctors'
 import { breadcrumbSchema, faqSchema, serviceSchema, itemListSchema, medicalWebPageSchema } from '../lib/schema'
+import { CONTENT_DATES } from '../lib/content-dates'
 import { AREAS, TREATMENT_LOCAL } from '../data/areas'
 
 // =========================================================
@@ -256,6 +257,8 @@ export const TreatmentDetailPage = ({
           name: `${t.name} | ${t.tagline}`,
           description: t.metaDescription,
           about: t.name,
+          aboutId: `https://${CLINIC.domain}/treatments/${t.slug}#procedure`,
+          lastReviewed: CONTENT_DATES.treatments,
           reviewer: doctors[0]
             ? { name: doctors[0].name, title: doctors[0].title, slug: doctors[0].slug }
             : undefined,
@@ -308,6 +311,7 @@ export const TreatmentDetailPage = ({
               <p style="font-size:0.86rem; color:var(--ink-600); line-height:1.55; margin:0;">
                 이 페이지의 의료 정보는 <a href={`/doctors/${doctors[0].slug}`} style="font-weight:700; color:var(--brand-700, #1d7a78);">{doctors[0].title} {doctors[0].name}</a>
                 {doctors[0].education?.[0] ? <span> ({doctors[0].education[0]})</span> : null}이(가) 작성·감수했습니다.
+                <span style="display:block; margin-top:4px; color:var(--ink-500);">감수: {doctors[0].name} {doctors[0].title} · 최종 검토 <time datetime={CONTENT_DATES.treatments}>{CONTENT_DATES.treatments}</time></span>
               </p>
             </aside>
           ) : null}

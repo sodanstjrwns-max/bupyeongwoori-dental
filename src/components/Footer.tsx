@@ -1,4 +1,4 @@
-import { CLINIC, CORE_TREATMENTS, OTHER_TREATMENTS } from '../lib/constants'
+import { CLINIC, CORE_TREATMENTS, OTHER_TREATMENTS, hasRealBizNumber } from '../lib/constants'
 import { AREAS } from '../data/areas'
 
 export const Footer = () => {
@@ -88,7 +88,8 @@ export const Footer = () => {
             <div>주소 : {CLINIC.address}</div>
             <div>대표전화 : <a href={`tel:${CLINIC.phone}`} style="display:inline;">{CLINIC.phone}</a> · 이메일 : <a href={`mailto:${CLINIC.email}`} style="display:inline;">{CLINIC.email}</a></div>
             <div><i class="fas fa-clock" style="margin-right:4px;"></i>{CLINIC.responseExpectation.kakao} {CLINIC.responseExpectation.afterHours}</div>
-            <div>사업자등록번호 : {CLINIC.business.registrationNumber}</div>
+            {/* 사업자등록번호가 자리표시자('---')면 표시하지 않음 — 실제 번호 입력 시 자동 노출 */}
+            {hasRealBizNumber() ? <div>사업자등록번호 : {CLINIC.business.registrationNumber}</div> : null}
           </div>
         </div>
 

@@ -8,7 +8,8 @@
 // ============================================================
 
 import { Layout } from '../components/Layout'
-import { CLINIC, OG_IMAGES } from '../lib/constants'
+import { CLINIC, OG_IMAGES, hoursSummary } from '../lib/constants'
+import { CONTENT_DATES, toKstNoonIso } from '../lib/content-dates'
 import {
   AREAS,
   type AreaInfo,
@@ -21,7 +22,7 @@ import {
 } from '../data/areas'
 import { TREATMENT_LIST } from '../data/treatments'
 import type { TreatmentDetail } from '../data/treatments'
-import { breadcrumbSchema, dentistSchema, faqSchema, serviceSchema, dentistAggregateRatingSchema } from '../lib/schema'
+import { breadcrumbSchema, dentistSchema, faqSchema, serviceSchema } from '../lib/schema'
 import { CtaSection } from '../components/CtaSection'
 import { InlineCta } from '../components/InlineCta'
 import { buildOgImageUrl } from '../lib/og-dynamic'
@@ -136,49 +137,8 @@ export const AreaHubPage = ({ area }: { area: AreaInfo }) => {
           { name: '지역별 안내', url: '/areas' },
           { name: `${area.name} 치과`, url: `/areas/${area.slug}` },
         ]),
-        // MedicalBusiness 스키마 (지역 특화)
-        {
-          '@context': 'https://schema.org',
-          '@type': ['Dentist', 'MedicalBusiness'],
-          '@id': `${BASE}/areas/${area.slug}#business`,
-          name: `${CLINIC.name} (${area.name} 진료)`,
-          description,
-          url: `${BASE}/areas/${area.slug}`,
-          telephone: CLINIC.phone,
-          image: `${BASE}${OG_IMAGES.home}`,
-          logo: `${BASE}/media/brand/mark-256.png`,
-          priceRange: '₩₩',
-          address: {
-            '@type': 'PostalAddress',
-            streetAddress: '부평대로 16 에이플러스에셋빌딩',
-            addressLocality: '부평구',
-            addressRegion: '인천광역시',
-            postalCode: '21315',
-            addressCountry: 'KR',
-          },
-          geo: area.geo ? {
-            '@type': 'GeoCoordinates',
-            latitude: area.geo.lat,
-            longitude: area.geo.lng,
-          } : undefined,
-          areaServed: [
-            {
-              '@type': 'Place',
-              name: area.nameFull,
-              address: { '@type': 'PostalAddress', addressLocality: area.district, addressRegion: '인천광역시', addressCountry: 'KR' },
-            },
-            {
-              '@type': 'City',
-              name: area.name,
-            },
-          ],
-          medicalSpecialty: 'Dentistry',
-          availableService: treatments.map(t => ({
-            '@type': 'MedicalProcedure',
-            name: `${area.name} ${t.name}`,
-            url: `${BASE}/areas/${area.slug}/${t.slug}`,
-          })),
-        },
+        // 병원 엔티티는 사이트 전체에서 하나(@id /#clinic)로 통일 — 지역별 별도 Dentist 엔티티(지역 좌표) 제거
+        dentistSchema(),
         // FAQPage + Speakable (음성검색 대응)
         {
           ...faqSchema([
@@ -192,8 +152,6 @@ export const AreaHubPage = ({ area }: { area: AreaInfo }) => {
             cssSelector: ['.page-title', '.page-lead', '.section-title'],
           },
         },
-        // AggregateRating (실제 네이버 리뷰 기반)
-        dentistAggregateRatingSchema(),
       ]}
     >
       <section class="page-hero">
@@ -307,7 +265,7 @@ export const AreaTreatmentPage = ({ area, treatment }: { area: AreaInfo; treatme
       ogType="article"
       articleMeta={{
         publishedTime: '2026-05-14T00:00:00+09:00',
-        modifiedTime: new Date().toISOString(),
+        modifiedTime: toKstNoonIso(CONTENT_DATES.areas), // 고정 수정일 (오늘 날짜 자동 생성 금지)
         author: CLINIC.representative,
         section: `${area.name} ${treatment.name}`,
         tags: [`${area.name} ${treatment.name}`, `${area.name} 치과`, treatment.name, `${area.district} 치과`],
@@ -319,36 +277,8 @@ export const AreaTreatmentPage = ({ area, treatment }: { area: AreaInfo; treatme
           { name: `${area.name} 치과`, url: `/areas/${area.slug}` },
           { name: `${area.name} ${treatment.name}`, url: `/areas/${area.slug}/${treatment.slug}` },
         ]),
-        // MedicalBusiness — 지역 특화
-        {
-          '@context': 'https://schema.org',
-          '@type': ['Dentist', 'MedicalBusiness'],
-          '@id': `${url}#business`,
-          name: `${CLINIC.name} - ${area.name} ${treatment.name}`,
-          description,
-          url,
-          telephone: CLINIC.phone,
-          image: `${BASE}${OG_IMAGES.home}`,
-          logo: `${BASE}/media/brand/mark-256.png`,
-          priceRange: '₩₩',
-          address: {
-            '@type': 'PostalAddress',
-            streetAddress: '부평대로 16 에이플러스에셋빌딩',
-            addressLocality: '부평구',
-            addressRegion: '인천광역시',
-            postalCode: '21315',
-            addressCountry: 'KR',
-          },
-          geo: area.geo ? {
-            '@type': 'GeoCoordinates',
-            latitude: area.geo.lat,
-            longitude: area.geo.lng,
-          } : undefined,
-          areaServed: {
-            '@type': 'Place',
-            name: area.nameFull,
-          },
-        },
+        // 병원 엔티티는 사이트 전체에서 하나(@id /#clinic)로 통일 — 지역별 별도 Dentist 엔티티(지역 좌표) 제거
+        dentistSchema(),
         // Service / MedicalProcedure
         {
           ...serviceSchema({
@@ -372,8 +302,6 @@ export const AreaTreatmentPage = ({ area, treatment }: { area: AreaInfo; treatme
             cssSelector: ['.section-title', '.faq-item summary', '.faq-answer', '.page-lead'],
           },
         },
-        // Phase 2-3: AggregateRating (실제 네이버 플레이스 리뷰 수치 기반)
-        dentistAggregateRatingSchema(),
       ]}
     >
       <section class="page-hero area-treatment-hero">
@@ -448,7 +376,7 @@ export const AreaTreatmentPage = ({ area, treatment }: { area: AreaInfo; treatme
             <div class="area-transport-card">
               <div class="icon"><i class="fas fa-clock"></i></div>
               <div class="label">진료 시간</div>
-              <div class="value">평일 10~20시 · 토 09:30~13:30</div>
+              <div class="value">{hoursSummary()}</div>
             </div>
           </div>
         </div>

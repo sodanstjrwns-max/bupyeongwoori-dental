@@ -3,6 +3,7 @@ import { CLINIC, OG_IMAGES } from '../lib/constants'
 import { GLOSSARY, GLOSSARY_CATEGORIES, getRelatedTerms, type GlossaryTerm } from '../data/glossary'
 import { TREATMENT_LIST } from '../data/treatments'
 import { breadcrumbSchema, medicalWebPageSchema } from '../lib/schema'
+import { CONTENT_DATES } from '../lib/content-dates'
 import { CtaSection } from '../components/CtaSection'
 import { InlineCta } from '../components/InlineCta'
 
@@ -179,6 +180,7 @@ export const GlossaryDetailPage = ({ term }: { term: GlossaryTerm }) => {
           name: `${term.term} | 치과 백과사전`,
           description: term.short ?? term.definition,
           about: term.term,
+          lastReviewed: CONTENT_DATES.glossary,
           speakableSelectors: ['.glossary-detail-title', '.glossary-detail-short'],
         }),
       ]}
@@ -198,6 +200,10 @@ export const GlossaryDetailPage = ({ term }: { term: GlossaryTerm }) => {
           <div class="glossary-detail-body prose">
             <p>{term.definition}</p>
           </div>
+          {/* E-E-A-T 가시적 감수 줄 — 스키마 reviewedBy·lastReviewed 와 동일 값 */}
+          <p class="medical-review-line" style="margin-top:16px; font-size:0.84rem; color:var(--ink-500);">
+            감수: <a href="/doctors/kim-jaein" style="color:inherit; text-decoration:underline;">{CLINIC.representative} 대표원장</a> · 최종 검토 <time datetime={CONTENT_DATES.glossary}>{CONTENT_DATES.glossary}</time>
+          </p>
 
           {relatedTreatments.length > 0 && (
             <div class="glossary-related-block">

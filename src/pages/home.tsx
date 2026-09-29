@@ -1,8 +1,12 @@
 import { Layout } from '../components/Layout'
-import { CLINIC, CORE_TREATMENTS, EQUIPMENTS, OG_IMAGES } from '../lib/constants'
+import { CLINIC, CORE_TREATMENTS, EQUIPMENTS, OG_IMAGES, hoursSummary } from '../lib/constants'
 import { DOCTORS, doctorPhotoSrc } from '../data/doctors'
 import { breadcrumbSchema, dentistSchema, faqSchema, websiteSchema } from '../lib/schema'
 import { CORE_LIST } from '../data/treatments'
+
+// 홈 FAQ — 핵심 진료(임플란트·심미보철·교정) 대표 질문 2개씩.
+// 화면(아래 #home-faq)과 FAQPage 스키마가 같은 배열을 쓰므로 문항이 항상 1:1 일치한다.
+const HOME_FAQS = CORE_LIST.flatMap((t) => t.faqs.slice(0, 2).map((f) => ({ q: f.q, a: f.a, slug: t.slug, name: t.name })))
 
 export const HomePage = () => {
   return (
@@ -17,7 +21,7 @@ export const HomePage = () => {
         // 홈 BreadcrumbList — 사이트 계층 루트 명시 (AEO)
         breadcrumbSchema([{ name: '홈', url: '/' }]),
         // 홈 FAQPage — 핵심 진료(임플란트·심미보철·교정) 대표 질문 발췌 (AEO)
-        faqSchema(CORE_LIST.flatMap((t) => t.faqs.slice(0, 2)).map((f) => ({ q: f.q, a: f.a }))),
+        faqSchema(HOME_FAQS.map((f) => ({ q: f.q, a: f.a }))),
         // 음성검색 AEO — 시리/구글어시스턴트가 읽을 핵심 영역 지정
         {
           '@context': 'https://schema.org',
@@ -25,6 +29,8 @@ export const HomePage = () => {
           '@id': `https://${CLINIC.domain}/#homepage`,
           url: `https://${CLINIC.domain}/`,
           name: `${CLINIC.name} — 부평역 26번 출구 임플란트·교정·심미보철`,
+          isPartOf: { '@id': `https://${CLINIC.domain}/#website` },
+          about: { '@id': `https://${CLINIC.domain}/#clinic` },
           speakable: { '@type': 'SpeakableSpecification', cssSelector: ['#hero-title', '.hero-sub'] },
         },
       ]}
@@ -434,6 +440,31 @@ export const HomePage = () => {
         </div>
       </section>
 
+      {/* =============== FAQ (FAQPage 스키마와 동일 문항) =============== */}
+      <section id="home-faq" class="section section-soft" aria-labelledby="home-faq-title">
+        <div class="container" style="max-width:900px;">
+          <div class="section-head" data-reveal>
+            <div class="section-eyebrow" style="padding-left:0;">FAQ · 자주 묻는 질문</div>
+            <h2 id="home-faq-title" class="section-title">핵심 진료, <em>먼저 묻는 질문.</em></h2>
+          </div>
+          <div class="faq-list">
+            {HOME_FAQS.map((f, i) => (
+              <details class="faq-item" name="home-faq">
+                <summary>
+                  <span class="faq-q-num">Q{i + 1}.</span>
+                  <span class="faq-q-text">{f.q}</span>
+                  <span class="faq-q-icon"><i class="fas fa-chevron-down"></i></span>
+                </summary>
+                <div class="faq-a">{f.a}</div>
+              </details>
+            ))}
+          </div>
+          <div style="margin-top:24px;">
+            <a href="/faq" class="btn" style="background:white; border:1px solid var(--ink-200); color:var(--ink-900);">전체 FAQ 보기 →</a>
+          </div>
+        </div>
+      </section>
+
       {/* =============== CTA =============== */}
       <section class="section section-white">
         <div class="container">
@@ -449,7 +480,7 @@ export const HomePage = () => {
             </h2>
             <p>
               진료 가능 여부와 예상 치료 플랜을 <strong style="color:#fff;">정직하게</strong> 안내드립니다.
-              부평역 26번 출구 · {CLINIC.hours.mon} · 수요일은 야간 21:00까지.
+              부평역 26번 출구 · {hoursSummary()}.
             </p>
             <div class="btns">
               <a href={CLINIC.socialLinks.naverBooking} target="_blank" rel="noopener" class="btn btn-primary btn-lg" data-magnetic style="background:#03C75A; border-color:#03C75A;">

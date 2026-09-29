@@ -1022,6 +1022,18 @@ const EXTRA_AUTO: AutoTerm[] = [
 export const GLOSSARY_ALIASES: Record<string, string> = {
   'dry-mouth': 'xerostomia',            // 구강건조증 (Xerostomia)
   'vitality-test': 'pulp-vitality-test', // 치수 생활력 검사 (Pulp Vitality Test)
+  // 2026-09-29 GSC 크롤 감사: 같은 개념이 다른 slug 로 두 번 있던 용어 → 본문이 더 긴 쪽으로 301
+  'iTero': 'itero',                          // iTero 스캐너 = 아이테로 (대소문자만 다른 URL 이 둘 다 200 이던 문제)
+  'pfm-crown': 'pfm',                        // PFM 크라운 = PFM (Porcelain Fused to Metal)
+  'arch-wire': 'wire',                       // 아치와이어 = 와이어 (Archwire)
+  'lingual-braces': 'lingual-ortho',         // 설측 교정
+  'proxabrush': 'interdental-brush',         // 치간 칫솔
+  'panoramic-xray': 'panorama',              // 파노라마 엑스레이
+  'ssc-crown': 'pedo-crown',                 // 유치 기성 크라운 (Stainless Steel Crown)
+  'periapical-xray': 'periapical',           // 치근단 엑스레이
+  'supernumerary': 'hyperdontia',            // 과잉치
+  'opalescence': 'opalescence-whitening',    // 오팔레센스 (미백)
+  'wax-up': 'diagnostic-wax-up',             // 왁스업
 }
 export const resolveGlossaryAlias = (slug: string): string | undefined => GLOSSARY_ALIASES[slug]
 
@@ -1049,6 +1061,20 @@ export const GLOSSARY: GlossaryTerm[] = (() => {
 
   // alias slug 는 대표 slug 로 301 처리하므로 목록에서 제외
   for (let i = all.length - 1; i >= 0; i--) if (all[i].slug in GLOSSARY_ALIASES) all.splice(i, 1)
+
+  // SEEDS 안에 같은 slug 가 두 번 들어간 용어(enamel·dentin·pulp·cementum·root) → 먼저 나온 것만 유지
+  // (사이트맵에 같은 URL 이 두 번 실리던 문제)
+  const seenSlugs = new Set<string>()
+  for (let i = 0; i < all.length; i++) {
+    if (seenSlugs.has(all[i].slug)) { all.splice(i, 1); i-- } else seenSlugs.add(all[i].slug)
+  }
+
+  // 관련 용어가 alias 를 가리키면 대표 slug 로 치환 (301 거치지 않게)
+  for (const t of all) {
+    if (!t.relatedTerms) continue
+    const mapped = t.relatedTerms.map((s) => GLOSSARY_ALIASES[s] ?? s).filter((s) => s !== t.slug)
+    t.relatedTerms = [...new Set(mapped)]
+  }
 
   // 레거시 호환 alias 필드 주입 (short, treatments, related)
   for (const t of all) {

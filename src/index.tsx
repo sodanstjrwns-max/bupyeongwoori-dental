@@ -533,6 +533,13 @@ app.get('/glossary', (c) => {
 })
 app.get('/glossary/:slug', (c) => {
   const slug = c.req.param('slug')
+  // 대소문자만 다른 URL(/glossary/iTero) → 소문자로 301. 모든 용어 slug 는 소문자다.
+  if (/[A-Z]/.test(slug)) {
+    const lower = slug.toLowerCase()
+    const base = lower.endsWith('.md') ? lower.slice(0, -3) : lower
+    const target = resolveGlossaryAlias(base) ?? base
+    return c.redirect(`/glossary/${target}${lower.endsWith('.md') ? '.md' : ''}${new URL(c.req.url).search}`, 301)
+  }
   // 중복 slug(alias) → 대표 slug 301 (.md 변형 포함)
   const aliasTarget = resolveGlossaryAlias(slug.endsWith('.md') ? slug.slice(0, -3) : slug)
   if (aliasTarget) return c.redirect(`/glossary/${aliasTarget}${slug.endsWith('.md') ? '.md' : ''}`, 301)

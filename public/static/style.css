@@ -7130,3 +7130,24 @@ th{ font-weight:700; background:var(--ink-50); font-size:.85rem; letter-spacing:
   font-weight: 700;
   color: var(--brand-700);
 }
+
+/* 칼럼·비포애프터 SEO 블록 (2026-10-03) — 핵심 요약·작성자·관련 링크·페이지네이션 */
+.wr-answer{margin:28px 0 32px;padding:18px 22px;background:var(--brand-50);border-left:3px solid var(--brand-500);border-radius:0 12px 12px 0}
+.wr-answer strong{display:block;font-size:.8rem;letter-spacing:.06em;color:var(--brand-700);margin-bottom:6px}
+.wr-answer p{margin:0;font-weight:600;line-height:1.75;color:var(--ink-800)}
+.wr-note{margin-top:28px;font-size:.84rem;color:var(--ink-500)}
+.wr-author{display:flex;gap:16px;align-items:flex-start;margin-top:32px;padding:20px;border:1px solid var(--ink-100);border-radius:16px;background:var(--ink-0)}
+.wr-author img{width:72px;height:72px;border-radius:50%;object-fit:cover;flex:0 0 72px}
+.wr-author-label{display:block;font-size:.75rem;color:var(--ink-400);font-weight:600}
+.wr-author-name{font-weight:700;color:var(--brand-700);font-size:1.05rem}
+.wr-author p{margin:6px 0 0;font-size:.88rem;color:var(--ink-600);line-height:1.6}
+.wr-author .wr-author-date{font-size:.8rem;color:var(--ink-400)}
+.wr-related{margin-top:36px;padding-top:20px;border-top:1px solid var(--ink-100)}
+.wr-related h2{font-size:1.1rem;font-weight:700;margin:0 0 10px}
+.wr-related ul{list-style:none;padding:0;margin:0}
+.wr-related li{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px dashed var(--ink-100)}
+.wr-related li a{color:var(--ink-800);font-weight:600}
+.wr-related li a:hover{color:var(--brand-600)}
+.wr-related li span{flex:0 0 auto;font-size:.82rem;color:var(--ink-400)}
+.wr-pager{justify-content:center;margin-top:40px}
+@media (max-width:640px){.wr-related li{flex-direction:column;gap:2px}.wr-author{padding:16px}}

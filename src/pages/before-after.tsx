@@ -2,7 +2,20 @@ import { Layout } from '../components/Layout'
 import { CLINIC, OG_IMAGES } from '../lib/constants'
 import { TREATMENT_LIST, CORE_LIST } from '../data/treatments'
 import { DOCTORS } from '../data/doctors'
-import { breadcrumbSchema, articleSchema, serviceSchema } from '../lib/schema'
+import { breadcrumbSchema, articleSchema, serviceSchema, itemListSchema } from '../lib/schema'
+import { metaDescription } from '../lib/article-seo'
+
+export const BA_PER_PAGE = 12
+// 샘플(시드) 케이스는 실제 진료 사례로 색인되지 않게 noindex·사이트맵 제외
+export const isSampleCase = (slug: string) => /^sample-/.test(slug)
+const genderKo = (g: string | null) => (g === 'M' || g === 'male' ? '남성' : g === 'F' || g === 'female' ? '여성' : '')
+// 구조 필드만으로 만든 사례 요약(데이터에 있는 값만)
+export const caseSummaryText = (c: { treatment_slug: string; age: number | null; gender: string | null; treatment_period: string | null; doctor_slug: string }) => {
+  const t = TREATMENT_LIST.find((x) => x.slug === c.treatment_slug)
+  const d = DOCTORS.find((x) => x.slug === c.doctor_slug)
+  const who = [c.age ? `${Math.floor(c.age / 10) * 10}대` : '', genderKo(c.gender)].filter(Boolean).join(' ')
+  return [`${t?.name ?? '치과'} 사례`, who ? `${who} 환자` : '', c.treatment_period ? `치료 기간 ${c.treatment_period}` : '', d ? `담당 ${d.title} ${d.name}` : ''].filter(Boolean).join(' · ') + '.'
+}
 import { CtaSection } from '../components/CtaSection'
 import { autoLinkContent } from '../lib/auto-link'
 
@@ -35,20 +48,25 @@ export const BeforeAfterListPage = ({
   isLoggedIn,
   activeTreatment,
   query,
+  page = 1,
+  totalPages = 1,
 }: {
   cases: BeforeAfterRow[]
   isLoggedIn: boolean
   activeTreatment?: string
   query?: string
+  page?: number
+  totalPages?: number
 }) => {
+  const pq = (n: number) => { const a: string[] = []; if (activeTreatment) a.push(`treatment=${encodeURIComponent(activeTreatment)}`); if (n > 1) a.push(`page=${n}`); return a.length ? `?${a.join('&')}` : '' }
   const treatmentName = (slug: string) => TREATMENT_LIST.find((t) => t.slug === slug)?.name ?? slug
   const doctorName = (slug: string) => DOCTORS.find((d) => d.slug === slug)?.name ?? slug
 
   return (
     <Layout
       title="비포애프터 갤러리"
-      description="부평우리치과의 실제 전후 케이스를 확인해 보세요. 임플란트·심미보철·교정·라미네이트 등 진료별 결과를 공유합니다."
-      canonical={`https://${CLINIC.domain}/before-after`}
+      description="부평우리치과의 전후 케이스를 진료별로 모았습니다. 임플란트·심미보철·교정·라미네이트의 진단과 치료 과정, 치료 기간을 사례마다 설명합니다. 치료 후 사진은 회원 로그인 후 볼 수 있습니다."
+      canonical={`https://${CLINIC.domain}/before-after${!activeTreatment && page > 1 ? `?page=${page}` : ''}`}
       keywords="부평 치과 비포애프터, 부평 임플란트 전후, 부평 심미보철 사례, 부평 교정 사례, 부평우리치과 케이스"
       ogImage={OG_IMAGES.beforeAfter}
       jsonLd={[
@@ -56,6 +74,7 @@ export const BeforeAfterListPage = ({
           { name: '홈', url: '/' },
           { name: '비포애프터', url: '/before-after' },
         ]),
+        cases.length ? itemListSchema(cases.map((c) => ({ name: c.title, url: `/before-after/${c.slug}` })), '부평우리치과 비포애프터') : null,
       ]}
     >
       <section class="page-hero">
@@ -126,7 +145,7 @@ export const BeforeAfterListPage = ({
                   <div class="ba-slider" data-reveal>
                     <div class="ba-before">
                       {c.before_intra_key ? (
-                        <img src={`/media/${c.before_intra_key}`} alt={`${c.title} 전`} />
+                        <img src={`/media/${c.before_intra_key}`} alt={`${treatmentName(c.treatment_slug)} 치료 전`} loading="lazy" decoding="async" />
                       ) : (
                         <div class="ba-placeholder">
                           <span>Before</span>
@@ -136,7 +155,7 @@ export const BeforeAfterListPage = ({
                     </div>
                     <div class="ba-after">
                       {c.after_intra_key && isLoggedIn ? (
-                        <img src={`/media/${c.after_intra_key}`} alt={`${c.title} 후`} />
+                        <img src={`/media/${c.after_intra_key}`} alt={`${treatmentName(c.treatment_slug)} 치료 후`} loading="lazy" decoding="async" />
                       ) : (
                         <div class="ba-locked">
                           <i class="fas fa-lock"></i>
@@ -162,6 +181,13 @@ export const BeforeAfterListPage = ({
               ))}
             </div>
           )}
+          {totalPages > 1 ? (
+            <nav class="blog-filter wr-pager" aria-label="비포애프터 목록 페이지">
+              {page > 1 ? <a href={`/before-after${pq(page - 1)}`} class="chip" rel="prev">‹ 이전</a> : null}
+              {Array.from({ length: totalPages }, (_, k) => k + 1).map((n) => n === page ? <span class="chip active" aria-current="page">{n}</span> : <a href={`/before-after${pq(n)}`} class="chip">{n}</a>)}
+              {page < totalPages ? <a href={`/before-after${pq(page + 1)}`} class="chip" rel="next">다음 ›</a> : null}
+            </nav>
+          ) : null}
         </div>
       </section>
 
@@ -181,10 +207,12 @@ export const BeforeAfterDetailPage = ({
   caseRow,
   isLoggedIn,
   relatedCases,
+  relatedPosts = [],
 }: {
   caseRow: BeforeAfterRow
   isLoggedIn: boolean
   relatedCases: BeforeAfterRow[]
+  relatedPosts?: { slug: string; title: string; published_at?: string }[]
 }) => {
   const treatment = TREATMENT_LIST.find((t) => t.slug === caseRow.treatment_slug)
   const doctor = DOCTORS.find((d) => d.slug === caseRow.doctor_slug)
@@ -196,18 +224,21 @@ export const BeforeAfterDetailPage = ({
   const caseUrl = `${baseUrl}/before-after/${caseRow.slug}`
 
   // 이미지 절대 URL 후보 (Article의 image 배열용)
+  // 치료 후(After) 사진은 회원 전용(/media 서버 게이트) → 구조화 데이터·OG 에는 치료 전 사진만 노출
   const imgKeys = [
     caseRow.before_pano_key,
-    caseRow.after_pano_key,
     caseRow.before_intra_key,
-    caseRow.after_intra_key,
   ].filter(Boolean) as string[]
+  const summaryText = caseSummaryText(caseRow)
+  const txLabel = treatment?.name ?? '치과'
   const imageUrls = imgKeys.length > 0
     ? imgKeys.map((k) => `${baseUrl}/media/${k}`)
     : [`${baseUrl}${OG_IMAGES.beforeAfter}`]
 
-  const description = caseRow.summary
-    ?? `${treatment?.name ?? '진료'} 실제 케이스 — ${caseRow.title}. ${CLINIC.name}의 검증된 진료 결과를 확인하세요.`
+  const description = metaDescription(
+    caseRow.summary,
+    `${summaryText} ${String(caseRow.content ?? '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()}`,
+  )
 
   // 1) Article (비포애프터 케이스 자체를 발행물로)
   const articleLd = articleSchema({
@@ -216,8 +247,9 @@ export const BeforeAfterDetailPage = ({
     url: caseUrl,
     image: imageUrls[0],
     author: doctor ? `${doctor.title} ${doctor.name}` : CLINIC.representative,
+    authorSlug: doctor?.slug,
     datePublished: caseRow.created_at,
-    dateModified: caseRow.created_at,
+    dateModified: (caseRow as any).updated_at ?? caseRow.created_at,
   })
   // image를 배열로 강화 (Google 권장: 16:9, 4:3, 1:1)
   ;(articleLd as any).image = imageUrls
@@ -232,7 +264,7 @@ export const BeforeAfterDetailPage = ({
 
   // 2) ImageObject — Before/After 각각 명시적으로 마킹 (이미지 검색 노출용)
   const imageObjectsLd = imgKeys.map((k, idx) => {
-    const isAfter = k === caseRow.after_pano_key || k === caseRow.after_intra_key
+    const isAfter = false
     const isPano = k === caseRow.before_pano_key || k === caseRow.after_pano_key
     return {
       '@context': 'https://schema.org',
@@ -271,12 +303,14 @@ export const BeforeAfterDetailPage = ({
     name: caseRow.title,
     description,
     inLanguage: 'ko-KR',
+    isPartOf: { '@id': `${baseUrl}/#website` },
     audience: { '@type': 'MedicalAudience', audienceType: 'Patient' },
-    about: treatment ? { '@type': 'MedicalProcedure', name: treatment.name } : undefined,
-    lastReviewed: caseRow.created_at,
+    about: treatment ? { '@type': 'MedicalProcedure', '@id': `${baseUrl}/treatments/${treatment.slug}#procedure`, name: treatment.name } : undefined,
+    lastReviewed: String(caseRow.created_at).slice(0, 10),
     reviewedBy: doctor
-      ? { '@type': 'Physician', name: `${doctor.title} ${doctor.name}`, worksFor: { '@type': 'Dentist', name: CLINIC.name } }
-      : { '@type': 'Dentist', name: CLINIC.name },
+      ? { '@type': 'Physician', '@id': `${baseUrl}/doctors/${doctor.slug}#person`, name: `${doctor.title} ${doctor.name}`, worksFor: { '@type': 'Dentist', '@id': `${baseUrl}/#clinic`, name: CLINIC.name } }
+      : { '@type': 'Dentist', '@id': `${baseUrl}/#clinic`, name: CLINIC.name },
+    speakable: { '@type': 'SpeakableSpecification', cssSelector: ['h1', '.wr-answer'] },
     primaryImageOfPage: imageUrls[0]
       ? { '@type': 'ImageObject', url: imageUrls[0] }
       : undefined,
@@ -300,9 +334,10 @@ export const BeforeAfterDetailPage = ({
 
   return (
     <Layout
-      title={caseRow.title}
+      title={`${txLabel} 사례 — ${caseRow.title}${caseRow.treatment_period && !caseRow.title.includes(caseRow.treatment_period) ? `, ${caseRow.treatment_period}` : ''}`}
       description={description}
       canonical={caseUrl}
+      noindex={isSampleCase(caseRow.slug)}
       keywords={`${treatment?.keywords ?? ''}, 부평 치과 비포애프터, ${treatment?.name ?? ''} 사례, ${caseRow.region ?? ''}, 부평 임플란트 전후, 부평 라미네이트 전후, 부평 교정 전후`}
       ogImage={caseRow.before_pano_key ? `/media/${caseRow.before_pano_key}` : (caseRow.before_intra_key ? `/media/${caseRow.before_intra_key}` : OG_IMAGES.beforeAfter)}
       ogType="article"
@@ -410,13 +445,13 @@ export const BeforeAfterDetailPage = ({
                 <div class="ba-compare">
                   <div class="ba-compare-before">
                     {caseRow.before_pano_key ? (
-                      <img src={`/media/${caseRow.before_pano_key}`} alt="파노라마 전" loading="lazy" decoding="async" />
+                      <img src={`/media/${caseRow.before_pano_key}`} alt={`${txLabel} 치료 전 — 파노라마`} loading="lazy" decoding="async" />
                     ) : <div class="ba-placeholder"><span>Before</span></div>}
                     <span class="ba-label">BEFORE</span>
                   </div>
                   <div class="ba-compare-after">
                     {caseRow.after_pano_key && isLoggedIn ? (
-                      <img src={`/media/${caseRow.after_pano_key}`} alt="파노라마 후" loading="lazy" decoding="async" />
+                      <img src={`/media/${caseRow.after_pano_key}`} alt={`${txLabel} 치료 후 — 파노라마`} loading="lazy" decoding="async" />
                     ) : (
                       <div class="ba-locked">
                         <i class="fas fa-lock"></i>
@@ -440,13 +475,13 @@ export const BeforeAfterDetailPage = ({
                 <div class="ba-compare">
                   <div class="ba-compare-before">
                     {caseRow.before_intra_key ? (
-                      <img src={`/media/${caseRow.before_intra_key}`} alt="구내 전" loading="lazy" decoding="async" />
+                      <img src={`/media/${caseRow.before_intra_key}`} alt={`${txLabel} 치료 전 — 구내 사진`} loading="lazy" decoding="async" />
                     ) : <div class="ba-placeholder"><span>Before</span></div>}
                     <span class="ba-label">BEFORE</span>
                   </div>
                   <div class="ba-compare-after">
                     {caseRow.after_intra_key && isLoggedIn ? (
-                      <img src={`/media/${caseRow.after_intra_key}`} alt="구내 후" loading="lazy" decoding="async" />
+                      <img src={`/media/${caseRow.after_intra_key}`} alt={`${txLabel} 치료 후 — 구내 사진`} loading="lazy" decoding="async" />
                     ) : (
                       <div class="ba-locked">
                         <i class="fas fa-lock"></i>
@@ -484,6 +519,7 @@ export const BeforeAfterDetailPage = ({
             </div>
           )}
 
+          <aside class="wr-answer" aria-label="사례 요약"><strong>사례 요약</strong><p>{summaryText}</p></aside>
           {caseRow.content ? (
             <div class="prose case-content" data-reveal>
               {/* @ts-ignore */}
@@ -502,6 +538,13 @@ export const BeforeAfterDetailPage = ({
               다른 케이스 보기
             </a>
           </div>
+          <p class="wr-note">※ 치료 결과는 개인의 구강 상태에 따라 다를 수 있습니다. 전후 사진은 같은 촬영 조건을 기준으로 하며 개인차가 있습니다.</p>
+          {relatedPosts.length ? (
+            <div class="wr-related">
+              <h2>{treatment ? `${treatment.name} 관련 칼럼` : '관련 칼럼'}</h2>
+              <ul>{relatedPosts.map((r) => <li><a href={`/blog/${r.slug}`}>{r.title}</a>{r.published_at ? <span>{String(r.published_at).slice(0, 10)}</span> : null}</li>)}</ul>
+            </div>
+          ) : null}
         </div>
       </section>
 
@@ -518,11 +561,11 @@ export const BeforeAfterDetailPage = ({
                 <a href={`/before-after/${c.slug}`} class="ba-card">
                   <div class="ba-slider">
                     <div class="ba-before">
-                      {c.before_intra_key ? <img src={`/media/${c.before_intra_key}`} alt={c.title} /> : <div class="ba-placeholder"><span>Before</span></div>}
+                      {c.before_intra_key ? <img src={`/media/${c.before_intra_key}`} alt={`${txLabel} 치료 전`} loading="lazy" decoding="async" /> : <div class="ba-placeholder"><span>Before</span></div>}
                       <span class="ba-label">BEFORE</span>
                     </div>
                     <div class="ba-after">
-                      {c.after_intra_key && isLoggedIn ? <img src={`/media/${c.after_intra_key}`} alt={c.title} /> : <div class="ba-locked"><i class="fas fa-lock"></i></div>}
+                      {c.after_intra_key && isLoggedIn ? <img src={`/media/${c.after_intra_key}`} alt={`${txLabel} 치료 후`} loading="lazy" decoding="async" /> : <div class="ba-locked"><i class="fas fa-lock"></i></div>}
                       <span class="ba-label after-label">AFTER</span>
                     </div>
                   </div>

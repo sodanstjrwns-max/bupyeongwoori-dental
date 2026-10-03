@@ -109,7 +109,7 @@ export const Head = (props: HeadProps) => {
       {/* CWV 튜닝: dns-prefetch + preconnect + 자체 CSS preload (LCP/FCP 개선 → 랭킹 시그널) */}
       <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
       <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin="anonymous" />
-      <link rel="preload" href="/static/style.css?v=20260526b" as="style" />
+      <link rel="preload" href="/static/style.css?v=20261003seo" as="style" />
       <link
         rel="stylesheet"
         href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"
@@ -118,7 +118,7 @@ export const Head = (props: HeadProps) => {
       <noscript>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
       </noscript>
-      <link rel="stylesheet" href="/static/style.css?v=20260526b" />
+      <link rel="stylesheet" href="/static/style.css?v=20261003seo" />
 
       {/* Structured data */}
       {jsonLds.map((ld, i) => (
@@ -126,7 +126,7 @@ export const Head = (props: HeadProps) => {
           key={i}
           type="application/ld+json"
           // @ts-ignore
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(ld).replace(/</g, '\\u003c') }}
         />
       ))}
       {/* GA4 */}

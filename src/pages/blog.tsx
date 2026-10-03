@@ -5,6 +5,18 @@ import { articleSchema, breadcrumbSchema, itemListSchema, medicalWebPageSchema }
 import { CtaSection } from '../components/CtaSection'
 import { InlineCta } from '../components/InlineCta'
 import { autoLinkContent } from '../lib/auto-link'
+import { doctorPhotoSrc } from '../data/doctors'
+import { TREATMENT_LIST } from '../data/treatments'
+import { prepareArticleHtml, answerSummaryFromHtml, faqsFromArticleHtml, htmlText, metaDescription } from '../lib/article-seo'
+import { faqSchema } from '../lib/schema'
+
+export const BLOG_PER_PAGE = 12
+const listQuery = (category: string | undefined, page: number) => {
+  const q: string[] = []
+  if (category) q.push(`category=${encodeURIComponent(category)}`)
+  if (page > 1) q.push(`page=${page}`)
+  return q.length ? `?${q.join('&')}` : ''
+}
 
 type BlogRow = {
   id: number
@@ -27,22 +39,28 @@ type BlogRow = {
 export const BlogListPage = ({
   posts,
   category,
+  allCategories,
+  page = 1,
+  totalPages = 1,
 }: {
   posts: BlogRow[]
   category?: string
+  allCategories?: string[]
+  page?: number
+  totalPages?: number
 }) => {
-  const categories = Array.from(new Set(posts.map((p) => p.category).filter(Boolean))) as string[]
+  const categories = allCategories ?? (Array.from(new Set(posts.map((p) => p.category).filter(Boolean))) as string[])
   return (
     <Layout
-      title="블로그"
+      title={`${category ? `${category} ` : ''}블로그${page > 1 ? ` (${page}쪽)` : ''}`}
       description="부평우리치과의 진료 정보 아카이브. 임플란트·심미보철·교정·라미네이트 등 검색했을 때 충분한 답을 드릴 수 있도록, 치과 지식과 실제 케이스를 기록합니다."
-      canonical={`https://${CLINIC.domain}/blog`}
+      canonical={`https://${CLINIC.domain}/blog${page > 1 ? `?page=${page}` : ''}`}
       keywords="부평치과 블로그, 임플란트 정보, 치과 건강 정보, 부평우리치과 블로그"
       ogImage={OG_IMAGES.blog}
       jsonLd={[
         breadcrumbSchema([{ name: '홈', url: '/' }, { name: '블로그', url: '/blog' }]),
         itemListSchema(
-          posts.slice(0, 30).map((p) => ({ name: p.title, url: `/blog/${p.slug}` })),
+          posts.map((p) => ({ name: p.title, url: `/blog/${p.slug}` })),
           '부평우리치과 블로그'
         ),
       ]}
@@ -82,7 +100,7 @@ export const BlogListPage = ({
                   <a href={`/blog/${p.slug}`} class="blog-card" data-reveal>
                     <div class="blog-cover">
                       {p.cover_key ? (
-                        <img src={`/media/${p.cover_key}`} alt={p.title} />
+                        <img src={`/media/${p.cover_key}`} alt={p.title} loading="lazy" decoding="async" />
                       ) : (
                         <div class="blog-cover-fallback">
                           <span class="font-display">{p.category ?? 'POST'}</span>
@@ -103,6 +121,15 @@ export const BlogListPage = ({
               })}
             </div>
           )}
+          {totalPages > 1 ? (
+            <nav class="blog-filter wr-pager" aria-label="블로그 목록 페이지">
+              {page > 1 ? <a href={`/blog${listQuery(category, page - 1)}`} class="chip" rel="prev">‹ 이전</a> : null}
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) =>
+                n === page ? <span class="chip active" aria-current="page">{n}</span> : <a href={`/blog${listQuery(category, n)}`} class="chip">{n}</a>
+              )}
+              {page < totalPages ? <a href={`/blog${listQuery(category, page + 1)}`} class="chip" rel="next">다음 ›</a> : null}
+            </nav>
+          ) : null}
         </div>
       </section>
 
@@ -118,14 +145,22 @@ export const BlogListPage = ({
 export const BlogDetailPage = ({
   post,
   related,
+  relatedCases = [],
 }: {
   post: BlogRow
   related: BlogRow[]
+  relatedCases?: { slug: string; title: string; treatment_period?: string | null }[]
 }) => {
   const author = DOCTORS.find((d) => d.slug === post.author_slug)
   const url = `https://${CLINIC.domain}/blog/${post.slug}`
   const baseUrl = `https://${CLINIC.domain}`
-  const description = post.meta_description ?? post.excerpt ?? post.title
+  // 본문 정리(h1→h2·이미지 alt/lazy) → 핵심 요약(본문 발췌)·질문형 h3 FAQ 를 화면과 같은 HTML 에서 추출
+  const bodyHtml = prepareArticleHtml(autoLinkContent(post.content), post.title)
+  const answer = answerSummaryFromHtml(bodyHtml)
+  const faqs = faqsFromArticleHtml(bodyHtml)
+  const description = metaDescription(post.meta_description ?? post.excerpt, answer || htmlText(bodyHtml).slice(0, 200))
+  const treatment = TREATMENT_LIST.find((t) => t.name === post.category)
+  const photo = author ? doctorPhotoSrc(author.photo) : null
   const coverAbs = post.cover_key
     ? `${baseUrl}/media/${post.cover_key}`
     : `${baseUrl}${OG_IMAGES.blog}`
@@ -151,6 +186,15 @@ export const BlogDetailPage = ({
       : `부평치과, 부평우리치과${post.category ? `, ${post.category}` : ''}`)
   articleLd.inLanguage = 'ko-KR'
   articleLd.isAccessibleForFree = true
+  // 칼럼 = BlogPosting, 페이지 노드(MedicalWebPage)와 @id 로 연결
+  articleLd['@type'] = 'BlogPosting'
+  articleLd['@id'] = `${url}#article`
+  articleLd.url = url
+  articleLd.mainEntityOfPage = { '@id': `${url}#webpage` }
+  articleLd.isPartOf = { '@id': `${baseUrl}/#website` }
+  articleLd.image = { '@type': 'ImageObject', url: coverAbs }
+  if (author) articleLd.reviewedBy = { '@id': `${baseUrl}/doctors/${author.slug}#person` }
+  if (treatment) articleLd.about = { '@id': `${baseUrl}/treatments/${treatment.slug}#procedure` }
 
   return (
     <Layout
@@ -182,13 +226,16 @@ export const BlogDetailPage = ({
           description,
           reviewer: author ? { name: author.name, title: author.title, slug: author.slug } : undefined,
           lastReviewed: modifiedAt?.slice(0, 10),
+          ...(treatment ? { about: treatment.name, aboutId: `${baseUrl}/treatments/${treatment.slug}#procedure` } : {}),
+          speakableSelectors: ['h1', ...(answer ? ['.wr-answer'] : [])],
         }),
+        faqs.length ? { ...faqSchema(faqs), '@id': `${url}#faq` } : null,
       ]}
     >
       <article class="section" style="padding-top:120px;">
         <div class="container" style="max-width:820px;">
           <div class="page-breadcrumb">
-            <a href="/blog">블로그</a>{post.category ? <> · {post.category}</> : null}
+            <a href="/blog">블로그</a>{post.category ? <> · <a href={`/blog?category=${encodeURIComponent(post.category)}`}>{post.category}</a></> : null}
           </div>
           <h1 style="font-family:var(--font-display); font-weight:300; font-size:clamp(2rem, 4vw, 3rem); margin-top:16px; line-height:1.2;">
             {post.title}
@@ -222,11 +269,43 @@ export const BlogDetailPage = ({
             <img src={`/media/${post.cover_key}`} alt={post.title} style="width:100%; border-radius:16px; margin:40px 0;" />
           ) : null}
 
+          {answer ? (
+            <aside class="wr-answer" aria-label="핵심 요약">
+              <strong>핵심 요약</strong>
+              <p>{answer}</p>
+            </aside>
+          ) : null}
+
           <div class="prose post-content">
             {/* @ts-ignore */}
             {/* Phase 3-5: 자동 내부 링크 — 진료/지역 키워드 발견 시 토픽 클러스터 링크 */}
-            <div dangerouslySetInnerHTML={{ __html: autoLinkContent(post.content) }} />
+            <div dangerouslySetInnerHTML={{ __html: bodyHtml }} />
           </div>
+          <p class="wr-note">※ 이 글은 일반적인 의료 정보이며, 치료 결과는 개인의 구강 상태에 따라 다를 수 있습니다.</p>
+
+          {author ? (
+            <aside class="wr-author" aria-label="글쓴이">
+              {photo ? <img src={photo} alt={`${author.title} ${author.name}`} width={72} height={72} loading="lazy" decoding="async" /> : null}
+              <div>
+                <span class="wr-author-label">글쓴이</span>
+                <a href={`/doctors/${author.slug}`} class="wr-author-name">{author.title} {author.name}</a>
+                <p>{author.specialties.map((sl) => TREATMENT_LIST.find((t) => t.slug === sl)?.name ?? sl).join(' · ')}{author.education?.[0] ? ` · ${author.education[0]}` : ''}</p>
+                <p class="wr-author-date">최종 검토일 <time datetime={modifiedAt?.slice(0, 10)}>{modifiedAt?.slice(0, 10)}</time></p>
+              </div>
+            </aside>
+          ) : null}
+
+          {treatment || relatedCases.length ? (
+            <div class="wr-related">
+              {treatment ? <p><strong>관련 진료</strong> <a href={`/treatments/${treatment.slug}`}>{treatment.name} 진료 안내 →</a></p> : null}
+              {relatedCases.length ? (
+                <>
+                  <h2>{treatment ? `${treatment.name} 비포애프터` : '비포애프터'}</h2>
+                  <ul>{relatedCases.map((k) => <li><a href={`/before-after/${k.slug}`}>{k.title}</a>{k.treatment_period ? <span>{k.treatment_period}</span> : null}</li>)}</ul>
+                </>
+              ) : null}
+            </div>
+          ) : null}
 
           {post.tags ? (
             <div class="blog-tags">
@@ -258,7 +337,7 @@ export const BlogDetailPage = ({
               {related.map((p) => (
                 <a href={`/blog/${p.slug}`} class="blog-card">
                   <div class="blog-cover">
-                    {p.cover_key ? <img src={`/media/${p.cover_key}`} alt={p.title} /> : (
+                    {p.cover_key ? <img src={`/media/${p.cover_key}`} alt={p.title} loading="lazy" decoding="async" /> : (
                       <div class="blog-cover-fallback"><span class="font-display">{p.category ?? 'POST'}</span></div>
                     )}
                   </div>

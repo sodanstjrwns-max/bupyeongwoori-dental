@@ -8,8 +8,8 @@ import { TreatmentsListPage, TreatmentDetailPage } from './pages/treatments'
 import { PlaceholderPage } from './pages/placeholder'
 import { LoginPage, SignupPage } from './pages/auth'
 import { MyPage } from './pages/mypage'
-import { BeforeAfterListPage, BeforeAfterDetailPage } from './pages/before-after'
-import { BlogListPage, BlogDetailPage } from './pages/blog'
+import { BeforeAfterListPage, BeforeAfterDetailPage, BA_PER_PAGE } from './pages/before-after'
+import { BlogListPage, BlogDetailPage, BLOG_PER_PAGE } from './pages/blog'
 import { NoticesListPage, NoticeDetailPage } from './pages/notices'
 import { GlossaryListPage, GlossaryDetailPage } from './pages/glossary'
 import { FaqAllPage } from './pages/faq'
@@ -446,8 +446,13 @@ app.get('/before-after', async (c) => {
   const params: any[] = []
   if (treatment) { sql += ' AND treatment_slug = ?'; params.push(treatment) }
   if (q) { sql += ' AND (title LIKE ? OR summary LIKE ?)'; params.push(`%${q}%`, `%${q}%`) }
-  sql += ' ORDER BY created_at DESC LIMIT 60'
-  const cases = (await c.env.DB.prepare(sql).bind(...params).all()).results as any[]
+  sql += ' ORDER BY created_at DESC'
+  const all = (await c.env.DB.prepare(sql).bind(...params).all()).results as any[]
+  // 서버 페이지네이션(?page=N, a 링크)
+  const totalPages = Math.max(1, Math.ceil(all.length / BA_PER_PAGE))
+  const page = Math.max(1, parseInt(c.req.query('page') || '1', 10) || 1)
+  if (page > totalPages) return c.notFound()
+  const cases = all.slice((page - 1) * BA_PER_PAGE, page * BA_PER_PAGE)
 
   return c.html(
     <BeforeAfterListPage
@@ -455,6 +460,8 @@ app.get('/before-after', async (c) => {
       isLoggedIn={loggedIn}
       activeTreatment={treatment || undefined}
       query={q || undefined}
+      page={page}
+      totalPages={totalPages}
     />
   )
 })
@@ -470,7 +477,13 @@ app.get('/before-after/:slug', async (c) => {
     'SELECT * FROM before_after WHERE treatment_slug = ? AND id != ? AND is_published = 1 ORDER BY created_at DESC LIMIT 3'
   ).bind(caseRow.treatment_slug, caseRow.id).all()).results as any[]
 
-  return c.html(<BeforeAfterDetailPage caseRow={caseRow} isLoggedIn={loggedIn} relatedCases={related} />)
+  // 관련 칼럼: 같은 진료(카테고리=진료명) 최신 3편
+  const txName = TREATMENT_LIST.find((t) => t.slug === caseRow.treatment_slug)?.name
+  const relatedPosts = txName ? ((await c.env.DB.prepare(
+    'SELECT slug, title, published_at FROM blog_posts WHERE is_published = 1 AND category = ? ORDER BY published_at DESC LIMIT 3'
+  ).bind(txName).all()).results as any[]) : []
+
+  return c.html(<BeforeAfterDetailPage caseRow={caseRow} isLoggedIn={loggedIn} relatedCases={related} relatedPosts={relatedPosts} />)
 })
 
 // ============================================================
@@ -481,9 +494,15 @@ app.get('/blog', async (c) => {
   let sql = 'SELECT * FROM blog_posts WHERE is_published = 1'
   const params: any[] = []
   if (category) { sql += ' AND category = ?'; params.push(category) }
-  sql += ' ORDER BY published_at DESC LIMIT 60'
-  const posts = (await c.env.DB.prepare(sql).bind(...params).all()).results as any[]
-  return c.html(<BlogListPage posts={posts} category={category || undefined} />)
+  sql += ' ORDER BY published_at DESC'
+  const all = (await c.env.DB.prepare(sql).bind(...params).all()).results as any[]
+  const allCategories = ((await c.env.DB.prepare('SELECT DISTINCT category FROM blog_posts WHERE is_published = 1 AND category IS NOT NULL ORDER BY category').all()).results as any[]).map((r) => r.category as string)
+  // 서버 페이지네이션(?page=N, a 링크) — 2쪽부터 canonical 에 page 유지
+  const totalPages = Math.max(1, Math.ceil(all.length / BLOG_PER_PAGE))
+  const page = Math.max(1, parseInt(c.req.query('page') || '1', 10) || 1)
+  if (page > totalPages) return c.notFound()
+  const posts = all.slice((page - 1) * BLOG_PER_PAGE, page * BLOG_PER_PAGE)
+  return c.html(<BlogListPage posts={posts} category={category || undefined} allCategories={allCategories} page={page} totalPages={totalPages} />)
 })
 
 app.get('/blog/:slug', async (c) => {
@@ -503,10 +522,19 @@ app.get('/blog/:slug', async (c) => {
   const post = await c.env.DB.prepare('SELECT * FROM blog_posts WHERE slug = ? AND is_published = 1 LIMIT 1').bind(slug).first<any>()
   if (!post) return c.notFound()
   c.executionCtx?.waitUntil?.(c.env.DB.prepare('UPDATE blog_posts SET view_count = view_count + 1 WHERE id = ?').bind(post.id).run())
-  const related = (await c.env.DB.prepare(
-    'SELECT * FROM blog_posts WHERE id != ? AND is_published = 1 ORDER BY published_at DESC LIMIT 3'
-  ).bind(post.id).all()).results as any[]
-  return c.html(<BlogDetailPage post={post} related={related} />)
+  // 관련 칼럼: 같은 카테고리 최신 3편 우선, 부족하면 최신 글로 채움 + 같은 진료 비포애프터
+  const sameCat = post.category ? ((await c.env.DB.prepare(
+    'SELECT * FROM blog_posts WHERE id != ? AND is_published = 1 AND category = ? ORDER BY published_at DESC LIMIT 3'
+  ).bind(post.id, post.category).all()).results as any[]) : []
+  const latest = sameCat.length < 3 ? ((await c.env.DB.prepare(
+    'SELECT * FROM blog_posts WHERE id != ? AND is_published = 1 ORDER BY published_at DESC LIMIT 6'
+  ).bind(post.id).all()).results as any[]) : []
+  const related = [...sameCat, ...latest.filter((r) => !sameCat.some((x) => x.id === r.id))].slice(0, 3)
+  const txSlug = TREATMENT_LIST.find((t) => t.name === post.category)?.slug
+  const relatedCases = txSlug ? ((await c.env.DB.prepare(
+    "SELECT slug, title, treatment_period FROM before_after WHERE is_published = 1 AND treatment_slug = ? AND slug NOT LIKE 'sample-%' ORDER BY created_at DESC LIMIT 3"
+  ).bind(txSlug).all()).results as any[]) : []
+  return c.html(<BlogDetailPage post={post} related={related} relatedCases={relatedCases} />)
 })
 
 // ============================================================
@@ -1177,7 +1205,8 @@ app.get('/sitemap-ba.xml', async (c) => {
   const entries: SitemapEntry[] = []
   try {
     const bas = (await c.env.DB.prepare(
-      'SELECT slug, COALESCE(updated_at, published_at, created_at) AS lastmod FROM before_after WHERE is_published = 1 ORDER BY COALESCE(updated_at, published_at, created_at) DESC'
+      // before_after 에는 published_at 열이 없어 기존 쿼리가 오류 → 빈 사이트맵이던 문제 수정. 샘플(sample-*) 케이스는 noindex 라 제외
+      "SELECT slug, COALESCE(updated_at, created_at) AS lastmod FROM before_after WHERE is_published = 1 AND slug NOT LIKE 'sample-%' ORDER BY COALESCE(updated_at, created_at) DESC"
     ).all()).results as any[]
     for (const b of bas) {
       entries.push({ loc: `/before-after/${b.slug}`, lastmod: toIsoLastmod(b.lastmod, todayIso), changefreq: 'weekly', priority: '0.85' })

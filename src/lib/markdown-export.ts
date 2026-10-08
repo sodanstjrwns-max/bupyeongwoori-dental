@@ -123,7 +123,18 @@ export function glossaryToMarkdown(term: GlossaryTerm): string {
     `**분류**: 치과 백과사전 / ${term.category}`,
     '',
   ]
-  if (term.body) {
+  if (term.content) {
+    lines.push(term.content.lead, '')
+    for (const sec of term.content.sections) {
+      lines.push(`## ${sec.h}`, '', ...sec.p.flatMap((p) => [p, '']))
+      if (sec.list?.length) lines.push(...sec.list.map((li) => `- ${li}`), '')
+    }
+    if (term.content.faqs.length) {
+      lines.push('## 자주 묻는 질문', '')
+      for (const f of term.content.faqs) lines.push(`### ${f.q}`, '', f.a, '')
+    }
+    if (term.modified) lines.push(`**최종 검토**: ${term.modified}`, '')
+  } else if (term.body) {
     lines.push('## 상세 설명', '', htmlToMarkdown(term.body), '')
   }
   if (term.relatedTreatments?.length) {

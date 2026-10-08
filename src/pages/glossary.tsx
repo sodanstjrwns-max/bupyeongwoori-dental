@@ -2,8 +2,8 @@ import { Layout } from '../components/Layout'
 import { CLINIC, OG_IMAGES } from '../lib/constants'
 import { GLOSSARY, GLOSSARY_CATEGORIES, getRelatedTerms, type GlossaryTerm } from '../data/glossary'
 import { TREATMENT_LIST } from '../data/treatments'
-import { breadcrumbSchema, medicalWebPageSchema } from '../lib/schema'
-import { CONTENT_DATES } from '../lib/content-dates'
+import { breadcrumbSchema, faqSchema, medicalWebPageSchema } from '../lib/schema'
+import { CONTENT_DATES, toKstNoonIso } from '../lib/content-dates'
 import { CtaSection } from '../components/CtaSection'
 import { InlineCta } from '../components/InlineCta'
 
@@ -145,20 +145,58 @@ export const GlossaryListPage = ({
 // ============================================================
 // 상세 페이지
 // ============================================================
+
+/** 본문 문단 안의 관련 용어 이름을 첫 등장 1회만 링크 (용어당 1회, 페이지당 최대 8개) */
+type LinkTarget = { name: string; href: string }
+const linkify = (text: string, targets: LinkTarget[], used: Set<string>): any[] => {
+  let parts: any[] = [text]
+  for (const t of targets) {
+    if (used.has(t.href) || used.size >= 8) continue
+    const next: any[] = []
+    let done = false
+    for (const part of parts) {
+      if (done || typeof part !== 'string') { next.push(part); continue }
+      const i = part.indexOf(t.name)
+      if (i < 0) { next.push(part); continue }
+      next.push(part.slice(0, i), <a href={t.href}>{t.name}</a>, part.slice(i + t.name.length))
+      done = true
+      used.add(t.href)
+    }
+    parts = next
+  }
+  return parts.filter((x) => x !== '')
+}
+const displayName = (term: string) => term.replace(/\s*\(.*?\)\s*/g, '').trim()
+
 export const GlossaryDetailPage = ({ term }: { term: GlossaryTerm }) => {
   const related = getRelatedTerms(term)
   const cat = GLOSSARY_CATEGORIES.find((c) => c.slug === term.category)
-  const relatedTreatments = (term.treatments ?? [])
+  const relatedTreatments = (term.relatedTreatments ?? term.treatments ?? [])
     .map((s) => TREATMENT_LIST.find((t) => t.slug === s))
     .filter(Boolean)
+  const content = term.content
+  // 화면 감수 줄·MedicalWebPage lastReviewed·sitemap lastmod 가 같은 값 (보강일 고정값)
+  const reviewed = term.modified ?? CONTENT_DATES.glossary
+  const url = `https://${CLINIC.domain}/glossary/${term.slug}`
+
+  // 본문 인라인 링크 대상: 관련 용어(이름 2자 이상, 긴 이름 먼저) + 관련 진료
+  const linkTargets: LinkTarget[] = [
+    ...related
+      .map((r) => ({ name: displayName(r.term), href: `/glossary/${r.slug}` }))
+      .filter((x) => x.name.length >= 2 && x.name !== displayName(term.term)),
+    ...relatedTreatments.map((t) => ({ name: t!.name, href: `/treatments/${t!.slug}` })),
+  ].sort((a, b) => b.name.length - a.name.length)
+  const used = new Set<string>()
 
   return (
     <Layout
       title={`${term.term}${term.termEn ? ` (${term.termEn})` : ''} | 치과 백과사전`}
-      description={`${term.term}${term.termEn ? ` (${term.termEn})` : ''} — ${term.short}. 부평우리치과 치과 백과사전.`}
+      description={`${term.term}${term.termEn ? ` (${term.termEn})` : ''} — ${term.short}${content ? ` ${content.lead}`.slice(0, 90) : ''}`.slice(0, 155)}
       keywords={`${term.term}, ${term.termEn ?? ''}, 치과 용어, 부평우리치과`}
-      canonical={`https://${CLINIC.domain}/glossary/${term.slug}`}
+      canonical={url}
       ogImage={OG_IMAGES.glossary}
+      ogType={content ? 'article' : 'website'}
+      articleMeta={content ? { modifiedTime: toKstNoonIso(reviewed), author: CLINIC.representative, section: cat?.name ?? '치과 백과사전' } : undefined}
       jsonLd={[
         breadcrumbSchema([
           { name: '홈', url: '/' },
@@ -168,21 +206,28 @@ export const GlossaryDetailPage = ({ term }: { term: GlossaryTerm }) => {
         {
           '@context': 'https://schema.org',
           '@type': 'DefinedTerm',
+          '@id': `${url}#term`,
           name: term.term,
           alternateName: term.termEn,
           description: term.short,
           inDefinedTermSet: `https://${CLINIC.domain}/glossary`,
-          url: `https://${CLINIC.domain}/glossary/${term.slug}`,
+          url,
         },
         // E-E-A-T: 의학 용어 해설도 의료 콘텐츠 — 대표원장 감수 명시
-        medicalWebPageSchema({
-          url: `https://${CLINIC.domain}/glossary/${term.slug}`,
-          name: `${term.term} | 치과 백과사전`,
-          description: term.short ?? term.definition,
-          about: term.term,
-          lastReviewed: CONTENT_DATES.glossary,
-          speakableSelectors: ['.glossary-detail-title', '.glossary-detail-short'],
-        }),
+        {
+          ...medicalWebPageSchema({
+            url,
+            name: `${term.term} | 치과 백과사전`,
+            description: content?.lead ?? term.short ?? term.definition,
+            about: term.term,
+            lastReviewed: reviewed,
+            speakableSelectors: ['.glossary-detail-title', '.glossary-detail-short', '.glossary-lead'],
+          }),
+          ...(content ? { dateModified: reviewed } : {}),
+          mainEntity: { '@id': `${url}#term` },
+        },
+        // FAQPage — 화면 #glossary-faq 의 <details> 와 같은 배열 (1:1)
+        content && content.faqs.length > 0 ? faqSchema(content.faqs) : null,
       ]}
     >
       <article class="section" style="padding-top:120px;">
@@ -197,12 +242,43 @@ export const GlossaryDetailPage = ({ term }: { term: GlossaryTerm }) => {
           </h1>
           <p class="glossary-detail-short">{term.short}</p>
 
-          <div class="glossary-detail-body prose">
-            <p>{term.definition}</p>
-          </div>
+          {content ? (
+            <div class="glossary-detail-body prose">
+              <p class="glossary-lead">{linkify(content.lead, linkTargets, used)}</p>
+              {content.sections.map((sec) => (
+                <section>
+                  <h2>{sec.h}</h2>
+                  {sec.p.map((para) => <p>{linkify(para, linkTargets, used)}</p>)}
+                  {sec.list && sec.list.length > 0 ? (
+                    <ul>{sec.list.map((li) => <li>{linkify(li, linkTargets, used)}</li>)}</ul>
+                  ) : null}
+                </section>
+              ))}
+            </div>
+          ) : (
+            <div class="glossary-detail-body prose">
+              <p>{term.definition}</p>
+            </div>
+          )}
+
+          {content && content.faqs.length > 0 ? (
+            <section id="glossary-faq" style="margin-top:40px;">
+              <h2 style="font-size:var(--h-4); margin-bottom:16px;">{displayName(term.term)}, 자주 묻는 질문</h2>
+              <div class="accordion">
+                {content.faqs.map((f) => (
+                  <details>
+                    <summary>{f.q}</summary>
+                    <div class="answer">{f.a}</div>
+                  </details>
+                ))}
+              </div>
+            </section>
+          ) : null}
+
           {/* E-E-A-T 가시적 감수 줄 — 스키마 reviewedBy·lastReviewed 와 동일 값 */}
-          <p class="medical-review-line" style="margin-top:16px; font-size:0.84rem; color:var(--ink-500);">
-            감수: <a href="/doctors/kim-jaein" style="color:inherit; text-decoration:underline;">{CLINIC.representative} 대표원장</a> · 최종 검토 <time datetime={CONTENT_DATES.glossary}>{CONTENT_DATES.glossary}</time>
+          <p class="medical-review-line" style="margin-top:24px; font-size:0.84rem; color:var(--ink-500);">
+            감수: <a href="/doctors/kim-jaein" style="color:inherit; text-decoration:underline;">{CLINIC.representative} 대표원장</a> · 최종 검토 <time datetime={reviewed}>{reviewed}</time>
+            {content ? <> · 일반적인 정보이며 개인의 구강 상태에 따라 진단과 치료는 달라질 수 있습니다.</> : null}
           </p>
 
           {relatedTreatments.length > 0 && (

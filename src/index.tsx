@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { CONTENT_DATES, toKstNoonIso } from './lib/content-dates'
+import { CONTENT_DATES, PAGE_DATES, toKstNoonIso } from './lib/content-dates'
 import { cors } from 'hono/cors'
 import { HomePage } from './pages/home'
 import { MissionPage } from './pages/mission'
@@ -44,6 +44,7 @@ import { TREATMENT_LIST, getTreatment } from './data/treatments'
 import { pingIndexNow, INDEXNOW_KEY } from './lib/indexnow'
 import { autoFillBlogSeo, autoFillBaSeo, buildIndexNowUrls } from './lib/auto-seo'
 import { AreasIndexPage, AreaHubPage, AreaTreatmentPage } from './pages/areas'
+import { BupyeongHubPage, BUPYEONG_HUB_SLUG } from './pages/bupyeong-hub'
 import { AREAS, getArea, TREATMENT_LOCAL } from './data/areas'
 import { SearchPage, searchStatic, type SearchResultItem } from './pages/search'
 import { NotFoundPage } from './pages/not-found'
@@ -54,13 +55,15 @@ import { fetchSiteStats, renderStatsPage, isValidStatsKey } from './lib/stats'
 const app = new Hono<{ Bindings: Bindings }>()
 
 // ============================================================
-// canonical host 통일 — www.wooridc.kr → wooridc.kr (301)
-// www 호스트가 200 으로 같은 페이지를 서빙하면 GSC 에서 중복 호스트로 잡힌다.
-// *.pages.dev 등 다른 호스트는 건드리지 않는다 (www. 로 시작하는 경우만).
+// canonical host 통일 — www.wooridc.kr / bupyeongwoori-dental.pages.dev → wooridc.kr (301)
+// www·pages.dev 프로덕션 별칭이 200 으로 같은 페이지를 서빙하면 중복 호스트로 잡힌다.
+// 배포별 미리보기 URL(<hash>.bupyeongwoori-dental.pages.dev)은 검증용으로 그대로 둔다
+// (프로덕션 호스트명과 정확히 일치할 때만 301).
 // ============================================================
+const PAGES_DEV_PROD_HOST = 'bupyeongwoori-dental.pages.dev'
 app.use('*', async (c, next) => {
   const url = new URL(c.req.url)
-  if (url.hostname.startsWith('www.')) {
+  if (url.hostname.startsWith('www.') || url.hostname === PAGES_DEV_PROD_HOST) {
     const path = url.pathname.length > 1 ? url.pathname.replace(/\/+$/, '') : url.pathname
     return c.redirect(`https://${CLINIC.domain}${path}${url.search}`, 301)
   }
@@ -122,6 +125,8 @@ app.get('/mission', (c) => c.html(<MissionPage />))
 app.get('/doctors', (c) => c.html(<DoctorsPage />))
 app.get('/doctors/:slug', async (c) => {
   const slug = c.req.param('slug')
+  // 없는 의료진 slug — soft 404(200) 대신 404 페이지
+  if (!getDoctor(slug)) return c.notFound()
   let cases: any[] = []
   try {
     const r = await c.env.DB.prepare(
@@ -190,6 +195,10 @@ app.get('/treatments/:slug', async (c) => {
   } catch (e) {
     console.error('treatment related posts fetch failed', e)
   }
+  // 없는 진료 slug — 200 + noindex(soft 404) 대신 진짜 404 + noindex
+  if (!getTreatment(slug)) {
+    return c.html(<TreatmentDetailPage slug={slug} cases={[]} relatedPosts={[]} isLoggedIn={false} />, 404, { 'X-Robots-Tag': 'noindex' })
+  }
   const user = await getUserFromSession(c)
   const isLoggedIn = !!user
   return c.html(<TreatmentDetailPage slug={slug} cases={cases} relatedPosts={relatedPosts} isLoggedIn={isLoggedIn} />)
@@ -204,6 +213,8 @@ app.get('/areas/:region', (c) => {
   const region = c.req.param('region')
   const area = getArea(region)
   if (!area) return c.notFound()
+  // "부평 치과" 대표 허브 — 부평구 지역 페이지를 허브로 승격 (URL 유지)
+  if (area.slug === BUPYEONG_HUB_SLUG) return c.html(<BupyeongHubPage area={area} />)
   return c.html(<AreaHubPage area={area} />)
 })
 
@@ -1027,8 +1038,14 @@ function todayIsoKst(): string {
 const PAGES_LASTMOD = toKstNoonIso(CONTENT_DATES.treatments)
 /** 지역×진료 랜딩 — 2026-05-26 생성 이후 콘텐츠 변경 없음 */
 const AREAS_LASTMOD = toKstNoonIso(CONTENT_DATES.areas)
-/** 치과 백과사전 582 용어 — 2026-04-20 마지막 시드 이후 변경 없음 */
+/** 치과 백과사전 — 2026-10-08 전 용어 본문 보강 (용어별 modified 가 있으면 그 값) */
 const GLOSSARY_LASTMOD = toKstNoonIso(CONTENT_DATES.glossary)
+/** 정적 페이지별 실제 수정일 (content-dates.ts PAGE_DATES) */
+const pageLastmod = (loc: string) => toKstNoonIso(PAGE_DATES[loc] ?? CONTENT_DATES.treatments)
+/** 사이트맵 인덱스용 pages 묶음 lastmod = 묶음 안 가장 최근 수정일 */
+const PAGES_INDEX_LASTMOD = toKstNoonIso([...Object.values(PAGE_DATES), CONTENT_DATES.treatments].sort().at(-1)!)
+/** 지역 묶음 lastmod = 허브 보강일과 지역 랜딩 중 최근 */
+const AREAS_INDEX_LASTMOD = toKstNoonIso([CONTENT_DATES.areas, CONTENT_DATES.bupyeongHub, PAGE_DATES['/areas']].sort().at(-1)!)
 
 // ============================================================
 // Sitemap Index — 조건부 등록 (빈 sitemap 자동 제외)
@@ -1045,11 +1062,21 @@ app.get('/sitemap.xml', async (c) => {
     ).first<{ lm: string | null; cnt: number }>()
     if (b?.lm) blogLast = toIsoLastmod(b.lm, todayIso)
     blogCount = Number(b?.cnt ?? 0)
+  } catch (err) {
+    console.error('Sitemap index blog error:', err)
+  }
+  try {
+    // before_after 에는 published_at 열이 없다 — 기존 쿼리가 오류를 내며 아래 공지·이미지 집계까지 건너뛰어
+    // sitemap-notices 가 인덱스에서 빠지던 문제(2026-10-08 수정). 샘플 케이스는 sitemap-ba 와 같게 제외.
     const a = await c.env.DB.prepare(
-      'SELECT MAX(COALESCE(updated_at, published_at, created_at)) AS lm, COUNT(*) AS cnt FROM before_after WHERE is_published = 1'
+      "SELECT MAX(COALESCE(updated_at, created_at)) AS lm, COUNT(*) AS cnt FROM before_after WHERE is_published = 1 AND slug NOT LIKE 'sample-%'"
     ).first<{ lm: string | null; cnt: number }>()
     if (a?.lm) baLast = toIsoLastmod(a.lm, todayIso)
     baCount = Number(a?.cnt ?? 0)
+  } catch (err) {
+    console.error('Sitemap index BA error:', err)
+  }
+  try {
     const n = await c.env.DB.prepare(
       'SELECT MAX(COALESCE(updated_at, published_at, created_at)) AS lm, COUNT(*) AS cnt FROM notices WHERE is_published = 1'
     ).first<{ lm: string | null; cnt: number }>()
@@ -1064,7 +1091,7 @@ app.get('/sitemap.xml', async (c) => {
     // Image sitemap 활성 조건: BA(공개) 이미지 또는 블로그 커버가 1개라도 있으면
     const im = await c.env.DB.prepare(
       `SELECT
-         (SELECT COUNT(*) FROM before_after WHERE is_published=1 AND (before_intra_key IS NOT NULL OR before_pano_key IS NOT NULL))
+         (SELECT COUNT(*) FROM before_after WHERE is_published=1 AND slug NOT LIKE 'sample-%' AND (before_intra_key IS NOT NULL OR before_pano_key IS NOT NULL))
        + (SELECT COUNT(*) FROM blog_posts WHERE is_published=1 AND cover_key IS NOT NULL AND cover_key != '')
          AS cnt`
     ).first<{ cnt: number }>()
@@ -1075,8 +1102,8 @@ app.get('/sitemap.xml', async (c) => {
 
   // 항상 등록 (정적 콘텐츠) — 정직한 lastmod: 실제 콘텐츠 수정일
   const children: string[] = [
-    `  <sitemap><loc>${base}/sitemap-pages.xml</loc><lastmod>${PAGES_LASTMOD}</lastmod></sitemap>`,
-    `  <sitemap><loc>${base}/sitemap-areas.xml</loc><lastmod>${AREAS_LASTMOD}</lastmod></sitemap>`,
+    `  <sitemap><loc>${base}/sitemap-pages.xml</loc><lastmod>${PAGES_INDEX_LASTMOD}</lastmod></sitemap>`,
+    `  <sitemap><loc>${base}/sitemap-areas.xml</loc><lastmod>${AREAS_INDEX_LASTMOD}</lastmod></sitemap>`,
     `  <sitemap><loc>${base}/sitemap-glossary.xml</loc><lastmod>${GLOSSARY_LASTMOD}</lastmod></sitemap>`,
   ]
   // 조건부 등록 (DB 의존, 데이터 있을 때만)
@@ -1110,13 +1137,14 @@ app.get('/sitemap-areas.xml', (c) => {
   const base = `https://${CLINIC.domain}`
   // 정직한 lastmod: 지역 콘텐츠 실제 수정일 (매일 갱신 X)
   const entries: SitemapEntry[] = [
-    { loc: '/areas', lastmod: AREAS_LASTMOD, changefreq: 'monthly', priority: '0.9' },
+    { loc: '/areas', lastmod: toKstNoonIso(PAGE_DATES['/areas']), changefreq: 'monthly', priority: '0.9' },
   ]
   // 지역 허브 페이지 (8개) — priority 0.76~0.95
   for (const a of AREAS) {
     entries.push({
       loc: `/areas/${a.slug}`,
-      lastmod: AREAS_LASTMOD,
+      // "부평 치과" 허브(bupyeong-gu)는 2026-10-08 본문 신설 — 나머지는 지역 랜딩 생성일
+      lastmod: a.slug === 'bupyeong-gu' ? toKstNoonIso(CONTENT_DATES.bupyeongHub) : AREAS_LASTMOD,
       changefreq: 'monthly',
       priority: (Math.max(0.7, a.priority * 0.95)).toFixed(2),
     })
@@ -1143,17 +1171,17 @@ app.get('/sitemap-pages.xml', (c) => {
   const base = `https://${CLINIC.domain}`
   // 정직한 lastmod: 실제 콘텐츠 수정일 (거짓 lastmod = Patient Grader A3 0점)
   const entries: SitemapEntry[] = [
-    { loc: '/', lastmod: PAGES_LASTMOD, changefreq: 'weekly', priority: '1.0' },
-    { loc: '/mission', lastmod: PAGES_LASTMOD, changefreq: 'monthly', priority: '0.8' },
-    { loc: '/doctors', lastmod: PAGES_LASTMOD, changefreq: 'monthly', priority: '0.9' },
-    { loc: '/doctors/kim-jaein', lastmod: PAGES_LASTMOD, changefreq: 'monthly', priority: '0.9' },
-    { loc: '/treatments', lastmod: PAGES_LASTMOD, changefreq: 'monthly', priority: '0.9' },
-    { loc: '/before-after', lastmod: PAGES_LASTMOD, changefreq: 'weekly', priority: '0.8' },
-    { loc: '/blog', lastmod: PAGES_LASTMOD, changefreq: 'daily', priority: '0.9' },
-    { loc: '/notices', lastmod: PAGES_LASTMOD, changefreq: 'weekly', priority: '0.8' },
-    { loc: '/glossary', lastmod: GLOSSARY_LASTMOD, changefreq: 'monthly', priority: '0.7' },
-    { loc: '/faq', lastmod: PAGES_LASTMOD, changefreq: 'monthly', priority: '0.8' },
-    { loc: '/visit', lastmod: PAGES_LASTMOD, changefreq: 'monthly', priority: '0.8' },
+    { loc: '/', lastmod: pageLastmod('/'), changefreq: 'weekly', priority: '1.0' },
+    { loc: '/mission', lastmod: pageLastmod('/mission'), changefreq: 'monthly', priority: '0.8' },
+    { loc: '/doctors', lastmod: pageLastmod('/doctors'), changefreq: 'monthly', priority: '0.9' },
+    { loc: '/doctors/kim-jaein', lastmod: pageLastmod('/doctors/kim-jaein'), changefreq: 'monthly', priority: '0.9' },
+    { loc: '/treatments', lastmod: pageLastmod('/treatments'), changefreq: 'monthly', priority: '0.9' },
+    { loc: '/before-after', lastmod: pageLastmod('/before-after'), changefreq: 'weekly', priority: '0.8' },
+    { loc: '/blog', lastmod: pageLastmod('/blog'), changefreq: 'daily', priority: '0.9' },
+    { loc: '/notices', lastmod: pageLastmod('/notices'), changefreq: 'weekly', priority: '0.8' },
+    { loc: '/glossary', lastmod: pageLastmod('/glossary'), changefreq: 'monthly', priority: '0.7' },
+    { loc: '/faq', lastmod: pageLastmod('/faq'), changefreq: 'monthly', priority: '0.8' },
+    { loc: '/visit', lastmod: pageLastmod('/visit'), changefreq: 'monthly', priority: '0.8' },
   ]
   // 진료 상세 8종 — 핵심 SEO 페이지 (3차 업글에서 용어 병기·진료장면 추가 = 실제 수정)
   for (const t of TREATMENT_LIST) {
@@ -1163,15 +1191,15 @@ app.get('/sitemap-pages.xml', (c) => {
 })
 
 // ============================================================
-// sitemap-glossary.xml — 치과 백과사전 (582 용어) 단독
+// sitemap-glossary.xml — 치과 백과사전 (485 용어, 2026-10-08 전 용어 본문 보강) 단독
 // 검색콘솔에서 추적 효율 위해 메인 페이지 sitemap과 분리
 // ============================================================
 app.get('/sitemap-glossary.xml', (c) => {
   const base = `https://${CLINIC.domain}`
-  // 정직한 lastmod: 용어집 마지막 실제 수정일 (2026-04-20 시드 완료)
+  // 정직한 lastmod: 용어별 본문 실제 수정일(modified, 2026-10-08 보강) — 없으면 용어집 기준일
   const entries: SitemapEntry[] = []
   for (const g of GLOSSARY) {
-    entries.push({ loc: `/glossary/${g.slug}`, lastmod: GLOSSARY_LASTMOD, changefreq: 'yearly', priority: '0.6' })
+    entries.push({ loc: `/glossary/${g.slug}`, lastmod: g.modified ? toKstNoonIso(g.modified) : GLOSSARY_LASTMOD, changefreq: 'yearly', priority: '0.6' })
   }
   return c.text(buildUrlsetXml(base, entries), 200, sitemapXmlHeaders)
 })
@@ -1248,9 +1276,10 @@ app.get('/sitemap-images.xml', async (c) => {
   // BA 비포(공개) 이미지 — 애프터는 회원 전용이라 색인 제외
   try {
     const ba = (await c.env.DB.prepare(
+      // 샘플(sample-*) 케이스는 noindex 페이지라 이미지 사이트맵에서도 제외 (2026-10-08)
       `SELECT id, slug, title, treatment_slug, before_intra_key, before_pano_key
        FROM before_after
-       WHERE is_published = 1
+       WHERE is_published = 1 AND slug NOT LIKE 'sample-%'
        ORDER BY created_at DESC
        LIMIT 200`
     ).all()).results as any[]
@@ -1392,7 +1421,9 @@ app.get('/rss.xml', async (c) => {
     }
     items = posts.map(p => {
       const link = `${base}/blog/${p.slug}`
-      const pubDate = new Date(p.published_at).toUTCString()
+      // published_at 이 비어 있으면 pubDate 를 생략 (Invalid Date 출력 방지 — RSS 유효성)
+      const pd = p.published_at ? new Date(p.published_at) : null
+      const pubDate = pd && !isNaN(pd.getTime()) ? pd.toUTCString() : ''
       const desc = p.excerpt ?? p.meta_description ?? ''
       const category = p.category ?? ''
       const enclosure = p.cover_key ? `\n      <enclosure url="${escapeXml(`${base}/media/${p.cover_key}`)}" type="image/jpeg"/>` : ''
@@ -1402,7 +1433,7 @@ app.get('/rss.xml', async (c) => {
       <guid isPermaLink="true">${escapeXml(link)}</guid>
       <description>${escapeXml(desc)}</description>
       ${category ? `<category>${escapeXml(category)}</category>` : ''}
-      <pubDate>${pubDate}</pubDate>${enclosure}
+      ${pubDate ? `<pubDate>${pubDate}</pubDate>` : ''}${enclosure}
     </item>`
     })
   } catch (err) { console.error('RSS error:', err) }

@@ -71,6 +71,7 @@ export const AreasIndexPage = () => {
           </h1>
           <p class="page-lead">
             부평역 26번 출구 도보 1분, {CLINIC.name}. 부평구 전 지역과 인접 지역에서 어떻게 오시는지, 지역별 진료 안내를 한눈에 확인하세요.
+            위치·진료시간·의료진을 한 번에 보시려면 <a href="/areas/bupyeong-gu" style="color:inherit; border-bottom:1px solid currentColor;">부평 치과 안내</a>를 참고하세요.
           </p>
         </div>
       </section>
@@ -199,7 +200,7 @@ export const AreaHubPage = ({ area }: { area: AreaInfo }) => {
         <div class="container">
           <h2 class="section-title">{area.name} 거주자분께 추천하는 진료</h2>
           <p style="text-align:center; color:var(--ink-500); margin-bottom:40px;">
-            아래 진료별 상세 페이지에서 {area.name}에서 ${CLINIC.name}을(를) 선택하시는 이유를 자세히 안내드립니다.
+            아래 진료별 상세 페이지에서 {area.name}에서 {CLINIC.name}을(를) 선택하시는 이유를 자세히 안내드립니다.
           </p>
           <div class="area-treatment-grid">
             {treatments.map((t) => (
@@ -274,7 +275,7 @@ export const AreaTreatmentPage = ({ area, treatment }: { area: AreaInfo; treatme
         breadcrumbSchema([
           { name: '홈', url: '/' },
           { name: '지역별 안내', url: '/areas' },
-          { name: `${area.name} 치과`, url: `/areas/${area.slug}` },
+          { name: area.slug === 'bupyeong-gu' ? '부평 치과' : `${area.name} 치과`, url: `/areas/${area.slug}` },
           { name: `${area.name} ${treatment.name}`, url: `/areas/${area.slug}/${treatment.slug}` },
         ]),
         // 병원 엔티티는 사이트 전체에서 하나(@id /#clinic)로 통일 — 지역별 별도 Dentist 엔티티(지역 좌표) 제거

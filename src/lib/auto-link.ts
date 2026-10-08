@@ -16,8 +16,9 @@ type LinkMap = { keyword: string; href: string; title?: string }[]
 const DEFAULT_LINKS: LinkMap = [
   // 지역 (구체적인 것 먼저)
   { keyword: '부평역 26번 출구', href: '/visit', title: '오시는 길' },
+  { keyword: '부평 치과', href: '/areas/bupyeong-gu', title: '부평 치과 안내' },
   { keyword: '부평역', href: '/areas/bupyeong-station', title: '부평역 치과 안내' },
-  { keyword: '부평구', href: '/areas/bupyeong-gu', title: '부평구 치과 안내' },
+  { keyword: '부평구', href: '/areas/bupyeong-gu', title: '부평 치과 안내' },
   { keyword: '부평동', href: '/areas/bupyeong-dong', title: '부평동 치과 안내' },
   { keyword: '십정동', href: '/areas/sipjeong-dong', title: '십정동 치과 안내' },
   { keyword: '산곡동', href: '/areas/sangok-dong', title: '산곡동 치과 안내' },

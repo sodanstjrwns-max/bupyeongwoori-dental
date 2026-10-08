@@ -75,7 +75,7 @@ export const Footer = () => {
           <div style="display:flex; flex-wrap:wrap; gap:8px 14px; font-size:0.82rem;">
             {AREAS.map((a) => (
               <a href={`/areas/${a.slug}`} style="color:rgba(255,255,255,0.55); text-decoration:none;">
-                {a.name} 치과
+                {a.slug === 'bupyeong-gu' ? '부평 치과' : `${a.name} 치과`}
               </a>
             ))}
             <a href="/areas" style="color:rgba(255,255,255,0.85); font-weight:600;">전체 지역 →</a>

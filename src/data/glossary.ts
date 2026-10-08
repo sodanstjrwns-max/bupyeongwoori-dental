@@ -1,6 +1,7 @@
 // ============================================================
 // 치과 백과사전 (500+ 용어) - SEO/내부링크 자동화
 // ============================================================
+import { GLOSSARY_CONTENT, GLOSSARY_CONTENT_DATE } from './glossary-content'
 
 export type GlossaryTerm = {
   slug: string
@@ -12,11 +13,27 @@ export type GlossaryTerm = {
   relatedTreatments?: string[] // 관련 진료 slug
   relatedTerms?: string[] // 관련 용어 slug
   keywords?: string // SEO
+  /** 보강 본문(2026-10-08~) — src/data/glossary-content/*.json */
+  content?: GlossaryContent
+  /** 본문 최종 수정일 (YYYY-MM-DD, 고정값) */
+  modified?: string
 
   // --- 레거시 호환 필드 (alias) ---
   short?: string // = definition
   treatments?: string[] // = relatedTreatments
   related?: string[] // = relatedTerms
+}
+
+export type GlossaryContentKind = 'disease' | 'procedure' | 'material' | 'device' | 'anatomy' | 'admin' | 'concept'
+export type GlossaryContent = {
+  kind: GlossaryContentKind
+  /** 기존 한 줄 정의가 부정확·빈약할 때 대체하는 짧은 정의 */
+  short?: string
+  lead: string
+  sections: { h: string; p: string[]; list?: string[] }[]
+  faqs: { q: string; a: string }[]
+  relatedTreatments?: string[]
+  relatedTerms?: string[]
 }
 
 export type GlossaryCategory =
@@ -673,7 +690,7 @@ const AUTO: AutoTerm[] = [
   { slug: 'fusion', term: '융합치', termEn: 'Fusion', category: 'pathology', definition: '두 치아가 하나로 합쳐져 형성된 치아.' },
   { slug: 'gemination', term: '쌍생치', termEn: 'Gemination', category: 'pathology', definition: '한 치아의 싹이 둘로 갈라져 생긴 치아.' },
   { slug: 'taurodontism', term: '타우로돈티즘', termEn: 'Taurodontism', category: 'pathology', definition: '치수강이 비정상적으로 큰 치아 기형.' },
-  { slug: 'amelogenesis-imperfecta', term: '법랑질 형성부전', termEn: 'Amelogenesis Imperfecta', category: 'pathology', definition: '법랑질이 제대로 형성되지 않는 유전 질환.' },
+  { slug: 'amelogenesis-imperfecta', term: '법랑질 형성부전증(유전성)', termEn: 'Amelogenesis Imperfecta', category: 'pathology', definition: '법랑질이 제대로 형성되지 않는 유전 질환.' },
   { slug: 'dentinogenesis-imperfecta', term: '상아질 형성부전', termEn: 'Dentinogenesis Imperfecta', category: 'pathology', definition: '상아질 형성 이상 유전 질환.' },
   { slug: 'fluorosis', term: '불소증', termEn: 'Fluorosis', category: 'pathology', definition: '과도한 불소 섭취로 법랑질에 흰 반점·줄이 생기는 현상.' },
   { slug: 'tetracycline-stain', term: '테트라사이클린 착색', termEn: 'Tetracycline Staining', category: 'pathology', definition: '항생제 복용으로 인한 치아 내재성 변색.' },
@@ -971,7 +988,7 @@ const EXTRA_AUTO: AutoTerm[] = [
   { slug: 'hypodontia', term: '치아 결손증', termEn: 'Hypodontia', category: 'pathology', definition: '정상보다 적은 치아를 가진 상태.' },
   { slug: 'fluorosis', term: '반점치(치아불소증)', termEn: 'Fluorosis', category: 'pathology', definition: '과다 불소 섭취로 생기는 법랑질 반점.' },
   { slug: 'tetracycline-teeth', term: '테트라사이클린 치아', termEn: 'Tetracycline Teeth', category: 'pathology', definition: '항생제로 인한 영구적 치아 변색.' },
-  { slug: 'enamel-hypoplasia', term: '법랑질 형성부전', termEn: 'Enamel Hypoplasia', category: 'pathology', definition: '법랑질이 덜 형성되어 치아가 얇고 약한 상태.' },
+  { slug: 'enamel-hypoplasia', term: '법랑질 저형성', termEn: 'Enamel Hypoplasia', category: 'pathology', definition: '법랑질이 덜 형성되어 치아가 얇고 약한 상태.' },
   { slug: 'dental-trauma', term: '치아 외상', termEn: 'Dental Trauma', category: 'pathology', definition: '외부 충격으로 치아·잇몸·뼈에 생기는 손상.' },
   { slug: 'reimplantation', term: '재식립', termEn: 'Tooth Reimplantation', category: 'procedure', definition: '탈구된 치아를 다시 소켓에 심는 처치.' },
   { slug: 'ameloblastoma', term: '에나멜모세포종', termEn: 'Ameloblastoma', category: 'pathology', definition: '턱뼈에 생기는 양성 종양.' },
@@ -1034,6 +1051,35 @@ export const GLOSSARY_ALIASES: Record<string, string> = {
   'supernumerary': 'hyperdontia',            // 과잉치
   'opalescence': 'opalescence-whitening',    // 오팔레센스 (미백)
   'wax-up': 'diagnostic-wax-up',             // 왁스업
+  // 2026-10-08 용어 보강: 같은 개념을 다른 이름으로 따로 두던 용어 → 대표 용어로 301 (대표 쪽 본문에서 동의어로 설명)
+  'tetracycline-teeth': 'tetracycline-stain',   // 테트라사이클린 치아 = 테트라사이클린 착색
+  'aligner': 'clear-aligner',                   // 얼라이너 = 클리어 얼라이너
+  'bleaching': 'whitening',                     // 치아 미백 = 미백
+  'tad': 'mini-screw',                          // TAD = 미니 스크류(TAD)
+  'ortho-attachment': 'attachment-ortho',       // 교정 어태치먼트 = 어태치먼트(교정)
+  'bitewing': 'bite-wing',                      // 바이트윙 엑스레이 = 바이트윙 촬영
+  'autoclave-sterilizer': 'autoclave',          // 고압증기 멸균기 = 오토클레이브
+  'nightguard-splint': 'night-guard',           // 교합 안정 장치 = 나이트가드
+  'mectron': 'mectron-combitouch',              // 멕트론 = 멕트론 콤비터치
+  'cofferdam': 'rubber-dam',                    // 코퍼댐 = 러버댐
+  'dental-3d-printing': 'dental-3d-printer',    // 3D 프린팅 치과 = 치과용 3D 프린터
+  'home-bleaching-tray': 'home-bleaching',      // 홈 미백 트레이 = 자가 미백
+  'tray-whitening': 'home-bleaching',           // 트레이 미백 = 자가 미백
+  'walking-bleach': 'internal-bleaching',       // 워킹 블리치 = 신경치료 치아 미백
+  'isq': 'osstell',                             // ISQ = 오스텔(ISQ)
+  'panoramic-view': 'panorama',                 // 파노라마 뷰 = 파노라마
+  'bone-regeneration': 'gbr',                   // 골재생술 = GBR 골유도재생술
+  'bone-density-d1-d4': 'bone-density',         // 뼈 밀도 분류(D1~D4) = 골밀도
+  'all-ceramic-crown': 'all-ceramic',           // 올세라믹 크라운 = 올세라믹
+  'lithium-disilicate': 'emax',                 // 리튬 디실리케이트 = e.max
+  'veneer': 'laminate',                         // 베니어 = 라미네이트
+  'shade': 'shade-matching',                    // 셰이드 = 셰이드 매칭
+  'probe': 'probing',                           // 치주탐침자 = 치주 탐침
+  'cavitron': 'ultrasonic-scaler',              // 캐비트론 = 초음파 스케일러
+  'temporary-crown': 'provisional',             // 임시 치아 = 임시 보철
+  'nhi-coverage': 'covered',                    // 건강보험 적용 = 급여
+  'dds-dmd': 'dentist',                         // 치과의사 자격(DDS/DMD) = 치과의사
+  'itreatment': 'clincheck',                    // 인비절라인 3D 치료 시뮬레이션 = 클린체크 (같은 개념 중복)
 }
 export const resolveGlossaryAlias = (slug: string): string | undefined => GLOSSARY_ALIASES[slug]
 
@@ -1067,6 +1113,17 @@ export const GLOSSARY: GlossaryTerm[] = (() => {
   const seenSlugs = new Set<string>()
   for (let i = 0; i < all.length; i++) {
     if (seenSlugs.has(all[i].slug)) { all.splice(i, 1); i-- } else seenSlugs.add(all[i].slug)
+  }
+
+  // 보강 본문 연결 (2026-10-08) — 본문 쪽 관련 용어·진료를 우선, 짧은 정의 대체값 반영
+  for (const t of all) {
+    const c = GLOSSARY_CONTENT[t.slug]
+    if (!c) continue
+    t.content = c
+    t.modified = GLOSSARY_CONTENT_DATE
+    if (c.short) t.definition = c.short
+    if (c.relatedTerms?.length) t.relatedTerms = [...new Set([...c.relatedTerms, ...(t.relatedTerms ?? [])])]
+    if (c.relatedTreatments) t.relatedTreatments = c.relatedTreatments
   }
 
   // 관련 용어가 alias 를 가리키면 대표 slug 로 치환 (301 거치지 않게)

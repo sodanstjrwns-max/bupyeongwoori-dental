@@ -28,7 +28,7 @@ export const HomePage = () => {
           '@type': 'WebPage',
           '@id': `https://${CLINIC.domain}/#homepage`,
           url: `https://${CLINIC.domain}/`,
-          name: `${CLINIC.name} — 부평역 26번 출구 임플란트·교정·심미보철`,
+          name: `부평 치과 | ${CLINIC.name} — 부평역 26번 출구 임플란트·교정·심미보철`,
           isPartOf: { '@id': `https://${CLINIC.domain}/#website` },
           about: { '@id': `https://${CLINIC.domain}/#clinic` },
           speakable: { '@type': 'SpeakableSpecification', cssSelector: ['#hero-title', '.hero-sub'] },
@@ -53,14 +53,14 @@ export const HomePage = () => {
           <div>
             {/* SEO-friendly H1: 검색 키워드(부평우리치과·임플란트·교정·심미보철) 명시 + 시각적 슬로건은 강조어 처리 */}
             <h1 id="hero-title" class="hero-title">
-              <span class="sr-only">부평우리치과 — 부평역 26번 출구 임플란트·치아교정·심미보철 전문 치과. </span>
+              <span class="sr-only">부평 치과, 부평우리치과 — 부평역 26번 출구 앞 임플란트·치아교정·심미보철 진료. </span>
               <span class="hero-title-row"><span>변하지 않는 <em class="mint-1">진료</em>,</span></span>
               <span class="hero-title-row"><span>변하지 않는 <em class="mint-2">신뢰</em>,</span></span>
               <span class="hero-title-row"><span>변하지 않는 <em class="mint-3">우리</em>.</span></span>
             </h1>
 
             <p class="hero-sub">
-              제대로 된 치료를 받고 싶을 때, 믿고 찾을 수 있는 치과.
+              제대로 된 치료를 받고 싶을 때, 믿고 찾을 수 있는 부평 치과.
               고려대 구강외과 의학박사 · 세계 3대 임플란트 자문의가 <strong style="color:#fff;">14년 한 자리</strong>에서
               정직하게 진료합니다.
             </p>
@@ -480,7 +480,7 @@ export const HomePage = () => {
             </h2>
             <p>
               진료 가능 여부와 예상 치료 플랜을 <strong style="color:#fff;">정직하게</strong> 안내드립니다.
-              부평역 26번 출구 · {hoursSummary()}.
+              <a href="/areas/bupyeong-gu" style="color:#fff; border-bottom:1px solid rgba(255,255,255,.5);">부평 치과</a> 부평우리치과 · 부평역 26번 출구 · {hoursSummary()}.
             </p>
             <div class="btns">
               <a href={CLINIC.socialLinks.naverBooking} target="_blank" rel="noopener" class="btn btn-primary btn-lg" data-magnetic style="background:#03C75A; border-color:#03C75A;">

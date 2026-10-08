@@ -1,6 +1,5 @@
 import { Layout } from '../components/Layout'
 import { CLINIC, OG_IMAGES } from '../lib/constants'
-import { DOCTORS } from '../data/doctors'
 import { articleSchema, breadcrumbSchema, itemListSchema, medicalWebPageSchema } from '../lib/schema'
 import { CtaSection } from '../components/CtaSection'
 import { InlineCta } from '../components/InlineCta'
@@ -9,6 +8,7 @@ import { doctorPhotoSrc } from '../data/doctors'
 import { TREATMENT_LIST } from '../data/treatments'
 import { prepareArticleHtml, answerSummaryFromHtml, faqsFromArticleHtml, htmlText, metaDescription } from '../lib/article-seo'
 import { faqSchema } from '../lib/schema'
+import { postDoctor, clinicOrgRef, CLINIC_GENERAL_INFO_NOTE } from '../lib/authorship'
 
 export const BLOG_PER_PAGE = 12
 const listQuery = (category: string | undefined, page: number) => {
@@ -72,7 +72,7 @@ export const BlogListPage = ({
             검색했을 때 <em class="ph-mint-3">충분한 정보</em>를<br/>
             드릴 수 있는 치과.
           </h1>
-          <p class="page-lead">대표원장이 직접 전하는 치과 지식과 14년 임상 경험. 알음알음이 아니라 정확한 판단으로 찾아오실 수 있도록.</p>
+          <p class="page-lead">부평우리치과가 정리한 치과 지식과 진료 정보. 알음알음이 아니라 정확한 판단으로 찾아오실 수 있도록.</p>
         </div>
       </section>
 
@@ -95,7 +95,7 @@ export const BlogListPage = ({
           ) : (
             <div class="blog-grid">
               {posts.map((p) => {
-                const author = DOCTORS.find((d) => d.slug === p.author_slug)
+                const author = postDoctor(p)
                 return (
                   <a href={`/blog/${p.slug}`} class="blog-card" data-reveal>
                     <div class="blog-cover">
@@ -151,7 +151,8 @@ export const BlogDetailPage = ({
   related: BlogRow[]
   relatedCases?: { slug: string; title: string; treatment_period?: string | null }[]
 }) => {
-  const author = DOCTORS.find((d) => d.slug === post.author_slug)
+  // 대행사 투입 글·원장 미지정 글은 병원 발행 (lib/authorship.ts)
+  const author = postDoctor(post)
   const url = `https://${CLINIC.domain}/blog/${post.slug}`
   const baseUrl = `https://${CLINIC.domain}`
   // 본문 정리(h1→h2·이미지 alt/lazy) → 핵심 요약(본문 발췌)·질문형 h3 FAQ 를 화면과 같은 HTML 에서 추출
@@ -179,6 +180,7 @@ export const BlogDetailPage = ({
     datePublished: post.published_at,
     dateModified: modifiedAt,
   }) as any
+  if (!author) articleLd.author = clinicOrgRef()
   if (post.category) articleLd.articleSection = post.category
   articleLd.keywords = post.meta_keywords
     ?? (post.tags
@@ -207,7 +209,7 @@ export const BlogDetailPage = ({
       articleMeta={{
         publishedTime: post.published_at,
         modifiedTime: modifiedAt,
-        author: author ? `${author.title} ${author.name}` : CLINIC.representative,
+        author: author ? `${author.title} ${author.name}` : CLINIC.name,
         section: post.category ?? '치과 지식',
         tags: post.tags ? post.tags.split(',').map((t) => t.trim()).filter(Boolean) : undefined,
       }}
@@ -225,7 +227,8 @@ export const BlogDetailPage = ({
           name: post.title,
           description,
           reviewer: author ? { name: author.name, title: author.title, slug: author.slug } : undefined,
-          lastReviewed: modifiedAt?.slice(0, 10),
+          noReviewer: !author,
+          lastReviewed: author ? modifiedAt?.slice(0, 10) : undefined,
           ...(treatment ? { about: treatment.name, aboutId: `${baseUrl}/treatments/${treatment.slug}#procedure` } : {}),
           speakableSelectors: ['h1', ...(answer ? ['.wr-answer'] : [])],
         }),
@@ -263,7 +266,14 @@ export const BlogDetailPage = ({
                 {author.education?.[0] ? <span> ({author.education[0]})</span> : null}이(가) 직접 작성·검수한 의료 정보입니다.
               </p>
             </aside>
-          ) : null}
+          ) : (
+            <aside class="medical-review-badge" aria-label="작성 안내" style="display:flex; align-items:center; gap:12px; margin-top:20px; padding:14px 18px; background:var(--ink-50, #f4f7f7); border-left:3px solid var(--brand-500, #6DBBB9); border-radius:0 12px 12px 0;">
+              <i class="fas fa-info-circle" aria-hidden="true" style="color:var(--brand-600, #2a9d9a); font-size:1.2rem;"></i>
+              <p style="font-size:0.86rem; color:var(--ink-600); line-height:1.55; margin:0;">
+                {CLINIC.name} 발행 · {CLINIC_GENERAL_INFO_NOTE}
+              </p>
+            </aside>
+          )}
 
           {post.cover_key ? (
             <img src={`/media/${post.cover_key}`} alt={post.title} style="width:100%; border-radius:16px; margin:40px 0;" />

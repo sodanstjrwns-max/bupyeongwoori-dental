@@ -179,7 +179,7 @@ export function blogToMarkdown(post: {
   category?: string | null
   published_at: string
   updated_at?: string | null
-}, authorName?: string, authorTitle?: string): string {
+}, authorName?: string, authorTitle?: string, clinicPost = false): string {
   const lines: string[] = [
     `# ${post.title}`,
     '',
@@ -191,6 +191,7 @@ export function blogToMarkdown(post: {
     '',
     htmlToMarkdown(post.content),
   ]
-  lines.push(mdFooter(authorName, authorTitle))
+  // 병원 발행 글(대행사 투입·원장 미지정)은 의학 검수 줄 대신 일반 건강정보 안내 (2026-10-08)
+  lines.push(mdFooter(authorName, authorTitle, clinicPost))
   return lines.join('\n')
 }

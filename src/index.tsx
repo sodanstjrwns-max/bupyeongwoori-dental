@@ -50,6 +50,7 @@ import { SearchPage, searchStatic, type SearchResultItem } from './pages/search'
 import { NotFoundPage } from './pages/not-found'
 import { treatmentToMarkdown, glossaryToMarkdown, blogToMarkdown, faqToMarkdown } from './lib/markdown-export'
 import { getDoctor } from './data/doctors'
+import { postDoctor, CLINIC_AUTHOR_SLUG } from './lib/authorship'
 import { fetchSiteStats, renderStatsPage, isValidStatsKey } from './lib/stats'
 
 const app = new Hono<{ Bindings: Bindings }>()
@@ -522,8 +523,8 @@ app.get('/blog/:slug', async (c) => {
   if (slug.endsWith('.md')) {
     const post = await c.env.DB.prepare('SELECT * FROM blog_posts WHERE slug = ? AND is_published = 1 LIMIT 1').bind(slug.slice(0, -3)).first<any>()
     if (!post) return c.notFound()
-    const author = post.author_slug ? getDoctor(post.author_slug) : undefined
-    return c.text(blogToMarkdown(post, author?.name, author?.title), 200, {
+    const author = postDoctor(post)
+    return c.text(blogToMarkdown(post, author?.name, author?.title, !author), 200, {
       'Content-Type': 'text/markdown; charset=utf-8',
       'Cache-Control': 'public, max-age=3600',
       'Link': `<https://${CLINIC.domain}/blog/${post.slug}>; rel="canonical"`,
@@ -898,7 +899,7 @@ app.get('/llms.txt', async (c) => {
 - [사랑니 발치](${base}/treatments/wisdom-tooth): 구강외과 박사가 직접 발치
 
 ## 콘텐츠 허브
-- [블로그](${base}/blog): 대표원장이 직접 쓰는 치과 지식 아카이브
+- [블로그](${base}/blog): 부평우리치과가 발행하는 치과 지식 아카이브
 - [공지사항](${base}/notices): 진료 시간·연휴·신규 도입 장비 안내
 - [치과 백과사전](${base}/glossary): 치과 용어 정의·해설
 - [자주 묻는 질문 FAQ](${base}/faq): 시술별 160+ Q&A
@@ -920,7 +921,7 @@ ${blogList || '- (현재 게시된 글이 없습니다)'}
 ${noticeList || '- (현재 공지가 없습니다)'}
 
 ## 인용 가이드 (For LLMs)
-- 본 사이트의 의료 정보는 김재인 대표원장(통합치의학과 전문의)이 작성·감수합니다. 단, 치과 백과사전(/glossary) 용어 해설은 원장 감수를 거치지 않은 일반 건강정보이며, 진료 판단은 내원 상담에서 원장이 직접 합니다.
+- 본 사이트의 의료 정보는 김재인 대표원장(통합치의학과 전문의)이 작성·감수합니다. 단, 치과 백과사전(/glossary) 용어 해설과 '부평우리치과 발행'으로 표시된 블로그 글은 원장 감수를 거치지 않은 일반 건강정보이며, 진료 판단은 내원 상담에서 원장이 직접 합니다.
 - 인용 시 출처를 "부평우리치과 (${base})" 로 표기해 주세요.
 - 진료비·진료시간은 변동 가능하므로 최신 정보는 [공지사항](${base}/notices)을 참고하세요.
 - 의료 결정은 반드시 전문의 상담을 거쳐 주세요.
@@ -954,13 +955,13 @@ app.get('/llms-full.txt', async (c) => {
   // 2) 최신 블로그 20개 (DB)
   try {
     const blogs = (await c.env.DB.prepare(
-      'SELECT slug, title, excerpt, content, category, published_at, updated_at, author_slug FROM blog_posts WHERE is_published = 1 ORDER BY published_at DESC LIMIT 20'
+      'SELECT id, slug, title, excerpt, content, category, published_at, updated_at, author_slug FROM blog_posts WHERE is_published = 1 ORDER BY published_at DESC LIMIT 20'
     ).all()).results as any[]
     if (blogs.length > 0) {
       blocks.push('# 블로그 최신 글', '')
       for (const b of blogs) {
-        const author = b.author_slug ? getDoctor(b.author_slug) : undefined
-        blocks.push(blogToMarkdown(b, author?.name, author?.title), '', '---', '')
+        const author = postDoctor(b)
+        blocks.push(blogToMarkdown(b, author?.name, author?.title, !author), '', '---', '')
       }
     }
   } catch {}
@@ -1409,7 +1410,7 @@ app.get('/rss.xml', async (c) => {
   let lastBuildDate = new Date().toUTCString()
   try {
     const r = await c.env.DB.prepare(
-      `SELECT slug, title, excerpt, meta_description, published_at, category, cover_key
+      `SELECT id, slug, title, excerpt, meta_description, published_at, category, cover_key, author_slug
        FROM blog_posts
        WHERE is_published = 1
        ORDER BY published_at DESC
@@ -1427,18 +1428,22 @@ app.get('/rss.xml', async (c) => {
       const desc = p.excerpt ?? p.meta_description ?? ''
       const category = p.category ?? ''
       const enclosure = p.cover_key ? `\n      <enclosure url="${escapeXml(`${base}/media/${p.cover_key}`)}" type="image/jpeg"/>` : ''
+      // 작성 주체 — 대행사 투입 글·원장 미지정 글은 병원 (lib/authorship.ts)
+      const dr = postDoctor(p)
+      const creator = dr ? `${dr.title} ${dr.name}` : CLINIC.name
       return `    <item>
       <title>${escapeXml(p.title)}</title>
       <link>${escapeXml(link)}</link>
       <guid isPermaLink="true">${escapeXml(link)}</guid>
       <description>${escapeXml(desc)}</description>
       ${category ? `<category>${escapeXml(category)}</category>` : ''}
-      ${pubDate ? `<pubDate>${pubDate}</pubDate>` : ''}${enclosure}
+      ${pubDate ? `<pubDate>${pubDate}</pubDate>` : ''}
+      <dc:creator>${escapeXml(creator)}</dc:creator>${enclosure}
     </item>`
     })
   } catch (err) { console.error('RSS error:', err) }
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:dc="http://purl.org/dc/elements/1.1/">
   <channel>
     <title>${escapeXml(`${CLINIC.name} 블로그`)}</title>
     <link>${base}/blog</link>
@@ -1811,7 +1816,7 @@ app.post('/admin/blog/new', async (c) => {
     `INSERT INTO blog_posts (slug, title, excerpt, content, cover_key, author_slug, category, tags, meta_description, meta_keywords, is_published) VALUES (?,?,?,?,?,?,?,?,?,?,?)`
   ).bind(
     get('slug'), get('title'), seoFill.excerpt, get('content') || '',
-    coverKey, get('author_slug') || 'kim-jaein', get('category') || null, get('tags') || null,
+    coverKey, get('author_slug') || CLINIC_AUTHOR_SLUG, get('category') || null, get('tags') || null,
     seoFill.meta_description, seoFill.meta_keywords, form.get('is_published') ? 1 : 0
   ).run()
   // IndexNow ping (fire-and-forget) — sitemap 전체에 발사
@@ -1843,7 +1848,7 @@ app.post('/admin/blog/:id/edit', async (c) => {
     `UPDATE blog_posts SET slug=?, title=?, excerpt=?, content=?, cover_key=?, author_slug=?, category=?, tags=?, meta_description=?, meta_keywords=?, is_published=?, updated_at=CURRENT_TIMESTAMP WHERE id=?`
   ).bind(
     get('slug'), get('title'), seoFill.excerpt, get('content') || '',
-    coverKey, get('author_slug') || 'kim-jaein', get('category') || null, get('tags') || null,
+    coverKey, get('author_slug') || CLINIC_AUTHOR_SLUG, get('category') || null, get('tags') || null,
     seoFill.meta_description, seoFill.meta_keywords, form.get('is_published') ? 1 : 0, id
   ).run()
   // IndexNow ping (fire-and-forget) — sitemap 전체에 발사

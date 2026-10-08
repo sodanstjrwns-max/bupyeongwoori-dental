@@ -2,6 +2,7 @@ import { Layout } from '../components/Layout'
 import { CLINIC } from '../lib/constants'
 import { TREATMENT_LIST } from '../data/treatments'
 import { DOCTORS } from '../data/doctors'
+import { postDoctor } from '../lib/authorship'
 import { SEO_REGIONS } from '../lib/constants'
 
 // ============================================================
@@ -391,7 +392,7 @@ export const AdminBlogListPage = ({ posts }: { posts: any[] }) => {
                 <td>{p.id}</td>
                 <td><a href={`/blog/${p.slug}`} target="_blank">{p.title}</a></td>
                 <td>{p.category ?? '-'}</td>
-                <td>{DOCTORS.find(d=>d.slug===p.author_slug)?.name ?? p.author_slug}</td>
+                <td>{postDoctor(p)?.name ?? '병원 발행'}</td>
                 <td>{p.view_count}</td>
                 <td><span class={`badge ${p.is_published ? 'badge-brand' : ''}`}>{p.is_published ? '공개' : '비공개'}</span></td>
                 <td>{new Date(p.published_at).toLocaleDateString('ko-KR')}</td>
@@ -442,8 +443,10 @@ export const AdminBlogFormPage = ({
             </label>
             <label class="field">
               <span>작성자 *</span>
+              {/* 기본값 = 병원 발행(원장 이름 자동 부여 금지, 2026-10-08). 원장이 직접 쓰거나 검토한 글만 원장을 고른다. */}
               <select name="author_slug" required>
-                {DOCTORS.map(d => <option value={d.slug} selected={data?.author_slug === d.slug}>{d.title} {d.name}</option>)}
+                <option value="clinic" selected={!data || !DOCTORS.some(d => d.slug === data.author_slug)}>부평우리치과 발행 (원장 작성·검토 아님)</option>
+                {DOCTORS.map(d => <option value={d.slug} selected={data?.author_slug === d.slug}>{d.title} {d.name} (직접 작성·검토)</option>)}
               </select>
             </label>
           </div>

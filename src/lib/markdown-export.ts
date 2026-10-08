@@ -31,13 +31,16 @@ export function htmlToMarkdown(html: string): string {
 }
 
 /** 공통 푸터 — 출처/검수/연락처 (LLM 인용 유도) */
-export function mdFooter(reviewerName?: string, reviewerTitle?: string): string {
+export function mdFooter(reviewerName?: string, reviewerTitle?: string, noReviewer = false): string {
   return [
     '',
     '---',
     '',
     `**출처**: ${CLINIC.name} (${base()})`,
-    `**의학 검수**: ${reviewerTitle ?? '대표원장'} ${reviewerName ?? CLINIC.representative} (통합치의학과 전문의)`,
+    // 원장 검토 기록이 없는 글(백과사전 용어)은 검수 줄 대신 정직 안내 (2026-10-08)
+    noReviewer
+      ? '**안내**: 일반 건강정보입니다. 진료 판단은 내원 상담에서 원장이 직접 합니다.'
+      : `**의학 검수**: ${reviewerTitle ?? '대표원장'} ${reviewerName ?? CLINIC.representative} (통합치의학과 전문의)`,
     `**주소**: ${CLINIC.address} (부평역 26번 출구 도보 1분)`,
     `**전화**: ${CLINIC.phone}`,
     '',
@@ -133,7 +136,7 @@ export function glossaryToMarkdown(term: GlossaryTerm): string {
       lines.push('## 자주 묻는 질문', '')
       for (const f of term.content.faqs) lines.push(`### ${f.q}`, '', f.a, '')
     }
-    if (term.modified) lines.push(`**최종 검토**: ${term.modified}`, '')
+    if (term.modified) lines.push(`**최종 수정**: ${term.modified}`, '')
   } else if (term.body) {
     lines.push('## 상세 설명', '', htmlToMarkdown(term.body), '')
   }
@@ -142,7 +145,7 @@ export function glossaryToMarkdown(term: GlossaryTerm): string {
     for (const s of term.relatedTreatments) lines.push(`- ${base()}/treatments/${s}`)
     lines.push('')
   }
-  lines.push(mdFooter())
+  lines.push(mdFooter(undefined, undefined, true))
   return lines.join('\n')
 }
 

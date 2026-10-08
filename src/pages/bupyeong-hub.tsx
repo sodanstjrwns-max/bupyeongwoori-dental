@@ -101,9 +101,8 @@ export const BupyeongHubPage = ({ area }: { area: AreaInfo }) => {
             { '@type': 'Place', name: '인천 부평구 부평역', geo: { '@type': 'GeoCoordinates', latitude: 37.4894, longitude: 126.7245 } },
             ...nearby.filter((a) => a.slug !== 'bupyeong-station').map((a) => ({ '@type': 'Place', name: a.nameFull })),
           ],
-          lastReviewed: reviewed,
           dateModified: reviewed,
-          reviewedBy: { '@id': `${BASE}/doctors/kim-jaein#person` },
+          publisher: { '@id': `${BASE}/#clinic` },
           speakable: { '@type': 'SpeakableSpecification', cssSelector: ['.page-title', '#hub-answer'] },
         },
         faqSchema(HUB_FAQS),
@@ -245,7 +244,7 @@ export const BupyeongHubPage = ({ area }: { area: AreaInfo }) => {
             ))}
           </div>
           <p style="margin-top:24px; font-size:.84rem; color:var(--ink-500);">
-            최종 검토 <time datetime={reviewed}>{reviewed}</time> · 진료시간·주차 등 운영 정보는 병원 사정에 따라 바뀔 수 있어 방문 전 전화로 확인해 주세요.
+            최종 수정 <time datetime={reviewed}>{reviewed}</time> · 진료시간·주차 등 운영 정보는 병원 사정에 따라 바뀔 수 있어 방문 전 전화로 확인해 주세요.
           </p>
         </div>
       </section>

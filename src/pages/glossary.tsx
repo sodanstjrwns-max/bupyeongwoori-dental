@@ -175,7 +175,7 @@ export const GlossaryDetailPage = ({ term }: { term: GlossaryTerm }) => {
     .map((s) => TREATMENT_LIST.find((t) => t.slug === s))
     .filter(Boolean)
   const content = term.content
-  // 화면 감수 줄·MedicalWebPage lastReviewed·sitemap lastmod 가 같은 값 (보강일 고정값)
+  // 화면 수정일·MedicalWebPage dateModified·sitemap lastmod 가 같은 값 (보강일 고정값)
   const reviewed = term.modified ?? CONTENT_DATES.glossary
   const url = `https://${CLINIC.domain}/glossary/${term.slug}`
 
@@ -196,7 +196,7 @@ export const GlossaryDetailPage = ({ term }: { term: GlossaryTerm }) => {
       canonical={url}
       ogImage={OG_IMAGES.glossary}
       ogType={content ? 'article' : 'website'}
-      articleMeta={content ? { modifiedTime: toKstNoonIso(reviewed), author: CLINIC.representative, section: cat?.name ?? '치과 백과사전' } : undefined}
+      articleMeta={content ? { modifiedTime: toKstNoonIso(reviewed), author: CLINIC.name, section: cat?.name ?? '치과 백과사전' } : undefined}
       jsonLd={[
         breadcrumbSchema([
           { name: '홈', url: '/' },
@@ -213,14 +213,15 @@ export const GlossaryDetailPage = ({ term }: { term: GlossaryTerm }) => {
           inDefinedTermSet: `https://${CLINIC.domain}/glossary`,
           url,
         },
-        // E-E-A-T: 의학 용어 해설도 의료 콘텐츠 — 대표원장 감수 명시
+        // 의학 용어 해설 — 원장 검토 기록이 없으므로 reviewedBy·lastReviewed 를 두지 않는다(2026-10-08).
+        // 발행 주체는 병원(publisher=#clinic), dateModified 는 보강일 고정값.
         {
           ...medicalWebPageSchema({
             url,
             name: `${term.term} | 치과 백과사전`,
             description: content?.lead ?? term.short ?? term.definition,
             about: term.term,
-            lastReviewed: reviewed,
+            noReviewer: true,
             speakableSelectors: ['.glossary-detail-title', '.glossary-detail-short', '.glossary-lead'],
           }),
           ...(content ? { dateModified: reviewed } : {}),
@@ -275,10 +276,9 @@ export const GlossaryDetailPage = ({ term }: { term: GlossaryTerm }) => {
             </section>
           ) : null}
 
-          {/* E-E-A-T 가시적 감수 줄 — 스키마 reviewedBy·lastReviewed 와 동일 값 */}
+          {/* 정직 안내 — 원장 감수 표시 없음(검토 기록 없음). 날짜는 스키마 dateModified 와 동일 */}
           <p class="medical-review-line" style="margin-top:24px; font-size:0.84rem; color:var(--ink-500);">
-            감수: <a href="/doctors/kim-jaein" style="color:inherit; text-decoration:underline;">{CLINIC.representative} 대표원장</a> · 최종 검토 <time datetime={reviewed}>{reviewed}</time>
-            {content ? <> · 일반적인 정보이며 개인의 구강 상태에 따라 진단과 치료는 달라질 수 있습니다.</> : null}
+            일반 건강정보입니다. 진료 판단은 내원 상담에서 원장이 직접 합니다. · 최종 수정 <time datetime={reviewed}>{reviewed}</time>
           </p>
 
           {relatedTreatments.length > 0 && (

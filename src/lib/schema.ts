@@ -207,6 +207,8 @@ export const medicalWebPageSchema = (opts: {
   description: string
   /** 검수 의료진 — 없으면 대표원장 기본값 */
   reviewer?: { name: string; title: string; slug: string }
+  /** true 면 reviewedBy 생략 — 원장 검토 기록이 없는 페이지(백과사전 용어 등). 2026-10-08 */
+  noReviewer?: boolean
   lastReviewed?: string
   /** 페이지가 다루는 의학 주제 (예: '임플란트') */
   about?: string
@@ -232,15 +234,19 @@ export const medicalWebPageSchema = (opts: {
     // 고정 날짜만 — 값이 없으면 생략 (오늘 날짜 자동 생성 금지)
     ...(opts.lastReviewed ? { lastReviewed: opts.lastReviewed } : {}),
     isPartOf: { '@type': 'WebSite', '@id': `https://${CLINIC.domain}/#website`, name: CLINIC.name, url: `https://${CLINIC.domain}/` },
-    reviewedBy: {
-      '@type': 'Physician',
-      '@id': `https://${CLINIC.domain}/doctors/${reviewer.slug}#person`,
-      name: reviewer.name,
-      jobTitle: reviewer.title,
-      url: `https://${CLINIC.domain}/doctors/${reviewer.slug}`,
-      medicalSpecialty: 'Dentistry',
-      worksFor: { '@type': 'Dentist', '@id': `https://${CLINIC.domain}/#clinic`, name: CLINIC.name },
-    },
+    ...(opts.noReviewer
+      ? {}
+      : {
+          reviewedBy: {
+            '@type': 'Physician',
+            '@id': `https://${CLINIC.domain}/doctors/${reviewer.slug}#person`,
+            name: reviewer.name,
+            jobTitle: reviewer.title,
+            url: `https://${CLINIC.domain}/doctors/${reviewer.slug}`,
+            medicalSpecialty: 'Dentistry',
+            worksFor: { '@type': 'Dentist', '@id': `https://${CLINIC.domain}/#clinic`, name: CLINIC.name },
+          },
+        }),
     publisher: { '@type': 'Organization', '@id': `https://${CLINIC.domain}/#clinic`, name: CLINIC.name },
     ...(opts.speakableSelectors && opts.speakableSelectors.length > 0
       ? { speakable: { '@type': 'SpeakableSpecification', cssSelector: opts.speakableSelectors } }

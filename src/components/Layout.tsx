@@ -23,7 +23,7 @@ export const Layout = ({ children, heroDark, hideFooter, hideFloatingCta, user, 
         <a href="#main" class="sr-only">본문으로 바로가기</a>
         <Nav onDark={!!heroDark} user={user ?? null} />
         <main id="main">{children}</main>
-        {!hideFooter && <Footer />}
+        {!hideFooter && <Footer canonical={head.canonical} />}
         {!hideFloatingCta && <FloatingCta />}
         <script src="/static/app.js?v=20260429b" defer></script>
       </body>

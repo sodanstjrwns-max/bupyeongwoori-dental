@@ -1,4 +1,5 @@
 import { Layout } from '../components/Layout'
+import { HubLink } from '../lib/hub-link'
 import { CLINIC, OG_IMAGES } from '../lib/constants'
 import { GLOSSARY, GLOSSARY_CATEGORIES, getRelatedTerms, type GlossaryTerm } from '../data/glossary'
 import { TREATMENT_LIST } from '../data/treatments'
@@ -307,6 +308,11 @@ export const GlossaryDetailPage = ({ term }: { term: GlossaryTerm }) => {
               </div>
             </div>
           )}
+
+          {/* 허브 링크 한 줄 — "부평 치과" */}
+          <p class="hub-local-line" style="margin:28px 0 0; font-size:0.92rem; color:var(--ink-600); line-height:1.7;">
+            <i class="fas fa-map-marker-alt" style="margin-right:6px; color:var(--brand-600, #2a9d9a);"></i>{CLINIC.name} 위치·진료시간은 <HubLink /> 안내에서 확인하실 수 있습니다.
+          </p>
 
           <InlineCta
             title={`'${term.term}' — 내 케이스에선 어떻게 적용될까요?`}

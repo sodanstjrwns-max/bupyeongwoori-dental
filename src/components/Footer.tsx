@@ -1,7 +1,9 @@
 import { CLINIC, CORE_TREATMENTS, OTHER_TREATMENTS, hasRealBizNumber } from '../lib/constants'
 import { AREAS } from '../data/areas'
 
-export const Footer = () => {
+export const Footer = ({ canonical }: { canonical?: string } = {}) => {
+  // 허브(/areas/bupyeong-gu) 자신에서는 자기 링크를 넣지 않는다
+  const onHub = !!canonical && /\/areas\/bupyeong-gu\/?$/.test(canonical)
   const year = new Date().getFullYear()
   return (
     <footer class="footer">
@@ -73,11 +75,13 @@ export const Footer = () => {
             <i class="fas fa-map-marker-alt" style="margin-right:6px;"></i> 지역별 진료 안내
           </h4>
           <div style="display:flex; flex-wrap:wrap; gap:8px 14px; font-size:0.82rem;">
-            {AREAS.map((a) => (
+            {AREAS.map((a) => (a.slug === 'bupyeong-gu' && onHub ? (
+              <span style="color:rgba(255,255,255,0.55);">부평 치과</span>
+            ) : (
               <a href={`/areas/${a.slug}`} style="color:rgba(255,255,255,0.55); text-decoration:none;">
                 {a.slug === 'bupyeong-gu' ? '부평 치과' : `${a.name} 치과`}
               </a>
-            ))}
+            )))}
             <a href="/areas" style="color:rgba(255,255,255,0.85); font-weight:600;">전체 지역 →</a>
           </div>
         </div>

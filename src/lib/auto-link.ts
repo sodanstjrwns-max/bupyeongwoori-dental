@@ -18,7 +18,7 @@ const DEFAULT_LINKS: LinkMap = [
   { keyword: '부평역 26번 출구', href: '/visit', title: '오시는 길' },
   { keyword: '부평 치과', href: '/areas/bupyeong-gu', title: '부평 치과 안내' },
   { keyword: '부평역', href: '/areas/bupyeong-station', title: '부평역 치과 안내' },
-  { keyword: '부평구', href: '/areas/bupyeong-gu', title: '부평 치과 안내' },
+  // '부평구' → 허브 자동 링크는 제거 (허브 앵커는 "부평 치과" 정확 일치만, 2026-10-08)
   { keyword: '부평동', href: '/areas/bupyeong-dong', title: '부평동 치과 안내' },
   { keyword: '십정동', href: '/areas/sipjeong-dong', title: '십정동 치과 안내' },
   { keyword: '산곡동', href: '/areas/sangok-dong', title: '산곡동 치과 안내' },
@@ -110,6 +110,8 @@ function linkifyText(text: string, links: LinkMap, linkedKeywords: Set<string>, 
   let result = text
   for (const link of links) {
     if (linkedKeywords.has(link.keyword)) continue
+    // 같은 목적지는 1회만 (허브 등 한 페이지에 같은 링크 중복 방지)
+    if (linkedKeywords.has('href:' + link.href)) continue
     const idx = result.indexOf(link.keyword)
     if (idx < 0) continue
     // 첫 등장만 링크화
@@ -119,6 +121,7 @@ function linkifyText(text: string, links: LinkMap, linkedKeywords: Set<string>, 
     const titleAttr = link.title ? ` title="${escapeAttr(link.title)}"` : ''
     result = `${before}<a href="${link.href}" class="auto-link"${titleAttr}>${matched}</a>${after}`
     linkedKeywords.add(link.keyword)
+    linkedKeywords.add('href:' + link.href)
   }
   return result
 }

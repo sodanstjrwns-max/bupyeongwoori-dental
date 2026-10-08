@@ -1,4 +1,5 @@
 import { Layout } from '../components/Layout'
+import { BlogHubLine, htmlHasHubLink } from '../lib/hub-link'
 import { CLINIC, OG_IMAGES } from '../lib/constants'
 import { articleSchema, breadcrumbSchema, itemListSchema, medicalWebPageSchema } from '../lib/schema'
 import { CtaSection } from '../components/CtaSection'
@@ -291,6 +292,8 @@ export const BlogDetailPage = ({
             {/* Phase 3-5: 자동 내부 링크 — 진료/지역 키워드 발견 시 토픽 클러스터 링크 */}
             <div dangerouslySetInnerHTML={{ __html: bodyHtml }} />
           </div>
+          {/* 지역 안내 1문장 — "부평 치과" 허브로 (본문 자동 링크로 이미 허브 링크가 있으면 생략: 페이지당 2개 이하) */}
+          {htmlHasHubLink(bodyHtml) ? null : <BlogHubLine slug={post.slug} />}
           <p class="wr-note">※ 이 글은 일반적인 의료 정보이며, 치료 결과는 개인의 구강 상태에 따라 다를 수 있습니다.</p>
 
           {author ? (

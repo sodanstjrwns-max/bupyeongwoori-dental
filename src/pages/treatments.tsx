@@ -1,4 +1,5 @@
 import { Layout } from '../components/Layout'
+import { HubLink } from '../lib/hub-link'
 import { CLINIC, OG_IMAGES } from '../lib/constants'
 import { TREATMENT_LIST, CORE_LIST, OTHER_LIST, getTreatment } from '../data/treatments'
 import { DOCTORS, getDoctor, doctorPhotoSrc } from '../data/doctors'
@@ -688,6 +689,8 @@ export const TreatmentDetailPage = ({
               <span class="cta-line">변하지 않는 <em class="cta-mint-3">퀄리티</em>로.</span>
             </h2>
             <p>CBCT 3D 진단 포함 상담은 무료입니다. 진료 가능 여부와 비용을 <strong style="color:#fff;">정직하게</strong> 안내드립니다.</p>
+            {/* 진료 안내 한 줄 — "부평 치과" 허브 */}
+            <p class="hub-local-line" style="font-size:0.92rem; opacity:0.9;">위치·진료시간·주차는 <HubLink style="color:#fff; font-weight:700; border-bottom:1px solid rgba(255,255,255,.6);" /> 안내에서 확인하실 수 있습니다.</p>
             <div class="btns">
               <a href={CLINIC.socialLinks.naverBooking} target="_blank" rel="noopener" class="btn btn-primary" style="background:#03C75A; border-color:#03C75A;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.273 12.845 7.376 0H0v24h7.726V11.156L16.624 24H24V0h-7.727z"/></svg>

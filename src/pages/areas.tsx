@@ -8,6 +8,7 @@
 // ============================================================
 
 import { Layout } from '../components/Layout'
+import { HubLink } from '../lib/hub-link'
 import { CLINIC, OG_IMAGES, hoursSummary } from '../lib/constants'
 import { CONTENT_DATES, toKstNoonIso } from '../lib/content-dates'
 import {
@@ -71,7 +72,7 @@ export const AreasIndexPage = () => {
           </h1>
           <p class="page-lead">
             부평역 26번 출구 도보 1분, {CLINIC.name}. 부평구 전 지역과 인접 지역에서 어떻게 오시는지, 지역별 진료 안내를 한눈에 확인하세요.
-            위치·진료시간·의료진을 한 번에 보시려면 <a href="/areas/bupyeong-gu" style="color:inherit; border-bottom:1px solid currentColor;">부평 치과 안내</a>를 참고하세요.
+            위치·진료시간·의료진을 한 번에 보시려면 <a href="/areas/bupyeong-gu" style="color:inherit; border-bottom:1px solid currentColor;">부평 치과</a> 안내를 참고하세요.
           </p>
         </div>
       </section>
@@ -80,7 +81,8 @@ export const AreasIndexPage = () => {
         <div class="container">
           <h2 class="section-title">부평구 지역별 안내</h2>
           <div class="area-grid">
-            {AREAS.map((a) => (
+            {/* 부평구 = "부평 치과" 허브는 위 안내 문장에서 링크 (페이지당 허브 링크 2개 이하) */}
+            {AREAS.filter((a) => a.slug !== 'bupyeong-gu').map((a) => (
               <a href={`/areas/${a.slug}`} class="area-card" data-reveal>
                 <div class="area-card-head">
                   <div class="area-card-name">{a.name}</div>
@@ -164,6 +166,10 @@ export const AreaHubPage = ({ area }: { area: AreaInfo }) => {
           </h1>
           <p class="page-lead">
             {area.intro}
+          </p>
+          {/* "부평 치과" 허브 링크 — 상단 (페이지당 허브 링크: 이 줄 + 푸터) */}
+          <p class="hub-local-line" style="margin-top:14px; font-size:0.92rem; color:var(--ink-600); line-height:1.7;">
+            <i class="fas fa-map-marker-alt" style="margin-right:6px;"></i>병원 위치·진료시간·의료진 종합 안내: <HubLink />
           </p>
         </div>
       </section>
@@ -313,6 +319,10 @@ export const AreaTreatmentPage = ({ area, treatment }: { area: AreaInfo; treatme
             <em class="ph-mint-3">{CLINIC.name}</em>
           </h1>
           <p class="page-lead">{angle}</p>
+          {/* "부평 치과" 허브 링크 — 상단 (페이지당 허브 링크: 이 줄 + 푸터) */}
+          <p class="hub-local-line" style="margin-top:14px; font-size:0.92rem; color:var(--ink-600); line-height:1.7;">
+            <i class="fas fa-map-marker-alt" style="margin-right:6px;"></i>병원 위치·진료시간·의료진 종합 안내: <HubLink />
+          </p>
           <div style="margin-top:24px; display:flex; gap:10px; flex-wrap:wrap;">
             <a href="tel:032-529-2875" class="btn btn-primary"><i class="fas fa-phone"></i> 전화 상담</a>
             <a href={CLINIC.socialLinks.naverBooking} target="_blank" rel="noopener" class="btn btn-dark">네이버 예약</a>
@@ -441,8 +451,8 @@ export const AreaTreatmentPage = ({ area, treatment }: { area: AreaInfo; treatme
       <InlineCta
         title={`${area.name}에서 ${treatment.name}, 직접 상담받아보세요`}
         lead={`${area.name}에서 부평역까지 ${area.distance}. CBCT 3D 진단 포함 무료 상담으로 정직하게 안내드립니다.`}
-        backLabel={`${area.name} 진료 안내로`}
-        backHref={`/areas/${area.slug}`}
+        backLabel={area.slug === 'bupyeong-gu' ? '지역별 진료 안내로' : `${area.name} 진료 안내로`}
+        backHref={area.slug === 'bupyeong-gu' ? '/areas' : `/areas/${area.slug}`}
         extraLabel={`${treatment.name} 전체 보기`}
         extraHref={`/treatments/${treatment.slug}`}
       />

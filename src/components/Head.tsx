@@ -97,9 +97,12 @@ export const Head = (props: HeadProps) => {
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={ogImage} />
 
-      {/* Icons - 로고 마크와 통일된 디자인 (민트 꽃잎) */}
-      <link rel="icon" href="/static/favicon.svg?v=20260430g" type="image/svg+xml" />
-      <link rel="apple-touch-icon" href="/static/apple-touch-icon.png?v=20260430g" />
+      {/* Icons - 2026-10-14 승인 파비콘 (tools/favicons/out/bupyeongwoori-dental) */}
+      <link rel="icon" href="/favicon.ico?v=fav20261014" sizes="any" />
+      <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png?v=fav20261014" />
+      <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96.png?v=fav20261014" />
+      <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png?v=fav20261014" />
+      <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=fav20261014" />
       <link rel="manifest" href="/manifest.webmanifest" />
 
       {/* Phase 4-8: RSS autodiscovery — 피드리더/뉴스 크롤러가 자동 발견 */}

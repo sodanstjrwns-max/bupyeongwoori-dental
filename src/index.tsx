@@ -1466,7 +1466,10 @@ app.get('/manifest.webmanifest', (c) => {
     background_color: '#ffffff',
     display: 'standalone',
     start_url: '/',
-    icons: [{ src: '/static/favicon.svg', sizes: 'any', type: 'image/svg+xml' }],
+    icons: [
+      { src: '/favicon-192.png?v=fav20261014', sizes: '192x192', type: 'image/png' },
+      { src: '/favicon-512.png?v=fav20261014', sizes: '512x512', type: 'image/png' },
+    ],
   })
 })
 

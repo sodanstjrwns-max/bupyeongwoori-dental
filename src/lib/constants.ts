@@ -142,11 +142,12 @@ export const SEO_DEFAULT = {
   // 100자 이내: 8개 진료 + 지역 키워드
   keywords:
     '부평치과, 부평역치과, 부평 임플란트, 부평 교정, 부평 심미보철, 부평 라미네이트, 부평 투명교정, 사랑니발치, 부평우리치과, 인천치과',
-  ogImage: '/static/og/og-default.png?v=20260430m',
+  ogImage: '/static/img/cards/clinic-default-1200x630.jpg',
 } as const
 
-// 페이지별 OG 이미지 매핑 — 원장님 주신 원본 로고 PNG 그대로 사용
-const OG_UNIFIED = '/static/og/og-default.png?v=20260430m'
+// 페이지별 OG 이미지 매핑 — 2026-10-14: 로고만 있던 흰 PNG(8.7KB) → 실제 원내 진료실 사진 1200×630 jpg
+// (원본: R2 /media/clinic/operatory-window.jpg). 로고 PNG(/static/og/og-default.png)는 미션 영상 포스터용으로 보존.
+const OG_UNIFIED = '/static/img/cards/clinic-default-1200x630.jpg'
 export const OG_IMAGES = {
   home: OG_UNIFIED,
   mission: OG_UNIFIED,

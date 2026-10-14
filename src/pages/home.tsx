@@ -3,6 +3,7 @@ import { CLINIC, CORE_TREATMENTS, EQUIPMENTS, OG_IMAGES, hoursSummary } from '..
 import { DOCTORS, doctorPhotoSrc } from '../data/doctors'
 import { breadcrumbSchema, dentistSchema, faqSchema, websiteSchema } from '../lib/schema'
 import { CORE_LIST } from '../data/treatments'
+import { BUPYEONG_CORE, CoreCardGrid, coreItemListLd } from '../lib/bupyeong-core'
 
 // 홈 FAQ — 핵심 진료(임플란트·심미보철·교정) 대표 질문 2개씩.
 // 화면(아래 #home-faq)과 FAQPage 스키마가 같은 배열을 쓰므로 문항이 항상 1:1 일치한다.
@@ -32,7 +33,10 @@ export const HomePage = () => {
           isPartOf: { '@id': `https://${CLINIC.domain}/#website` },
           about: { '@id': `https://${CLINIC.domain}/#clinic` },
           speakable: { '@type': 'SpeakableSpecification', cssSelector: ['#hero-title', '.hero-sub'] },
+          hasPart: { '@id': `https://${CLINIC.domain}/#bupyeong-core` },
         },
+        // 홈 "부평 진료별 안내" 사진 카드 6개와 1:1 (같은 순서·이름·URL·사진)
+        coreItemListLd(BUPYEONG_CORE, `https://${CLINIC.domain}/`, '부평 치과 진료별 안내'),
       ]}
     >
       {/* =============== HERO (Editorial Cinematic) =============== */}
@@ -246,6 +250,28 @@ export const HomePage = () => {
         </div>
       </section>
 
+      {/* =============== 부평 진료별 안내 — 사진 카드 6개 (2026-10-14) =============== */}
+      <section class="section section-white" aria-labelledby="bpc-home-title">
+        <div class="container">
+          <div class="section-split" style="margin-bottom: clamp(32px, 4vw, 56px);">
+            <div class="section-label">
+              <span class="chapter">03</span>
+              Bupyeong Guide
+            </div>
+            <div>
+              <div class="section-eyebrow">부평역 26번 출구 앞</div>
+              <h2 id="bpc-home-title" style="font-size:var(--h-3); margin-top:20px; max-width:900px; word-break:keep-all;">
+                부평 치과, <em>진료별로 먼저 확인하실 것.</em>
+              </h2>
+              <p style="font-size:var(--t-lead); color:var(--ink-600); max-width:640px; margin-top:20px; line-height:1.6;">
+                진료마다 내원 횟수와 선택 기준이 다릅니다. 부평역 근처에서 다니실 분들을 위해 진료별로 정리했습니다.
+              </p>
+            </div>
+          </div>
+          <CoreCardGrid cards={BUPYEONG_CORE} idPrefix="home-core" />
+        </div>
+      </section>
+
       {/* =============== CREDENTIALS (Credentials strip) =============== */}
       <section class="section section-white" style="padding: clamp(60px, 8vw, 120px) 0;">
         <div class="container">
@@ -281,7 +307,7 @@ export const HomePage = () => {
         <div class="container">
           <div class="section-split" style="margin-bottom: clamp(48px, 6vw, 80px);">
             <div class="section-label">
-              <span class="chapter">03</span>
+              <span class="chapter">04</span>
               Our Doctors
             </div>
             <div>
@@ -342,7 +368,7 @@ export const HomePage = () => {
         <div class="container">
           <div class="section-split" style="margin-bottom: clamp(48px, 6vw, 80px);">
             <div class="section-label">
-              <span class="chapter">04</span>
+              <span class="chapter">05</span>
               Equipment
             </div>
             <div>
@@ -385,7 +411,7 @@ export const HomePage = () => {
         <div class="container">
           <div class="section-split" style="margin-bottom: clamp(48px, 6vw, 80px);">
             <div class="section-label">
-              <span class="chapter">05</span>
+              <span class="chapter">06</span>
               Our Space
             </div>
             <div>

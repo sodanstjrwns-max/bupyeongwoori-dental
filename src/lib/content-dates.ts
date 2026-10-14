@@ -7,12 +7,14 @@
 export const CONTENT_DATES = {
   /** 진료 상세·핵심 정적 페이지 — src/data/treatments.ts 3차 업글(D5 용어 병기 + C4 진료장면) */
   treatments: '2026-08-18',
-  /** 지역×진료 랜딩 — src/data/areas.ts 2026-05-26 생성 이후 콘텐츠 변경 없음 */
-  areas: '2026-05-26',
+  /** 지역×진료 랜딩 — src/data/areas.ts 2026-10-14 진료별 문구 의료광고 표현 정리(강남급·1%·최고 수준 등 삭제) */
+  areas: '2026-10-14',
   /** 치과 백과사전 용어 본문 — 2026-10-08 전 용어 본문 보강(src/data/glossary-content, 용어별 modified 와 동일) */
   glossary: '2026-10-08',
-  /** "부평 치과" 대표 허브(/areas/bupyeong-gu) — 2026-10-08 허브 본문 신설 */
-  bupyeongHub: '2026-10-08',
+  /** "부평 치과" 대표 허브(/areas/bupyeong-gu) — 2026-10-08 허브 본문 신설, 2026-10-14 핵심 진료 사진 카드 6개 */
+  bupyeongHub: '2026-10-14',
+  /** "부평 치과" 핵심 하위 6개(/areas/bupyeong-gu/{implant,ortho,esthetic,laminate,clear-aligner,wisdom-tooth}) — 2026-10-14 제목·대표 사진 */
+  bupyeongCore: '2026-10-14',
   /** 의료진 프로필 — src/data/doctors.ts 최종 수정 커밋 */
   doctors: '2026-04-30',
 } as const
@@ -22,7 +24,7 @@ export const CONTENT_DATES = {
  * 페이지를 실제로 고친 날에만 그 줄을 갱신한다. (한 값으로 전부 고정하던 방식 폐기, 2026-10-08)
  */
 export const PAGE_DATES: Record<string, string> = {
-  '/': '2026-10-08',            // 홈 title·첫 문단 "부평 치과" + 허브 앵커
+  '/': '2026-10-14',            // 홈 "부평 치과 진료 안내" 사진 카드 6개 (2026-10-08: title·첫 문단 "부평 치과" + 허브 앵커)
   '/mission': '2026-04-30',
   '/doctors': '2026-06-11',
   '/doctors/kim-jaein': '2026-06-11',

@@ -15,7 +15,7 @@ export const dentistSchema = () => ({
   url: `https://${CLINIC.domain}/`,
   telephone: CLINIC.phone,
   email: CLINIC.email,
-  image: `https://${CLINIC.domain}/static/og/og-default.png?v=20260430m`,
+  image: `https://${CLINIC.domain}/static/img/cards/clinic-default-1200x630.jpg`,
   logo: `https://${CLINIC.domain}/media/brand/mark-256.png`,
   priceRange: '₩₩',
   foundingDate: String(CLINIC.since),
@@ -152,7 +152,7 @@ export const articleSchema = (opts: {
   '@type': 'Article',
   headline: opts.title,
   description: opts.description,
-  image: opts.image ?? `https://${CLINIC.domain}/static/og/og-default.png?v=20260430m`,
+  image: opts.image ?? `https://${CLINIC.domain}/static/img/cards/clinic-default-1200x630.jpg`,
   datePublished: opts.datePublished,
   dateModified: opts.dateModified ?? opts.datePublished,
   author: opts.authorSlug

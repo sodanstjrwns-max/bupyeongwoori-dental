@@ -2,9 +2,15 @@ import { CLINIC, SEO_DEFAULT } from '../lib/constants'
 
 export type HeadProps = {
   title?: string
+  /** 완성된 <title> 그대로 쓸 때 (병원명 접미어 자동 추가 안 함) — 예: "부평 임플란트 | … — 부평우리치과" */
+  fullTitle?: string
   description?: string
   keywords?: string
   ogImage?: string
+  /** og:image:alt — 없으면 페이지 제목 */
+  ogImageAlt?: string
+  /** og 이미지 실제 크기. 생략 시 사이트 기본/카드 이미지(1200×630)일 때만 출력, 그 외(/media 업로드 등 크기 미상)는 생략 */
+  ogImageSize?: { w: number; h: number }
   canonical?: string
   jsonLd?: Record<string, unknown> | Array<Record<string, unknown> | null | undefined | false>
 
@@ -30,12 +36,17 @@ function toAbsoluteUrl(path: string): string {
 }
 
 export const Head = (props: HeadProps) => {
-  const title = props.title
+  const title = props.fullTitle
+    ? props.fullTitle
+    : props.title
     ? `${props.title} | ${CLINIC.name}`
     : SEO_DEFAULT.title
   const description = props.description ?? SEO_DEFAULT.description
   const keywords = props.keywords ?? SEO_DEFAULT.keywords
-  const ogImage = toAbsoluteUrl(props.ogImage ?? SEO_DEFAULT.ogImage)
+  const ogImagePath = props.ogImage ?? SEO_DEFAULT.ogImage
+  const ogImage = toAbsoluteUrl(ogImagePath)
+  // 사이트 기본 og·카드 og(public/static/img/cards/*-1200x630.jpg)는 1200×630 고정
+  const ogSize = props.ogImageSize ?? (/\/static\/img\/cards\/[^?]*-1200x630\.jpg/.test(ogImagePath) ? { w: 1200, h: 630 } : null)
   const canonical = props.canonical ?? ''
   const ogType = props.ogType ?? 'website'
   const articleMeta = props.articleMeta
@@ -72,9 +83,9 @@ export const Head = (props: HeadProps) => {
       <meta property="og:title" content={title} />
       <meta property="og:description" content={description} />
       <meta property="og:image" content={ogImage} />
-      <meta property="og:image:width" content="1200" />
-      <meta property="og:image:height" content="630" />
-      <meta property="og:image:alt" content={title} />
+      {ogSize ? <meta property="og:image:width" content={String(ogSize.w)} /> : null}
+      {ogSize ? <meta property="og:image:height" content={String(ogSize.h)} /> : null}
+      <meta property="og:image:alt" content={props.ogImageAlt ?? title} />
       <meta property="og:locale" content="ko_KR" />
       {canonical ? <meta property="og:url" content={canonical} /> : null}
 
@@ -112,7 +123,7 @@ export const Head = (props: HeadProps) => {
       {/* CWV 튜닝: dns-prefetch + preconnect + 자체 CSS preload (LCP/FCP 개선 → 랭킹 시그널) */}
       <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
       <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin="anonymous" />
-      <link rel="preload" href="/static/style.css?v=20261003seo" as="style" />
+      <link rel="preload" href="/static/style.css?v=20261014cards" as="style" />
       <link
         rel="stylesheet"
         href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"
@@ -121,7 +132,7 @@ export const Head = (props: HeadProps) => {
       <noscript>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
       </noscript>
-      <link rel="stylesheet" href="/static/style.css?v=20261003seo" />
+      <link rel="stylesheet" href="/static/style.css?v=20261014cards" />
 
       {/* Structured data */}
       {jsonLds.map((ld, i) => (

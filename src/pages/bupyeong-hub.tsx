@@ -6,13 +6,14 @@
 // 문장은 다른 지역 페이지와 재사용하지 않는다.
 // ============================================================
 import { Layout } from '../components/Layout'
-import { CLINIC, EQUIPMENTS, HOURS, OG_IMAGES } from '../lib/constants'
+import { CLINIC, EQUIPMENTS, HOURS } from '../lib/constants'
 import { CONTENT_DATES } from '../lib/content-dates'
 import { DOCTORS } from '../data/doctors'
 import { TREATMENT_LIST } from '../data/treatments'
 import { AREAS, TREATMENT_LOCAL, type AreaInfo } from '../data/areas'
 import { breadcrumbSchema, dentistSchema, faqSchema } from '../lib/schema'
 import { CtaSection } from '../components/CtaSection'
+import { BUPYEONG_CORE, BUPYEONG_HUB_IMAGE, CoreCardGrid, coreItemListLd, abs } from '../lib/bupyeong-core'
 
 const BASE = `https://${CLINIC.domain}`
 export const BUPYEONG_HUB_SLUG = 'bupyeong-gu'
@@ -77,7 +78,8 @@ export const BupyeongHubPage = ({ area }: { area: AreaInfo }) => {
       description={`부평 치과 찾으신다면 — 부평역 26번 출구 바로 앞 ${CLINIC.name}. ${CLINIC.addressShort}, ${latest.day} ${latest.closes}까지 야간·토요일 진료, 의료진 ${DOCTORS.length}명, 임플란트·교정·심미보철 등 8개 진료와 찾아오는 길·주차·예약 방법을 정리했습니다.`}
       canonical={HUB_URL}
       keywords="부평 치과, 부평역 치과, 부평구 치과, 부평 치과 야간진료, 부평 치과 토요일, 부평역 26번 출구 치과, 부평우리치과"
-      ogImage={OG_IMAGES.visit}
+      ogImage={BUPYEONG_HUB_IMAGE.og}
+      ogImageAlt={BUPYEONG_HUB_IMAGE.alt}
       jsonLd={[
         breadcrumbSchema([
           { name: '홈', url: '/' },
@@ -102,10 +104,14 @@ export const BupyeongHubPage = ({ area }: { area: AreaInfo }) => {
             ...nearby.filter((a) => a.slug !== 'bupyeong-station').map((a) => ({ '@type': 'Place', name: a.nameFull })),
           ],
           dateModified: reviewed,
+          image: abs(BUPYEONG_HUB_IMAGE.og),
+          primaryImageOfPage: { '@type': 'ImageObject', url: abs(BUPYEONG_HUB_IMAGE.og), contentUrl: abs(BUPYEONG_HUB_IMAGE.og), width: 1200, height: 630, caption: BUPYEONG_HUB_IMAGE.alt },
+          hasPart: { '@id': `${HUB_URL}#bupyeong-core` },
           publisher: { '@id': `${BASE}/#clinic` },
           speakable: { '@type': 'SpeakableSpecification', cssSelector: ['.page-title', '#hub-answer'] },
         },
         faqSchema(HUB_FAQS),
+        coreItemListLd(BUPYEONG_CORE, HUB_URL, '부평 치과 진료별 안내'),
       ]}
     >
       <section class="page-hero">
@@ -115,6 +121,9 @@ export const BupyeongHubPage = ({ area }: { area: AreaInfo }) => {
             부평 치과,<br/>
             <em class="ph-mint-3">{CLINIC.name}</em>
           </h1>
+          <figure class="bpc-hero-figure">
+            <img src={BUPYEONG_HUB_IMAGE.og} width="1200" height="630" alt={BUPYEONG_HUB_IMAGE.alt} fetchpriority="high" decoding="async" />
+          </figure>
           <p class="page-lead" id="hub-answer">
             {CLINIC.name}는 {CLINIC.address}에 있는 치과입니다. 부평역 지하상가 26번 출구로 나오면 바로 앞이라
             걸어서 1분이면 도착하고, {CLINIC.since}년 개원 후 같은 자리에서 진료하고 있습니다.
@@ -203,9 +212,12 @@ export const BupyeongHubPage = ({ area }: { area: AreaInfo }) => {
               </a>
             ))}
           </div>
-          <p style="margin-top:28px; color:var(--ink-600); text-align:center;">
-            부평구 주민분께 맞춘 진료별 안내:{' '}
-            {treatments.map((t, i) => (
+          {/* 부평 진료별 안내 사진 카드 6개 — ItemList(#bupyeong-core)와 1:1 */}
+          <h3 class="bpc-subhead">부평 진료별 안내</h3>
+          <CoreCardGrid cards={BUPYEONG_CORE} idPrefix="hub-core" />
+          <p style="margin-top:20px; color:var(--ink-600); text-align:center;">
+            그 밖의 진료:{' '}
+            {treatments.filter((t) => !BUPYEONG_CORE.some((c) => c.slug === t.slug)).map((t, i) => (
               <>
                 {i > 0 ? ' · ' : ''}
                 <a href={`/areas/${BUPYEONG_HUB_SLUG}/${t.slug}`}>부평구 {t.name}</a>

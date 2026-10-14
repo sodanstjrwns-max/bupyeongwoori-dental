@@ -46,6 +46,7 @@ import { autoFillBlogSeo, autoFillBaSeo, buildIndexNowUrls } from './lib/auto-se
 import { AreasIndexPage, AreaHubPage, AreaTreatmentPage } from './pages/areas'
 import { BupyeongHubPage, BUPYEONG_HUB_SLUG } from './pages/bupyeong-hub'
 import { AREAS, getArea, TREATMENT_LOCAL } from './data/areas'
+import { getCore, BUPYEONG_HUB, BUPYEONG_HUB_IMAGE } from './lib/bupyeong-core'
 import { SearchPage, searchStatic, type SearchResultItem } from './pages/search'
 import { NotFoundPage } from './pages/not-found'
 import { treatmentToMarkdown, glossaryToMarkdown, blogToMarkdown, faqToMarkdown } from './lib/markdown-export'
@@ -982,12 +983,18 @@ app.get('/llms-full.txt', async (c) => {
 // ============================================================
 const sitemapXmlHeaders = { 'Content-Type': 'application/xml; charset=utf-8' }
 
-type SitemapEntry = { loc: string; lastmod: string; changefreq: string; priority: string }
+type SitemapEntry = { loc: string; lastmod: string; changefreq: string; priority: string; images?: { loc: string; title: string }[] }
+
+const xmlEsc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;')
 
 function buildUrlsetXml(base: string, entries: SitemapEntry[]): string {
+  // 대표 사진이 있는 URL은 <image:image> 추가 (2026-10-14 "부평 치과" 허브·핵심 하위 6개)
+  const hasImages = entries.some((e) => e.images && e.images.length > 0)
+  const imgXml = (e: SitemapEntry) =>
+    (e.images ?? []).map((im) => `<image:image><image:loc>${xmlEsc(im.loc.startsWith('http') ? im.loc : base + im.loc)}</image:loc><image:title>${xmlEsc(im.title)}</image:title></image:image>`).join('')
   return `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${entries.map(e => `  <url><loc>${base}${e.loc}</loc><lastmod>${e.lastmod}</lastmod><changefreq>${e.changefreq}</changefreq><priority>${e.priority}</priority></url>`).join('\n')}
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"${hasImages ? ' xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"' : ''}>
+${entries.map(e => `  <url><loc>${base}${e.loc}</loc><lastmod>${e.lastmod}</lastmod><changefreq>${e.changefreq}</changefreq><priority>${e.priority}</priority>${imgXml(e)}</url>`).join('\n')}
 </urlset>`
 }
 
@@ -1148,16 +1155,19 @@ app.get('/sitemap-areas.xml', (c) => {
       lastmod: a.slug === 'bupyeong-gu' ? toKstNoonIso(CONTENT_DATES.bupyeongHub) : AREAS_LASTMOD,
       changefreq: 'monthly',
       priority: (Math.max(0.7, a.priority * 0.95)).toFixed(2),
+      ...(a.slug === BUPYEONG_HUB ? { images: [{ loc: BUPYEONG_HUB_IMAGE.og, title: BUPYEONG_HUB_IMAGE.alt }] } : {}),
     })
   }
   // 지역×진료 페이지 (64개) — priority 0.72~0.9
   for (const a of AREAS) {
     for (const tSlug of Object.keys(TREATMENT_LOCAL)) {
+      const core = getCore(a.slug, tSlug)
       entries.push({
         loc: `/areas/${a.slug}/${tSlug}`,
-        lastmod: AREAS_LASTMOD,
+        lastmod: core ? toKstNoonIso(CONTENT_DATES.bupyeongCore) : AREAS_LASTMOD,
         changefreq: 'monthly',
         priority: (Math.max(0.7, a.priority * 0.9)).toFixed(2),
+        ...(core ? { images: [{ loc: core.og, title: core.alt }] } : {}),
       })
     }
   }
@@ -1331,9 +1341,9 @@ app.get('/sitemap-images.xml', async (c) => {
     pageUrl: `${base}/`,
     pageTitle: CLINIC.name,
     images: [{
-      loc: `${base}/static/og/og-default.png?v=20260430m`,
-      title: `${CLINIC.name} 공식 이미지`,
-      caption: `${CLINIC.name} - 부평역 26번 출구 도보 1분`,
+      loc: `${base}/static/img/cards/clinic-default-1200x630.jpg`,
+      title: `${CLINIC.name} 진료실`,
+      caption: `${CLINIC.name} 창가 진료실 - 부평역 26번 출구 도보 1분`,
     }],
   })
 

@@ -27,6 +27,7 @@ import { breadcrumbSchema, dentistSchema, faqSchema, serviceSchema } from '../li
 import { CtaSection } from '../components/CtaSection'
 import { InlineCta } from '../components/InlineCta'
 import { buildOgImageUrl } from '../lib/og-dynamic'
+import { getCore, coreTitle, abs, BUPYEONG_CORE, CoreCardGrid } from '../lib/bupyeong-core'
 
 const BASE = `https://${CLINIC.domain}`
 
@@ -243,7 +244,9 @@ export const AreaTreatmentPage = ({ area, treatment }: { area: AreaInfo; treatme
 
   const title = `${area.name} ${treatment.name}`
   // Phase 1-1: 지역×진료 다양화된 description (64개 페이지 모두 유니크)
-  const description = buildAreaTreatmentDescription(area.slug, treatment.slug, treatment.name)
+  // 2026-10-14: "부평 치과" 핵심 하위 6개는 전용 제목·설명·대표 사진 (lib/bupyeong-core.tsx)
+  const core = getCore(area.slug, treatment.slug)
+  const description = core ? core.description : buildAreaTreatmentDescription(area.slug, treatment.slug, treatment.name)
   // Phase 1-1: 다양화된 키워드 (지역×진료 롱테일 풀세트)
   const dynamicKeywords = buildAreaTreatmentKeywords(area.slug, treatment.slug, treatment.name, treatment.keywords)
   const url = `${BASE}/areas/${area.slug}/${treatment.slug}`
@@ -252,6 +255,10 @@ export const AreaTreatmentPage = ({ area, treatment }: { area: AreaInfo; treatme
   const localFaqs = local.localFaqs(area.name)
   // Phase 1-2: 페이지별 OG 이미지 (지역×진료 시그니처)
   const ogImg = buildOgImageUrl({ type: 'area-treatment', area: area.slug, treatment: treatment.slug })
+
+  // 핵심 하위 형제 카드(사진) — 자신 제외 5개
+  const coreSiblings = core ? BUPYEONG_CORE.filter((c) => c.slug !== core.slug) : []
+  const coreSlugs = new Set(BUPYEONG_CORE.map((c) => c.slug))
 
   // 같은 지역의 다른 진료 (cross-link)
   const otherTreatments = Object.keys(TREATMENT_LOCAL)
@@ -265,14 +272,16 @@ export const AreaTreatmentPage = ({ area, treatment }: { area: AreaInfo; treatme
   return (
     <Layout
       title={`${area.name} ${treatment.name}`}
+      fullTitle={core ? coreTitle(core) : undefined}
       description={description}
       canonical={url}
       keywords={dynamicKeywords}
       ogImage={ogImg}
+      ogImageAlt={core ? core.alt : undefined}
       ogType="article"
       articleMeta={{
         publishedTime: '2026-05-14T00:00:00+09:00',
-        modifiedTime: toKstNoonIso(CONTENT_DATES.areas), // 고정 수정일 (오늘 날짜 자동 생성 금지)
+        modifiedTime: toKstNoonIso(core ? CONTENT_DATES.bupyeongCore : CONTENT_DATES.areas), // 고정 수정일 (오늘 날짜 자동 생성 금지)
         author: CLINIC.representative,
         section: `${area.name} ${treatment.name}`,
         tags: [`${area.name} ${treatment.name}`, `${area.name} 치과`, treatment.name, `${area.district} 치과`],
@@ -282,10 +291,35 @@ export const AreaTreatmentPage = ({ area, treatment }: { area: AreaInfo; treatme
           { name: '홈', url: '/' },
           { name: '지역별 안내', url: '/areas' },
           { name: area.slug === 'bupyeong-gu' ? '부평 치과' : `${area.name} 치과`, url: `/areas/${area.slug}` },
-          { name: `${area.name} ${treatment.name}`, url: `/areas/${area.slug}/${treatment.slug}` },
+          { name: core ? core.name : `${area.name} ${treatment.name}`, url: `/areas/${area.slug}/${treatment.slug}` },
         ]),
         // 병원 엔티티는 사이트 전체에서 하나(@id /#clinic)로 통일 — 지역별 별도 Dentist 엔티티(지역 좌표) 제거
         dentistSchema(),
+        // 핵심 하위 6개: 페이지 대표 사진(og·본문 첫 사진·사이트맵과 동일) — MedicalWebPage.image/primaryImageOfPage
+        core
+          ? {
+              '@context': 'https://schema.org',
+              '@type': ['WebPage', 'MedicalWebPage'],
+              '@id': `${url}#webpage`,
+              url,
+              name: coreTitle(core),
+              description,
+              inLanguage: 'ko-KR',
+              isPartOf: { '@id': `${BASE}/#website` },
+              about: { '@id': `${url}#procedure` },
+              publisher: { '@id': `${BASE}/#clinic` },
+              dateModified: CONTENT_DATES.bupyeongCore,
+              image: abs(core.og),
+              primaryImageOfPage: {
+                '@type': 'ImageObject',
+                url: abs(core.og),
+                contentUrl: abs(core.og),
+                width: 1200,
+                height: 630,
+                caption: core.alt,
+              },
+            }
+          : null,
         // Service / MedicalProcedure
         {
           ...serviceSchema({
@@ -315,9 +349,14 @@ export const AreaTreatmentPage = ({ area, treatment }: { area: AreaInfo; treatme
         <div class="container">
           <div class="page-eyebrow">{area.nameFull.toUpperCase()} · {treatment.name.toUpperCase()}</div>
           <h1 class="page-title">
-            {area.name}에서 {treatment.name},<br/>
+            {core ? <>{core.name},</> : <>{area.name}에서 {treatment.name},</>}<br/>
             <em class="ph-mint-3">{CLINIC.name}</em>
           </h1>
+          {core ? (
+            <figure class="bpc-hero-figure">
+              <img src={core.og} width="1200" height="630" alt={core.alt} fetchpriority="high" decoding="async" />
+            </figure>
+          ) : null}
           <p class="page-lead">{angle}</p>
           {/* "부평 치과" 허브 링크 — 상단 (페이지당 허브 링크: 이 줄 + 푸터) */}
           <p class="hub-local-line" style="margin-top:14px; font-size:0.92rem; color:var(--ink-600); line-height:1.7;">
@@ -414,12 +453,13 @@ export const AreaTreatmentPage = ({ area, treatment }: { area: AreaInfo; treatme
         </div>
       </section>
 
-      {/* 같은 지역의 다른 진료 */}
+      {/* 같은 지역의 다른 진료 — 핵심 6개 페이지는 사진 카드 + 나머지 진료 텍스트 링크 */}
       <section class="section section-soft">
         <div class="container">
-          <h2 class="section-title">{area.name}에서 받을 수 있는 다른 진료</h2>
-          <div class="area-cross-grid">
-            {otherTreatments.slice(0, 6).map((t) => (
+          <h2 class="section-title">{core ? '부평에서 받을 수 있는 다른 진료' : `${area.name}에서 받을 수 있는 다른 진료`}</h2>
+          {core ? <CoreCardGrid cards={coreSiblings} idPrefix={`sib-${core.slug}`} compact /> : null}
+          <div class="area-cross-grid" style={core ? 'margin-top:24px;' : undefined}>
+            {(core ? otherTreatments.filter((t) => !coreSlugs.has(t.slug)) : otherTreatments.slice(0, 6)).map((t) => (
               <a href={`/areas/${area.slug}/${t.slug}`} class="area-cross-card" data-reveal>
                 <span>{area.name} {t.name}</span>
                 <i class="fas fa-arrow-right"></i>

@@ -7151,3 +7151,23 @@ th{ font-weight:700; background:var(--ink-50); font-size:.85rem; letter-spacing:
 .wr-related li span{flex:0 0 auto;font-size:.82rem;color:var(--ink-400)}
 .wr-pager{justify-content:center;margin-top:40px}
 @media (max-width:640px){.wr-related li{flex-direction:column;gap:2px}.wr-author{padding:16px}}
+
+/* -------------------- 부평 진료별 사진 카드 (2026-10-14, bpc-*) -------------------- */
+.bpc-grid{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(14px,2vw,28px)}
+.bpc-grid--compact{grid-template-columns:repeat(5,minmax(0,1fr));gap:14px}
+.bpc-card{display:flex;flex-direction:column;height:100%;background:var(--surface);border:1px solid var(--ink-100);border-radius:var(--r-lg);overflow:hidden;color:var(--ink-900);transition:transform var(--d-base) var(--ease-out),box-shadow var(--d-base) var(--ease-out),border-color var(--d-base) var(--ease)}
+.bpc-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg);border-color:var(--brand-200)}
+.bpc-media{display:block;aspect-ratio:1/1;overflow:hidden;background:var(--brand-50)}
+.bpc-media img{width:100%;height:100%;object-fit:cover;display:block;transition:transform var(--d-slow) var(--ease-out)}
+.bpc-card:hover .bpc-media img{transform:scale(1.04)}
+.bpc-body{position:relative;display:flex;flex-direction:column;gap:6px;padding:18px 20px 22px;border-top:3px solid var(--brand)}
+.bpc-num{font-size:var(--t-micro);font-weight:800;letter-spacing:.14em;color:var(--brand-700)}
+.bpc-title{font-size:var(--h-6);font-weight:900;letter-spacing:-0.03em;line-height:1.25}
+.bpc-line{font-size:.92rem;color:var(--ink-500);line-height:1.55;word-break:keep-all}
+.bpc-grid--compact .bpc-body{padding:12px 14px 14px;border-top-width:2px}
+.bpc-grid--compact .bpc-title{font-size:.98rem}
+.bpc-subhead{margin:48px 0 20px;font-size:var(--h-5);font-weight:900;letter-spacing:-0.03em;text-align:center}
+.bpc-hero-figure{margin:28px 0 0;max-width:960px;border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--shadow-md);background:var(--brand-50)}
+.bpc-hero-figure img{display:block;width:100%;height:auto;aspect-ratio:1200/630;object-fit:cover}
+@media (max-width:1024px){.bpc-grid--compact{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:768px){.bpc-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.bpc-grid--compact{grid-template-columns:repeat(2,minmax(0,1fr))}.bpc-body{padding:14px 14px 16px}.bpc-line{font-size:.85rem}}

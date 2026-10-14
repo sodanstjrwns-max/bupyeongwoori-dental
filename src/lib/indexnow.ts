@@ -6,7 +6,9 @@
  * - 호출 비동기(fire-and-forget) — 관리자 응답 지연 없음
  */
 
-export const INDEXNOW_KEY = '900093ba7a44ff442bf2cf6f8a6ef936'
+// 2026-10-14: 기존 키(900093ba…)는 키 파일이 정상(200 text/plain)인데도 api.indexnow.org·Bing이
+// 403 UserForbiddedToAccessSite 를 반환(Yandex·네이버는 수락) → 새 키로 교체. 옛 키 파일은 public/ 에 보존.
+export const INDEXNOW_KEY = 'd235d0807a8e34a5a382b8d9a84699cd'
 const HOST = 'wooridc.kr'
 const KEY_LOCATION = `https://${HOST}/${INDEXNOW_KEY}.txt`
 // IndexNow 통합 엔드포인트 (Bing이 Yandex 등으로 자동 전파)

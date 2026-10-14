@@ -10,6 +10,7 @@
 //   - 진료별/지역별 시그니처 이미지 파일이 추가되면 자동 매핑
 // ============================================================
 import { OG_IMAGES } from './constants'
+import { getCore, BUPYEONG_HUB, BUPYEONG_HUB_IMAGE } from './bupyeong-core'
 
 type OgImageOpts =
   | { type: 'home' }
@@ -38,6 +39,12 @@ export function buildOgImageUrl(opts: OgImageOpts): string {
   if (opts.type === 'treatment' && TREATMENT_OG[opts.treatment]) {
     return TREATMENT_OG[opts.treatment]
   }
+  // 2026-10-14: "부평 치과" 허브·핵심 하위 6개는 페이지마다 고유 실사 (bupyeong-core.tsx)
+  if (opts.type === 'area-hub' && opts.area === BUPYEONG_HUB) return BUPYEONG_HUB_IMAGE.og
+  if (opts.type === 'area-treatment') {
+    const core = getCore(opts.area, opts.treatment)
+    if (core) return core.og
+  }
   if (opts.type === 'area-hub' && AREA_OG[opts.area]) {
     return AREA_OG[opts.area]
   }
@@ -51,14 +58,7 @@ export function buildOgImageUrl(opts: OgImageOpts): string {
     if (opts.cover.startsWith('/')) return opts.cover
     return `/media/${opts.cover}`
   }
-  // 폴백: 기본 OG + 식별 파라미터 (SNS 캐시 분리)
-  const idParts: string[] = []
-  if ('treatment' in opts && opts.treatment) idParts.push(opts.treatment)
-  if ('area' in opts && opts.area) idParts.push(opts.area)
-  if ('slug' in opts && opts.slug) idParts.push(opts.slug)
-  const id = idParts.join('-')
-  if (!id) return base
-  // 기본 URL에 식별자 파라미터만 추가 (캐시 분리 효과)
-  const sep = base.includes('?') ? '&' : '?'
-  return `${base}${sep}p=${encodeURIComponent(id)}`
+  // 폴백: 사이트 기본 og(실사 1200×630). 2026-10-14 — 같은 파일에 ?p= 쿼리만 붙이던 방식은
+  // 검색엔진이 서로 다른 이미지로 보지 않아 의미가 없어 제거.
+  return base
 }

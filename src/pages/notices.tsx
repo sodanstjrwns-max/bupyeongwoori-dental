@@ -155,7 +155,7 @@ export const NoticeDetailPage = ({ notice }: { notice: NoticeRow }) => {
           publisher: {
             '@type': 'Organization',
             name: CLINIC.name,
-            logo: { '@type': 'ImageObject', url: `https://${CLINIC.domain}/static/og/og-default.png?v=20260430m` },
+            logo: { '@type': 'ImageObject', url: `https://${CLINIC.domain}/media/brand/mark-256.png` },
           },
           mainEntityOfPage: {
             '@type': 'WebPage',

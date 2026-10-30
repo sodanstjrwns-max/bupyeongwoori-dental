@@ -17,3 +17,8 @@ html.mx .mx-pimg { translate: 0 var(--mx-y, 0%); scale: var(--mx-s, 1); will-cha
 
 /* 옆에서 들어오는 요소가 가로 스크롤을 만들지 않도록 */
 html.mx body { overflow-x: clip; }
+
+/* 동작 줄이기: 기존 CSS 는 [data-reveal="true"] 만 풀어 줘서 상담 블록([data-reveal="scale"])이 끝까지 숨는다 — 홈에서는 바로 보이게 */
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal="scale"] { opacity: 1 !important; transform: none !important; }
+}

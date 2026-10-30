@@ -31,7 +31,8 @@
   });
 
   // 1) 관성 스크롤 — 마우스·트랙패드만. 짧고 단단하게
-  if (fine && window.Lenis) {
+  // 표준 모드(<!DOCTYPE html>)에서만 — 호환(quirks) 모드는 스크롤 주체가 body 라 Lenis 가 움직이지 못한다
+  if (fine && window.Lenis && document.compatMode === 'CSS1Compat') {
     var lenis = new Lenis({ duration: 1.05, smoothWheel: true, wheelMultiplier: 1,
       prevent: function (node) { return !!(node.closest && node.closest('.mobile-menu, [data-lenis-prevent]')); } });
     lenis.on('scroll', ScrollTrigger.update);

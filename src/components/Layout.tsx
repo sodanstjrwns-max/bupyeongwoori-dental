@@ -19,7 +19,7 @@ export const Layout = ({ children, heroDark, hideFooter, hideFloatingCta, user, 
     <html lang="ko">
       <head>
         <Head {...head} />
-        {immersive && <link rel="stylesheet" href="/static/immersive.css?v=27511b3b14" />}
+        {immersive && <link rel="stylesheet" href="/static/immersive.css?v=4d724a4c3f" />}
       </head>
       <body>
         <a href="#main" class="sr-only">본문으로 바로가기</a>
@@ -32,7 +32,7 @@ export const Layout = ({ children, heroDark, hideFooter, hideFloatingCta, user, 
           <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
           <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
           <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js" defer></script>
-          <script src="/static/immersive.js?v=8755eb8833" defer></script>
+          <script src="/static/immersive.js?v=88c28a6dc8" defer></script>
         </>}
       </body>
     </html>

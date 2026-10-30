@@ -13,6 +13,7 @@ export const HomePage = () => {
   return (
     <Layout
       heroDark
+      immersive
       title=""
       canonical={`https://${CLINIC.domain}/`}
       ogImage={OG_IMAGES.home}

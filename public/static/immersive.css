@@ -1,0 +1,19 @@
+/* 부평우리치과 메인 스크롤 몰입 연출 — /static/immersive.js 가 html.mx 를 붙였을 때만 작동 */
+html.mx, html.mx body { scroll-behavior: auto !important; }
+html.mx.lenis, html.mx.lenis body { height: auto; }
+html.mx .lenis.lenis-smooth { scroll-behavior: auto !important; }
+
+/* 제목 낱말 마스크 */
+.mx-w { display: inline-block; overflow: hidden; vertical-align: top; padding-bottom: .08em; margin-bottom: -.08em; }
+.mx-wi { display: inline-block; will-change: transform; transform-origin: 0% 100%; }
+/* 민트 강조어(em)는 낱말로 나뉘어도 그대로 inline-block 유지 */
+html.mx h2 em .mx-w { vertical-align: baseline; }
+
+/* 장 번호 */
+html.mx .mx-ch { display: inline-block; }
+
+/* 사진 시차 — translate·scale 개별 속성이라 hover transform 과 충돌하지 않는다 */
+html.mx .mx-pimg { translate: 0 var(--mx-y, 0%); scale: var(--mx-s, 1); will-change: translate, scale; }
+
+/* 옆에서 들어오는 요소가 가로 스크롤을 만들지 않도록 */
+html.mx body { overflow-x: clip; }

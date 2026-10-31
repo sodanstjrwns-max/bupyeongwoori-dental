@@ -21,7 +21,7 @@ export const dentistSchema = () => ({
   foundingDate: String(CLINIC.since),
   address: {
     '@type': 'PostalAddress',
-    streetAddress: '부평대로 16 에이플러스에셋빌딩',
+    streetAddress: '부평대로 16 에이플러스에셋빌딩 5층·7층',
     addressLocality: '부평구',
     addressRegion: '인천광역시',
     postalCode: '21315',

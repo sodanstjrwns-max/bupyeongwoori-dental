@@ -127,40 +127,55 @@
     counters.forEach((el) => io.observe(el));
   }
 
-  // --------- Cursor follower ---------
-  if (!isTouch && !reduceMotion) {
-    const dot = document.createElement('div');
-    dot.className = 'cursor-dot';
-    document.body.appendChild(dot);
-    let tx = 0, ty = 0, x = 0, y = 0;
-    document.addEventListener('mousemove', (e) => {
-      tx = e.clientX; ty = e.clientY;
-      dot.classList.add('active');
-    });
-    document.addEventListener('mouseleave', () => dot.classList.remove('active'));
-    const animate = () => {
-      x += (tx - x) * 0.18;
-      y += (ty - y) * 0.18;
-      dot.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
-      requestAnimationFrame(animate);
+  // --------- Cursor follower: 2026-10-31 원장 요청으로 삭제 ---------
+
+  // --------- 상단 진료 상태 (진료중 HH:MM까지) — 2026-10-31 ---------
+  (function () {
+    const el = document.getElementById('nav-status');
+    if (!el) return;
+    let hours;
+    try { hours = JSON.parse(el.getAttribute('data-hours') || '[]'); } catch (e) { return; }
+    const lunch = (el.getAttribute('data-lunch') || '').split('-'); // "13:00-14:00"
+    const DAY = ['일', '월', '화', '수', '목', '금', '토'];
+    const toMin = (t) => { const p = String(t).split(':'); return (+p[0]) * 60 + (+p[1]); };
+    const label = el.querySelector('.nav-status-text');
+    const render = () => {
+      // 한국 시간 기준
+      const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' }));
+      const dow = now.getDay();
+      const m = now.getHours() * 60 + now.getMinutes();
+      const today = hours[(dow + 6) % 7]; // HOURS 는 월요일부터
+      let state = 'closed', head = '', detail = '';
+      const nextOpen = () => {
+        for (let i = 1; i <= 7; i++) {
+          const d = (dow + i) % 7; const h = hours[(d + 6) % 7];
+          if (h && h.opens) return (i === 1 ? '내일' : DAY[d] + '요일') + ' ' + h.opens + ' 진료';
+        }
+        return '';
+      };
+      if (today && today.opens) {
+        const o = toMin(today.opens), c = toMin(today.closes);
+        const hasLunch = dow !== 6 && lunch.length === 2 && toMin(lunch[0]) > o && toMin(lunch[1]) < c;
+        if (m < o) { state = 'soon'; head = '진료 전'; detail = today.opens + ' 시작'; }
+        else if (hasLunch && m >= toMin(lunch[0]) && m < toMin(lunch[1])) { state = 'lunch'; head = '점심시간'; detail = lunch[1] + ' 재개'; }
+        else if (m < c) { state = 'open'; head = '진료중'; detail = today.closes + '까지'; }
+        else { head = '진료 종료'; detail = nextOpen(); }
+      } else {
+        head = '오늘 휴진'; detail = nextOpen();
+      }
+      el.setAttribute('data-state', state);
+      el.setAttribute('title', head + ' · ' + detail);
+      if (label) {
+        label.textContent = '';
+        const b = document.createElement('span'); b.className = 'nav-status-head'; b.textContent = head;
+        const d = document.createElement('span'); d.className = 'nav-status-detail'; d.textContent = ' · ' + detail;
+        label.appendChild(b); label.appendChild(d);
+      }
+      el.hidden = false;
     };
-    animate();
-    // Hover state on interactive elements
-    document.addEventListener('mouseover', (e) => {
-      const t = e.target;
-      if (!(t instanceof Element)) return;
-      if (t.closest('a, button, [data-cursor="hover"]')) {
-        dot.classList.add('hover');
-      }
-    });
-    document.addEventListener('mouseout', (e) => {
-      const t = e.target;
-      if (!(t instanceof Element)) return;
-      if (t.closest('a, button, [data-cursor="hover"]')) {
-        dot.classList.remove('hover');
-      }
-    });
-  }
+    render();
+    setInterval(render, 60000);
+  })();
 
   // --------- Magnetic buttons (subtle pull toward cursor) ---------
   if (!isTouch && !reduceMotion) {

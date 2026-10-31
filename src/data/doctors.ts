@@ -28,7 +28,7 @@ export const doctorPhotoSrc = (photo?: string): string | null => {
   return `/media/${photo}?v=${PHOTO_CACHE_VERSION}`
 }
 
-export const DOCTORS: Doctor[] = [
+const ALL_DOCTORS: Doctor[] = [
   // ========================================================
   // 대표원장 김재인 — 임플란트·구강외과
   // ========================================================
@@ -46,7 +46,6 @@ export const DOCTORS: Doctor[] = [
       '정직하게 최선을 다해, 환자가 처한 여러 여건(경제적·신체적)을 고려하여 최적의 답을 제공하는 치과. 그것이 부평우리치과가 추구하는 방향이며, 제가 책임지고 이끌어가는 이유입니다.',
     ],
     education: [
-      '고려대학교 의과대학 구강외과 의학박사',
       '고려대학교 구강악안면외과학과 (임플란트 전공)',
       '고려대학교 의료원 외래교수 (구강악안면외과)',
     ],
@@ -61,7 +60,7 @@ export const DOCTORS: Doctor[] = [
       '대한치과턱관절교합학회 정회원',
     ],
     certifications: [
-      '보건복지부 인증 치과전문의',
+      '보건복지부 인증 통합치의학과 전문의',
       '스트라우만 임플란트 자문의사',
       '오스템 임플란트 임상자문위원',
       '네오 임플란트 임상자문위원',
@@ -112,7 +111,7 @@ export const DOCTORS: Doctor[] = [
     name: '조정하',
     title: '원장',
     role: 'doctor',
-    photo: 'doctors/jo-jeongha.jpg',
+    photo: 'doctors/jo-heeyoung.jpg', // 2026-10-31 원장 요청: 조희영·조정하 사진이 서로 바뀌어 있었음
     specialties: ['preservation', 'esthetic'],
     tagline: '치아를 살리는 치료, 치과보존과 전문의.',
     intro: [
@@ -142,7 +141,7 @@ export const DOCTORS: Doctor[] = [
     name: '조희영',
     title: '원장',
     role: 'doctor',
-    photo: 'doctors/jo-heeyoung.jpg',
+    photo: 'doctors/jo-jeongha.jpg', // 2026-10-31 원장 요청: 사진 교체
     specialties: ['esthetic', 'general-prosthesis', 'implant'],
     tagline: '연세치대원 보철 석사. 심미와 기능을 동시에.',
     intro: [
@@ -222,6 +221,9 @@ export const DOCTORS: Doctor[] = [
   },
 ]
 
+// 2026-10-31 원장 요청: 조정하 원장 퇴사 → 목록·메뉴·스키마에서 제외(데이터는 기록용 보존, /doctors/jo-jeongha 는 301)
+export const RETIRED_DOCTOR_SLUGS: readonly string[] = ['jo-jeongha']
+export const DOCTORS: Doctor[] = ALL_DOCTORS.filter((d) => !RETIRED_DOCTOR_SLUGS.includes(d.slug))
 // pending 필드가 없는 의료진만 "공개"로 간주
 export const PUBLIC_DOCTORS = DOCTORS
 

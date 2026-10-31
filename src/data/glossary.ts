@@ -538,7 +538,7 @@ const AUTO: AutoTerm[] = [
   { slug: 'cement-retained', term: '시멘트 유지형', termEn: 'Cement-Retained', category: 'implant', definition: '임플란트 크라운을 접착제로 고정하는 방식.' },
   { slug: 'overdenture', term: '오버덴쳐', termEn: 'Overdenture', category: 'implant', definition: '임플란트 위에 지지되는 탈착식 틀니. 고정성 임플란트보다 경제적.' },
   { slug: 'straumann', term: '스트라우만', termEn: 'Straumann', category: 'implant', definition: '스위스의 세계적 임플란트 제조사. 장기 임상 데이터가 가장 풍부하다.' },
-  { slug: 'osstem', term: '오스템 임플란트', termEn: 'Osstem', category: 'implant', definition: '국내 1위 임플란트 제조사. 한국인 구강 구조에 최적화.' },
+  { slug: 'osstem', term: '오스템 임플란트', termEn: 'Osstem', category: 'implant', definition: '국내 임플란트 제조사. 한국인 구강 구조를 고려해 설계.' },
   { slug: 'neo', term: '네오바이오텍', termEn: 'Neobiotech', category: 'implant', definition: '국내 중견 임플란트 제조사. 합리적 가격대의 대안.' },
   { slug: 'nobel-biocare', term: '노벨 바이오케어', termEn: 'Nobel Biocare', category: 'implant', definition: '브로네마크 임플란트로 유명한 글로벌 임플란트 회사.' },
   { slug: 'dentium', term: '덴티움', termEn: 'Dentium', category: 'implant', definition: '국내 주요 임플란트 제조사 중 하나.' },

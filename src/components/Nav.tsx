@@ -1,5 +1,4 @@
-import { CLINIC, CORE_TREATMENTS, OTHER_TREATMENTS } from '../lib/constants'
-import { DOCTORS } from '../data/doctors'
+import { CLINIC, CORE_TREATMENTS, HOURS, OTHER_TREATMENTS } from '../lib/constants'
 
 export type NavUser = {
   id: number
@@ -25,14 +24,9 @@ export const Nav = ({ onDark = false, user = null }: { onDark?: boolean; user?: 
               <a href="/mission" class="nav-link">병원미션</a>
             </div>
 
+            {/* 2026-10-31 원장 요청: 하위 메뉴 없이 바로 의료진 페이지로 */}
             <div class="nav-item">
-              <a href="/doctors" class="nav-link">의료진소개 ▾</a>
-              <div class="nav-dropdown">
-                <a href="/doctors">전체 의료진</a>
-                {DOCTORS.filter((d) => d.name && d.role !== 'doctor' || d.slug === 'kim-jaein').map((d) => (
-                  <a href={`/doctors/${d.slug}`}>{d.title} {d.name}</a>
-                ))}
-              </div>
+              <a href="/doctors" class="nav-link">의료진소개</a>
             </div>
 
             <div class="nav-item">
@@ -56,6 +50,7 @@ export const Nav = ({ onDark = false, user = null }: { onDark?: boolean; user?: 
                 <a href="/notices">공지사항</a>
                 <a href="/glossary">치과 백과사전</a>
                 <a href="/faq">자주 묻는 질문</a>
+                <a href="/videos">유튜브</a>
                 <a href="/search">통합 검색</a>
               </div>
             </div>
@@ -70,6 +65,11 @@ export const Nav = ({ onDark = false, user = null }: { onDark?: boolean; user?: 
             </div>
           </nav>
 
+          {/* 실시간 진료 상태 — app.js 가 한국 시간 기준으로 채움 (JS 없으면 숨김) */}
+          <a href="/visit#hours" class="nav-status" id="nav-status" hidden data-hours={JSON.stringify(HOURS.map((h) => ({ opens: h.opens, closes: h.closes })))} data-lunch="13:00-14:00" aria-live="polite">
+            <span class="nav-status-dot" aria-hidden="true"></span>
+            <span class="nav-status-text">진료 시간 안내</span>
+          </a>
           <div class="nav-cta-group">
             <a href={CLINIC.socialLinks.naverBooking} target="_blank" rel="noopener" class="nav-cta nav-cta-book" aria-label="네이버 예약">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.273 12.845 7.376 0H0v24h7.726V11.156L16.624 24H24V0h-7.727z"/></svg>
@@ -117,13 +117,7 @@ export const Nav = ({ onDark = false, user = null }: { onDark?: boolean; user?: 
           <summary>병원미션</summary>
           <a href="/mission">병원의 미션과 철학</a>
         </details>
-        <details>
-          <summary>의료진소개</summary>
-          <a href="/doctors">전체 의료진</a>
-          {DOCTORS.map((d) => (
-            <a href={`/doctors/${d.slug}`}>{`${d.title} ${d.name}`}</a>
-          ))}
-        </details>
+        <a href="/doctors" class="mobile-menu-link">의료진소개</a>
         <details>
           <summary>진료과목</summary>
           <a href="/treatments"><strong>전체 진료 안내</strong></a>
@@ -141,6 +135,7 @@ export const Nav = ({ onDark = false, user = null }: { onDark?: boolean; user?: 
           <a href="/notices">공지사항</a>
           <a href="/glossary">치과 백과사전</a>
           <a href="/faq">자주 묻는 질문</a>
+          <a href="/videos">유튜브</a>
           <a href="/search">통합 검색</a>
         </details>
         <details>
@@ -168,7 +163,7 @@ export const Nav = ({ onDark = false, user = null }: { onDark?: boolean; user?: 
           </div>
         ) : (
           <div style="margin-top:32px; display:flex; gap:12px;">
-            <a href="/login" class="btn btn-ghost" style="flex:1; justify-content:center; border:1px solid var(--ink-200); color:var(--ink-900);">로그인</a>
+            <a href="/login" class="btn btn-ghost" style="flex:1; justify-content:center; border:1px solid rgba(255,255,255,.35); color:#fff;">로그인</a>
             <a href="/signup" class="btn btn-primary" style="flex:1; justify-content:center;">회원가입</a>
           </div>
         )}

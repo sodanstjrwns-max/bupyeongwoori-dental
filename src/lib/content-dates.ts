@@ -34,6 +34,7 @@ export const PAGE_DATES: Record<string, string> = {
   '/notices': '2026-05-26',
   '/glossary': CONTENT_DATES.glossary,
   '/faq': '2026-06-11',
+  '/videos': '2026-10-31',
   '/visit': '2026-09-06',
   '/areas': '2026-10-08',       // 지역 인덱스에 "부평 치과" 허브 안내 추가
 }

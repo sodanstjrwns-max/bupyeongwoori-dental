@@ -35,12 +35,12 @@ export const CLINIC = {
   nameEn: 'Bupyeong Woori Dental Clinic',
   slogan: '정직한 진료, 변하지 않는 퀄리티',
   mission:
-    '제대로 된 치료를 받고 싶을 때, 믿고 찾을 수 있는 치과. 정직하게 최선을 다하여 최고의 진료를, 늘 같은 퀄리티와 같은 무드로 제공합니다.',
+    '제대로 된 치료를 받고 싶을 때, 믿고 찾을 수 있는 치과. 정직하게 최선을 다한 진료를, 늘 같은 퀄리티와 같은 무드로 제공합니다.',
   representative: '김재인',
   phone: '032-529-2875',
   mobile: '010-9687-2875',
-  email: 'rombardo@naver.com',
-  address: '인천광역시 부평구 부평대로 16 에이플러스에셋빌딩',
+  email: 'rombardo2877@naver.com',
+  address: '인천광역시 부평구 부평대로 16 에이플러스에셋빌딩 5층·7층',
   addressShort: '인천 부평구 부평대로 16',
   directions: '인천 부평역 지하상가 26번 출구로 나오시면 바로 있습니다.',
   since: 2012,
@@ -69,7 +69,7 @@ export const CLINIC = {
   business: {
     name: '부평우리치과의원',
     representative: '김재인',
-    registrationNumber: '---',
+    registrationNumber: '311-90-49073',
   },
 } as const
 
@@ -82,9 +82,9 @@ export const CORE_TREATMENTS = [
     slug: 'implant',
     name: '임플란트',
     nameEn: 'Dental Implant',
-    tagline: '14년 임상과 박사의 손끝, 오래 쓰는 임플란트',
+    tagline: '14년 한 자리, 오래 쓰는 임플란트',
     description:
-      '고려대 구강악안면외과 의학박사 출신 대표원장의 정교한 수술과, 스트라우만·오스템·네오 자문의 자격의 축적된 노하우로 완성되는 임플란트.',
+      '통합치의학과 전문의 대표원장과 의료진이 CBCT 3D 진단으로 계획하고, 스트라우만·오스템·네오 자문의로 쌓은 경험으로 완성하는 임플란트입니다.',
     color: 'from-teal-500 to-cyan-600',
   },
   {
@@ -93,7 +93,7 @@ export const CORE_TREATMENTS = [
     nameEn: 'Esthetic Restoration',
     tagline: '티 안 나게, 자연스럽게, 오래가는 아름다움',
     description:
-      '칼짜이스 미세현미경 Extaro 300과 국내 최고 수준의 보철 시스템으로 원래 내 치아보다 더 아름답게.',
+      '칼짜이스 미세현미경 Extaro 300으로 경계를 확인하며, 내 치아처럼 자연스러운 보철을 만듭니다.',
     color: 'from-cyan-500 to-blue-600',
   },
   {
@@ -102,7 +102,7 @@ export const CORE_TREATMENTS = [
     nameEn: 'Orthodontics',
     tagline: 'Invisalign 우수인증의가 제안하는 맞춤 교정',
     description:
-      '투명교정부터 메탈·세라믹까지, 라이프스타일과 얼굴형에 맞춘 최적의 교정 플랜.',
+      '투명교정부터 메탈·세라믹까지, 생활 방식과 얼굴형에 맞춰 교정 계획을 세웁니다.',
     color: 'from-blue-500 to-indigo-600',
   },
 ] as const
@@ -138,7 +138,7 @@ export const SEO_DEFAULT = {
   title: '부평 치과 | 부평우리치과 · 부평역 26번 출구 임플란트·교정·심미보철',
   // 150자 이내: 모든 핵심 진료 8종 + 위치 + 신뢰지표
   description:
-    '부평역 26번 출구 1분. 임플란트·치아교정·심미보철·일반보철·예방치료·라미네이트·투명교정·사랑니발치까지. 의학박사 대표원장과 임플란트 자문의가 14년 한 자리에서 정직하게 진료합니다.',
+    '부평역 26번 출구 1분. 임플란트·치아교정·심미보철·일반보철·예방치료·라미네이트·투명교정·사랑니발치까지. 통합치의학과 전문의 대표원장과 의료진이 14년 한 자리에서 정직하게 진료합니다.',
   // 100자 이내: 8개 진료 + 지역 키워드
   keywords:
     '부평치과, 부평역치과, 부평 임플란트, 부평 교정, 부평 심미보철, 부평 라미네이트, 부평 투명교정, 사랑니발치, 부평우리치과, 인천치과',

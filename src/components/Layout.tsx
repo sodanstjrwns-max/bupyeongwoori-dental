@@ -25,7 +25,7 @@ export const Layout = ({ children, heroDark, hideFooter, hideFloatingCta, user, 
         <main id="main">{children}</main>
         {!hideFooter && <Footer canonical={head.canonical} />}
         {!hideFloatingCta && <FloatingCta />}
-        <script src="/static/app.js?v=20260429b" defer></script>
+        <script src="/static/app.js?v=20261031c" defer></script>
       </body>
     </html>
   )

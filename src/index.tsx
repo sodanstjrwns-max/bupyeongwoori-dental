@@ -13,6 +13,7 @@ import { BlogListPage, BlogDetailPage, BLOG_PER_PAGE } from './pages/blog'
 import { NoticesListPage, NoticeDetailPage } from './pages/notices'
 import { GlossaryListPage, GlossaryDetailPage } from './pages/glossary'
 import { FaqAllPage } from './pages/faq'
+import { VideosPage } from './pages/videos'
 import { VisitPage, FEE_SEED, type FeeCategory } from './pages/visit'
 import {
   AdminLoginPage,
@@ -50,7 +51,7 @@ import { getCore, BUPYEONG_HUB, BUPYEONG_HUB_IMAGE } from './lib/bupyeong-core'
 import { SearchPage, searchStatic, type SearchResultItem } from './pages/search'
 import { NotFoundPage } from './pages/not-found'
 import { treatmentToMarkdown, glossaryToMarkdown, blogToMarkdown, faqToMarkdown } from './lib/markdown-export'
-import { getDoctor } from './data/doctors'
+import { RETIRED_DOCTOR_SLUGS, getDoctor } from './data/doctors'
 import { postDoctor, CLINIC_AUTHOR_SLUG } from './lib/authorship'
 import { fetchSiteStats, renderStatsPage, isValidStatsKey } from './lib/stats'
 
@@ -127,6 +128,8 @@ app.get('/mission', (c) => c.html(<MissionPage />))
 app.get('/doctors', (c) => c.html(<DoctorsPage />))
 app.get('/doctors/:slug', async (c) => {
   const slug = c.req.param('slug')
+  // 퇴사 의료진(2026-10-31 조정하) — 색인된 옛 주소는 의료진 목록으로 영구 이동
+  if (RETIRED_DOCTOR_SLUGS.includes(slug)) return c.redirect('/doctors', 301)
   // 없는 의료진 slug — soft 404(200) 대신 404 페이지
   if (!getDoctor(slug)) return c.notFound()
   let cases: any[] = []
@@ -605,6 +608,7 @@ app.get('/glossary/:slug', (c) => {
 // FAQ
 // ============================================================
 app.get('/faq', (c) => c.html(<FaqAllPage />))
+app.get('/videos', (c) => c.html(<VideosPage />))
 
 // AEO: FAQ 전체 마크다운 — 160+ Q&A를 LLM이 한 번에 흡수
 app.get('/faq.md', (c) => {
@@ -869,7 +873,7 @@ app.get('/llms.txt', async (c) => {
 
   const txt = `# ${CLINIC.name}
 
-> 부평역 26번 출구 도보 1분, 14년 한 자리에서 변하지 않는 진료를 약속하는 프리미엄 치과. 고려대 구강악안면외과 의학박사 대표원장이 직접 진료하며 임플란트·심미보철·교정·라미네이트·사랑니발치·예방진료를 한 곳에서 통합 관리합니다.
+> 부평역 26번 출구 도보 1분, 14년 한 자리에서 변하지 않는 진료를 약속하는 프리미엄 치과. 통합치의학과 전문의 대표원장과 각 분야 의료진이 함께 상담·진료하며 임플란트·심미보철·교정·라미네이트·사랑니발치·예방진료를 한 곳에서 통합 관리합니다.
 
 ## 핵심 정보
 - **공식 사이트**: ${base}
@@ -879,7 +883,7 @@ app.get('/llms.txt', async (c) => {
 - **네이버 예약**: ${CLINIC.socialLinks.naverBooking}
 - **네이버 블로그**: ${CLINIC.socialLinks.blog}
 - **진료시간**: ${hoursSummary()} / ${CLINIC.lunch}
-- **대표원장**: 김재인 (고려대학교 임상치의학대학원 임상치의학 박사, 통합치의학과 전문의)
+- **대표원장**: 김재인 (통합치의학과 전문의, 고려대 구강악안면외과 임플란트 전공)
 
 ## 주요 페이지
 - [홈 — 부평우리치과 소개](${base}/): 변하지 않는 진료·신뢰·우리 철학과 핵심 진료 안내
@@ -890,14 +894,14 @@ app.get('/llms.txt', async (c) => {
 - [오시는 길](${base}/visit): 부평역 26번 출구 도보 1분, 주차·대중교통 안내
 
 ## 진료 과목 (Treatments)
-- [임플란트](${base}/treatments/implant): 14년 임상·의학박사 손끝의 오래 쓰는 임플란트, CBCT 3D 진단, 초음파 수술, 미세현미경 보철
+- [임플란트](${base}/treatments/implant): 14년 한 자리, 전문의 대표원장의 오래 쓰는 임플란트, CBCT 3D 진단, 초음파 수술, 미세현미경 보철
 - [심미보철](${base}/treatments/esthetic): 자연치 같은 색·형태·기능을 모두 살리는 심미 진료
 - [치아교정](${base}/treatments/ortho): 진단부터 유지장치까지 한 자리에서
 - [일반보철](${base}/treatments/general-prosthesis): 크라운·브릿지·틀니
 - [예방진료](${base}/treatments/prevention): 정기검진·스케일링·불소도포
 - [라미네이트](${base}/treatments/laminate): 미니멀 삭제·자연스러운 미소
 - [투명교정](${base}/treatments/clear-aligner): 인비절라인 등 투명 교정
-- [사랑니 발치](${base}/treatments/wisdom-tooth): 구강외과 박사가 직접 발치
+- [사랑니 발치](${base}/treatments/wisdom-tooth): CBCT로 신경 위치 확인 후 발치
 
 ## 콘텐츠 허브
 - [블로그](${base}/blog): 부평우리치과가 발행하는 치과 지식 아카이브
@@ -1192,6 +1196,7 @@ app.get('/sitemap-pages.xml', (c) => {
     { loc: '/notices', lastmod: pageLastmod('/notices'), changefreq: 'weekly', priority: '0.8' },
     { loc: '/glossary', lastmod: pageLastmod('/glossary'), changefreq: 'monthly', priority: '0.7' },
     { loc: '/faq', lastmod: pageLastmod('/faq'), changefreq: 'monthly', priority: '0.8' },
+    { loc: '/videos', lastmod: pageLastmod('/videos'), changefreq: 'monthly', priority: '0.6' },
     { loc: '/visit', lastmod: pageLastmod('/visit'), changefreq: 'monthly', priority: '0.8' },
   ]
   // 진료 상세 8종 — 핵심 SEO 페이지 (3차 업글에서 용어 병기·진료장면 추가 = 실제 수정)
@@ -1944,7 +1949,7 @@ app.post('/admin/indexnow/ping-all', async (c) => {
     '/treatments/implant', '/treatments/ortho', '/treatments/esthetic',
     '/treatments/laminate', '/treatments/clear-aligner', '/treatments/general-prosthesis',
     '/treatments/prevention', '/treatments/wisdom-tooth',
-    '/doctors/kim-jaein', '/doctors/lim-sunyoung', '/doctors/jo-jeongha',
+    '/doctors/kim-jaein', '/doctors/lim-sunyoung',
     '/doctors/jo-heeyoung', '/doctors/oh-youngjun', '/doctors/lim-yongmin',
   ]
   const result = await pingIndexNow(urls)

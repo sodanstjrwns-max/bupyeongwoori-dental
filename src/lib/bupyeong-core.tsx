@@ -36,7 +36,7 @@ const RAW: Omit<CoreCard, 'line' | 'og' | 'card' | 'cardWebp'>[] = [
     slug: 'implant',
     name: '부평 임플란트',
     criterion: 'CBCT 진단·내원 횟수·회복 일정',
-    description: `부평구 부평역 26번 출구 앞 ${CLINIC.name} 임플란트 안내. CBCT 3D로 잇몸뼈를 확인한 뒤 구강외과 의학박사 대표원장이 수술 계획을 세웁니다. 수술 뒤 내원 횟수와 상담 방법을 정리했습니다.`,
+    description: `부평구 부평역 26번 출구 앞 ${CLINIC.name} 임플란트 안내. CBCT 3D로 잇몸뼈를 확인한 뒤 통합치의학과 전문의 대표원장과 의료진이 수술 계획을 세웁니다. 수술 뒤 내원 횟수와 상담 방법을 정리했습니다.`,
     alt: '부평 임플란트 — 부평우리치과 진료실에서 모니터 영상을 보며 진료하는 장면',
   },
   {
@@ -71,7 +71,7 @@ const RAW: Omit<CoreCard, 'line' | 'og' | 'card' | 'cardWebp'>[] = [
     slug: 'wisdom-tooth',
     name: '부평 사랑니발치',
     criterion: '매복 사랑니 CBCT 확인과 사후 관리',
-    description: `부평구에서 사랑니 발치를 고민하신다면 — 구강악안면외과 의학박사 대표원장이 CBCT 3D로 신경 위치를 확인한 뒤 매복·수평 사랑니를 발치합니다. 발치 다음날 소독도 부평역 26번 출구 앞에서.`,
+    description: `부평구에서 사랑니 발치를 고민하신다면 — CBCT 3D로 신경 위치를 확인한 뒤 매복·수평 사랑니를 발치합니다. 발치 다음날 소독도 부평역 26번 출구 앞에서.`,
     alt: '부평 사랑니발치 — 부평우리치과 대표원장이 X-ray 영상을 보며 설명하는 장면',
   },
 ]

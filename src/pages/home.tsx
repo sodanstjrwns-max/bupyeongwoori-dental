@@ -64,8 +64,8 @@ export const HomePage = () => {
             </h1>
 
             <p class="hero-sub">
-              제대로 된 치료를 받고 싶을 때, 믿고 찾을 수 있는 부평 치과.
-              고려대 구강외과 의학박사 · 세계 3대 임플란트 자문의가 <strong style="color:#fff;">14년 한 자리</strong>에서
+              제대로 된 치료를 받고 싶을 때 믿고 찾을 수 있는 부평 치과입니다.
+              통합치의학과 전문의 대표원장과 의료진이 <strong style="color:#fff;">14년 한 자리</strong>에서
               정직하게 진료합니다.
             </p>
 
@@ -91,8 +91,8 @@ export const HomePage = () => {
                 <div class="label">한 자리 진료</div>
               </div>
               <div class="stat">
-                <div class="num"><span data-count="6">6</span><span style="font-size:.5em; font-weight:700; color:rgba(255,255,255,.5); margin-left:4px;">인</span></div>
-                <div class="label">전문의 협진</div>
+                <div class="num"><span data-count={String(DOCTORS.length)}>{DOCTORS.length}</span><span style="font-size:.5em; font-weight:700; color:rgba(255,255,255,.5); margin-left:4px;">인</span></div>
+                <div class="label">의료진 협진</div>
               </div>
               <div class="stat">
                 <div class="num"><span data-count="160">160</span></div>
@@ -105,7 +105,7 @@ export const HomePage = () => {
             </div>
             <div class="hero-signature">
               <strong>김재인 대표원장</strong>
-              고려대 구강외과 의학박사
+              통합치의학과 전문의
             </div>
           </div>
         </div>
@@ -119,17 +119,17 @@ export const HomePage = () => {
           <div class="marquee-track">
             {[
               { n: '14', t: 'Years · 한 자리에서', accent: false },
-              { n: 'Ph.D.', t: '고려대 구강외과 의학박사', accent: true },
+              { n: '전문의', t: '통합치의학과 대표원장', accent: true },
               { n: 'Straumann', t: '·Osstem·Neo 자문의', accent: false },
               { n: 'Invisalign', t: '우수 인증의', accent: true },
               { n: '26', t: 'Exit · 부평역 1번지', accent: false },
-              { n: '400', t: 'Pyeong · 프리미엄 공간', accent: true },
+              { n: '160', t: 'Handpieces · 1인 1핸드피스 감염관리', accent: true },
               { n: '14', t: 'Years · 한 자리에서', accent: false },
-              { n: 'Ph.D.', t: '고려대 구강외과 의학박사', accent: true },
+              { n: '전문의', t: '통합치의학과 대표원장', accent: true },
               { n: 'Straumann', t: '·Osstem·Neo 자문의', accent: false },
               { n: 'Invisalign', t: '우수 인증의', accent: true },
               { n: '26', t: 'Exit · 부평역 1번지', accent: false },
-              { n: '400', t: 'Pyeong · 프리미엄 공간', accent: true },
+              { n: '160', t: 'Handpieces · 1인 1핸드피스 감염관리', accent: true },
             ].map((m) => (
               <div class={`marquee-item ${m.accent ? 'accent' : ''}`}>
                 <span class="n">{m.n}</span>
@@ -158,12 +158,12 @@ export const HomePage = () => {
               </h2>
               <div style="display:grid; grid-template-columns:1fr 1fr; gap:40px; max-width:900px;" data-reveal data-reveal-delay="2">
                 <p style="font-size:var(--t-lead); color:var(--ink-600); line-height:1.7;">
-                  진료의 퀄리티는 의사의 컨디션이나 병원의 분위기에 좌우되어서는 안 됩니다.
-                  내일 오시든 5년 뒤 오시든, 늘 <strong style="color:var(--ink-900);">같은 퀄리티·같은 무드</strong>로 진료받으실 수 있어야 한다고 믿습니다.
+                  진료의 퀄리티는 의사의 컨디션이나 병원 분위기에 따라 달라져서는 안 됩니다.
+                  내일 오시든 5년 뒤 오시든 <strong style="color:var(--ink-900);">같은 퀄리티·같은 무드</strong>로 진료받으실 수 있게 하겠습니다.
                 </p>
                 <p style="font-size:var(--t-lead); color:var(--ink-600); line-height:1.7;">
-                  환자의 경제적·신체적 여건을 고려해 <strong style="color:var(--ink-900);">정직하게 최적의 답</strong>을 제안하는 것.
-                  그것이 14년 동안 한 자리에서 우리가 지켜온 변하지 않는 약속입니다.
+                  환자분의 경제적·신체적 여건을 고려해 <strong style="color:var(--ink-900);">정직하게 맞는 답</strong>을 제안합니다.
+                  14년 동안 한 자리에서 지켜온 변하지 않는 약속입니다.
                 </p>
               </div>
               <div style="margin-top:48px; display:flex; gap:12px; flex-wrap:wrap;" data-reveal data-reveal-delay="3">
@@ -172,6 +172,45 @@ export const HomePage = () => {
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
                 </a>
                 <a href="/doctors" class="btn btn-outline">의료진 소개</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* =============== 14년 임플란트 · 감염관리 강조 (2026-10-31 원장 요청) =============== */}
+      <section class="section section-soft" aria-labelledby="trust-title" style="padding-bottom:clamp(40px,5vw,72px);">
+        <div class="container">
+          <div class="section-eyebrow" data-reveal>Since {CLINIC.since} · Implant & Infection Control</div>
+          <h2 id="trust-title" data-reveal data-reveal-delay="1" style="font-size:var(--h-2); margin-top:20px; max-width:900px;">
+            14년 임플란트 진료,<br /><em>보이지 않는 곳까지 깨끗하게.</em>
+          </h2>
+          <div class="trust-pillars" data-reveal data-reveal-delay="2">
+            <div class="trust-pillar">
+              <img src="/media/clinic/treatment-scene.jpg" alt="부평우리치과 임플란트 진료 — 모니터로 CBCT 영상을 함께 보며 설명" loading="lazy" decoding="async" />
+              <div class="tp-body">
+                <span class="tp-kicker">Implant · {new Date().getFullYear() - CLINIC.since}년 한 자리</span>
+                <h3><span class="nw">{CLINIC.since}년부터</span> <span class="nw">같은 자리에서</span> <span class="nw">이어 온 임플란트</span></h3>
+                <p>부평역 26번 출구 앞 같은 자리에서 임플란트를 진료해 왔습니다. CBCT 3D로 뼈와 신경을 확인해 수술 계획을 세우고, 수술 뒤 관리까지 같은 병원에서 이어갑니다.</p>
+                <ul>
+                  <li>통합치의학과 전문의 대표원장</li>
+                  <li>스트라우만·오스템·네오 자문의</li>
+                  <li>CBCT 2대</li>
+                </ul>
+              </div>
+            </div>
+            <div class="trust-pillar">
+              <img src="/media/clinic/operatory-hall.jpg" alt="부평우리치과 진료실 — 부스마다 분리된 진료 공간" loading="lazy" decoding="async" />
+              <div class="tp-body">
+                <span class="tp-kicker">Infection Control · 감염관리</span>
+                <h3><span class="nw">환자분마다</span> <span class="nw">멸균된 핸드피스를 씁니다</span></h3>
+                <p>KaVo 핸드피스 160개를 갖춰 1인 1핸드피스 원칙을 지킵니다. 진료 부스를 나누고, 사용한 기구는 멸균 과정을 거쳐 다시 씁니다. <a href="/videos" style="color:#7fe0d6; border-bottom:1px solid rgba(127,224,214,.5);">감염관리 영상 보기</a></p>
+                <ul>
+                  <li>1인 1핸드피스</li>
+                  <li>핸드피스 160개</li>
+                  <li>분리된 진료 부스</li>
+                  <li>대표원장 대한치과감염학회 재무이사</li>
+                </ul>
               </div>
             </div>
           </div>
@@ -189,11 +228,11 @@ export const HomePage = () => {
             <div>
               <div class="section-eyebrow" data-reveal>우리가 가장 잘하는 진료</div>
               <h2 data-reveal data-reveal-delay="1" style="font-size:var(--h-2); margin-top:20px; max-width:900px;">
-                부평우리치과 핵심 진료 — <em>임플란트·치아교정·심미보철</em>
+                부평우리치과 핵심 진료<br /><em>임플란트·치아교정·심미보철</em>
               </h2>
               <p data-reveal data-reveal-delay="2" style="font-size:var(--t-lead); color:var(--ink-600); max-width:640px; margin-top:24px; line-height:1.6;">
-                부평우리치과의 정체성은 세 가지 진료에 있습니다.
-                깊이 있는 임상과 최첨단 장비, 세계적인 학회의 인정이 뒷받침하는 확실한 선택지.
+                부평우리치과의 중심은 세 가지 진료입니다.
+                14년의 임상 경험과 정밀 장비, 학회 활동으로 쌓은 경험을 바탕으로 진료합니다.
               </p>
             </div>
           </div>
@@ -220,23 +259,23 @@ export const HomePage = () => {
             <div class="extra-treatments-grid">
               <a href="/treatments/laminate" class="extra-treatment-link">
                 <h3>라미네이트</h3>
-                <p>최소 삭제 · 최대 자연스러움. 앞니 심미 라미네이트.</p>
+                <p>치아를 적게 다듬고 자연스럽게 마무리하는 앞니 라미네이트입니다.</p>
               </a>
               <a href="/treatments/clear-aligner" class="extra-treatment-link">
                 <h3>투명교정</h3>
-                <p>Invisalign 우수 인증의의 보이지 않는 교정.</p>
+                <p>Invisalign 우수 인증의가 진행하는 눈에 덜 띄는 교정입니다.</p>
               </a>
               <a href="/treatments/wisdom-tooth" class="extra-treatment-link">
                 <h3>사랑니발치</h3>
-                <p>구강외과 의학박사의 안전한 매복 사랑니 발치.</p>
+                <p>CBCT로 신경 위치를 확인한 뒤 매복 사랑니를 발치합니다.</p>
               </a>
               <a href="/treatments/general-prosthesis" class="extra-treatment-link">
                 <h3>일반보철</h3>
-                <p>오래 쓰는 크라운·브릿지·인레이.</p>
+                <p>오래 쓰도록 만드는 크라운·브릿지·인레이입니다.</p>
               </a>
               <a href="/treatments/prevention" class="extra-treatment-link">
                 <h3>예방치료</h3>
-                <p>스케일링·불소도포·정기 검진으로 평생 치아 관리.</p>
+                <p>스케일링·불소도포·정기 검진으로 치아를 꾸준히 관리합니다.</p>
               </a>
             </div>
           </div>
@@ -285,9 +324,9 @@ export const HomePage = () => {
 
           <div class="creds-grid" data-reveal data-reveal-delay="2">
             {[
-              { k: 'Ph.D.', t: '고려대 구강악안면외과 의학박사', s: '대학원 박사과정 수료' },
-              { k: 'Straumann', t: '세계 1위 임플란트 자문의', s: '스위스 스트라우만 공식 자문' },
-              { k: 'Osstem', t: '국내 1위 임플란트 자문의', s: '오스템임플란트 공식 자문' },
+              { k: 'Specialist', t: '통합치의학과 전문의', s: '보건복지부 인증 치과전문의' },
+              { k: 'Straumann', t: '스트라우만 임플란트 자문의', s: '스위스 스트라우만 공식 자문' },
+              { k: 'Osstem', t: '오스템 임플란트 임상자문위원', s: '오스템임플란트 공식 자문' },
               { k: 'Neo', t: '프리미엄 임플란트 자문의', s: '네오임플란트 공식 자문' },
               { k: 'Invisalign', t: '인비절라인 우수 인증의', s: 'Align Technology 공인' },
               { k: 'ZEISS', t: 'EXTARO 300 미세현미경', s: '심미보철·근관치료 정밀' },
@@ -312,12 +351,12 @@ export const HomePage = () => {
             </div>
             <div>
               <h2 data-reveal data-reveal-delay="1" style="max-width:900px;">
-                <span class="sr-only">부평우리치과 의료진 6인 소개 — </span>
+                <span class="sr-only">부평우리치과 의료진 소개 — </span>
                 전문 분야는 다르지만,<br />
                 <em>원칙은 하나</em>입니다.
               </h2>
               <p data-reveal data-reveal-delay="2" style="font-size:var(--t-lead); color:rgba(255,255,255,.7); max-width:640px; margin-top:24px; line-height:1.6;">
-                "환자에게 정직한 최선을 다한다." — 여섯 명 모두가 14년간 함께 지켜온 약속.
+                "환자에게 정직한 최선을 다한다." 모든 의료진이 함께 지키는 약속입니다. 대표원장뿐 아니라 각 분야 원장 누구에게나 편하게 상담받으실 수 있습니다.
               </p>
             </div>
           </div>

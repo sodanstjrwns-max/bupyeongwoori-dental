@@ -1461,6 +1461,7 @@ th{ font-weight:700; background:var(--ink-50); font-size:.85rem; letter-spacing:
   opacity:0;
 }
 .cursor-dot.active{ opacity:1; }
+.cursor-dot{ display:none !important; } /* 2026-10-31 원장 요청: 커서 효과 삭제 */
 .cursor-dot.hover{
   width:40px; height:40px;
   background:#fff;
@@ -7171,3 +7172,73 @@ th{ font-weight:700; background:var(--ink-50); font-size:.85rem; letter-spacing:
 .bpc-hero-figure img{display:block;width:100%;height:auto;aspect-ratio:1200/630;object-fit:cover}
 @media (max-width:1024px){.bpc-grid--compact{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media (max-width:768px){.bpc-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.bpc-grid--compact{grid-template-columns:repeat(2,minmax(0,1fr))}.bpc-body{padding:14px 14px 16px}.bpc-line{font-size:.85rem}}
+
+
+/* ============================================================
+   2026-10-31 김재인 원장 수정 요청 반영
+   ============================================================ */
+/* 줄바꿈: 단어 중간에서 끊기지 않게(한국어 어절 단위) + 마지막 줄 한 글자 방지 */
+body{ word-break:keep-all; overflow-wrap:break-word; }
+p, li, figcaption, dd, blockquote, .desc, .tagline, .lbl, .label, .faq-a{ text-wrap:pretty; }
+h1, h2, h3, h4{ word-break:keep-all; }
+
+/* 상단 진료 상태 */
+.nav-status{
+  display:inline-flex; align-items:center; gap:7px;
+  padding:6px 12px; border-radius:999px;
+  font-size:.8rem; font-weight:700; line-height:1; white-space:nowrap;
+  background:rgba(15,23,42,.06); color:var(--ink-700, #334155);
+  border:1px solid rgba(15,23,42,.08);
+}
+.nav-status[hidden]{ display:none; }
+.nav-status .nav-status-dot{ width:8px; height:8px; border-radius:50%; background:#94a3b8; flex:none; }
+.nav-status[data-state="open"] .nav-status-dot{ background:#10b981; box-shadow:0 0 0 0 rgba(16,185,129,.55); animation:navStatusPulse 2s infinite; }
+.nav-status[data-state="lunch"] .nav-status-dot, .nav-status[data-state="soon"] .nav-status-dot{ background:#f59e0b; }
+.nav.on-dark .nav-status{ background:rgba(255,255,255,.1); color:#fff; border-color:rgba(255,255,255,.18); }
+@keyframes navStatusPulse{ 0%{ box-shadow:0 0 0 0 rgba(16,185,129,.55);} 70%{ box-shadow:0 0 0 7px rgba(16,185,129,0);} 100%{ box-shadow:0 0 0 0 rgba(16,185,129,0);} }
+.nav-status{ margin-right:12px; flex:none; }
+@media (max-width: 1280px){ .nav-status{ font-size:.74rem; padding:5px 10px; margin-right:8px; } }
+@media (max-width: 1024px){
+  .nav-status{ margin-left:auto; margin-right:10px; flex:0 1 auto; min-width:0; }
+  .nav-status .nav-status-text{ overflow:hidden; text-overflow:ellipsis; }
+  .nav-burger{ flex:none; }
+  .nav-logo{ flex:none; }
+}
+@media (max-width: 480px){
+  .nav-inner{ gap:8px; }
+  .nav-logo-text{ font-size:1rem; }
+  .nav-status{ font-size:.72rem; padding:6px 10px; gap:6px; margin-right:2px; }
+  /* 좁은 화면: 진료중·점심시간은 시각까지, 나머지는 상태만 */
+  .nav-status:not([data-state="open"]):not([data-state="lunch"]) .nav-status-detail{ display:none; }
+}
+.mobile-menu-link{ display:block; padding:22px 4px; font-size:1.5rem; font-weight:800; letter-spacing:-0.03em; border-bottom:1px solid rgba(255,255,255,.08); }
+
+/* 미션 '14년이 머문 자리' — 큰 사진 옆 2장 세로 배치로 빈칸 없이 */
+@media (min-width: 720px) and (max-width: 1023px){
+  .space-grid.space-grid-3 .space-item:nth-child(2), .space-grid.space-grid-3 .space-item:nth-child(3){ grid-column: span 3; }
+}
+
+/* 홈 '14년 임플란트·감염관리' 강조 블록 */
+.trust-pillars{ display:grid; grid-template-columns:repeat(2, 1fr); gap:24px; margin-top:40px; }
+.trust-pillar{ position:relative; overflow:hidden; border-radius:var(--radius-lg, 20px); min-height:360px; color:#fff; background:#0b1514; }
+.trust-pillar img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:.5; }
+.trust-pillar .tp-body{ position:relative; padding:clamp(28px, 4vw, 44px); display:flex; flex-direction:column; justify-content:flex-end; min-height:360px; background:linear-gradient(180deg, rgba(5,12,12,.2) 0%, rgba(5,12,12,.9) 58%); }
+.trust-pillar .tp-kicker{ font-size:.8rem; letter-spacing:.12em; text-transform:uppercase; color:#7fe0d6; font-weight:700; }
+.trust-pillar .nw{ white-space:nowrap; }
+.trust-pillar h3{ color:#fff; margin-top:10px; font-size:clamp(1.5rem, 2.6vw, 2.1rem); }
+.trust-pillar p{ margin-top:12px; color:rgba(255,255,255,.82); line-height:1.7; }
+.trust-pillar ul{ margin:14px 0 0; padding:0; list-style:none; display:flex; flex-wrap:wrap; gap:8px; }
+.trust-pillar li{ font-size:.82rem; padding:6px 12px; border-radius:999px; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.18); }
+@media (max-width: 860px){ .trust-pillars{ grid-template-columns:1fr; } }
+
+/* 유튜브 영상 */
+.yt-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:24px; }
+.yt-card{ display:block; border-radius:16px; overflow:hidden; background:#fff; border:1px solid var(--ink-100, #e5e7eb); }
+.yt-card .yt-thumb{ position:relative; aspect-ratio:16/9; background:#000; }
+.yt-card .yt-thumb img{ width:100%; height:100%; object-fit:cover; }
+.yt-card .yt-thumb::after{ content:""; position:absolute; left:50%; top:50%; width:58px; height:40px; transform:translate(-50%,-50%); border-radius:10px; background:rgba(255,0,0,.9) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='white' d='M8 5v14l11-7z'/%3E%3C/svg%3E") center/22px no-repeat; }
+.yt-card .yt-title{ padding:14px 16px 18px; font-weight:700; line-height:1.45; color:var(--ink-900, #0f172a); }
+.yt-embed{ position:relative; aspect-ratio:16/9; border-radius:16px; overflow:hidden; background:#000; }
+.yt-embed iframe{ position:absolute; inset:0; width:100%; height:100%; border:0; }
+@media (max-width: 960px){ .yt-grid{ grid-template-columns:repeat(2, 1fr); } }
+@media (max-width: 600px){ .yt-grid{ grid-template-columns:1fr; } }

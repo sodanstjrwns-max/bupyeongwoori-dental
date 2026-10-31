@@ -11,8 +11,8 @@ export const DoctorsPage = () => {
   return (
     <Layout
       heroDark
-      title="의료진 소개 | 6인의 전문의"
-      description="부평우리치과 의료진 — 고려대 구강외과 의학박사 김재인 대표원장을 비롯한 6인의 전문의가 함께합니다."
+      title="의료진 소개 | 대표원장과 각 분야 원장"
+      description="부평우리치과 의료진 — 통합치의학과 전문의 김재인 대표원장과 각 분야 원장이 함께 상담·진료합니다."
       canonical={`https://${CLINIC.domain}/doctors`}
       ogImage={OG_IMAGES.doctors}
       jsonLd={breadcrumbSchema([
@@ -28,12 +28,12 @@ export const DoctorsPage = () => {
             <span>OUR DOCTORS · 의료진 소개</span>
           </div>
           <h1 class="hero-title" data-reveal data-reveal-delay="1">
-            <span class="hero-title-row">여섯 명의 <em class="ph-mint-1">전문의</em>,</span>
+            <span class="hero-title-row">각 분야의 <em class="ph-mint-1">의료진</em>,</span>
             <span class="hero-title-row">변하지 않는 <em class="ph-mint-2">한 가지</em></span>
             <span class="hero-title-row">변하지 않는 <em class="ph-mint-3">우리</em>.</span>
           </h1>
           <p class="hero-sub" data-reveal data-reveal-delay="2">
-            전문 분야는 달라도, "환자에게 정직한 최선"이라는 원칙은 단 하나. 6인의 전문의가 같은 무드로, 같은 깊이로 함께합니다.
+            전문 분야는 달라도 "환자에게 정직한 최선"이라는 원칙은 같습니다. 대표원장뿐 아니라 각 분야 원장 누구에게나 편하게 상담받으실 수 있습니다.
           </p>
         </div>
       </section>
@@ -41,10 +41,10 @@ export const DoctorsPage = () => {
       {/* Atmosphere strip — 진료실 분위기 */}
       <section class="section section-soft" style="padding-top:0; padding-bottom:0;">
         <div class="doctors-atmosphere" data-reveal>
-          <img src="/media/clinic/operatory-hall.jpg" alt="부평우리치과 진료실 전경 - 6인 전문의가 함께 진료하는 공간" loading="lazy" decoding="async" />
+          <img src="/media/clinic/operatory-hall.jpg" alt="부평우리치과 진료실 전경 - 의료진이 함께 진료하는 공간" loading="lazy" decoding="async" />
           <div class="doctors-atmosphere-cap">
             <span class="section-eyebrow" style="padding-left:0; color:rgba(255,255,255,0.85);">SAME PLACE · SAME PRINCIPLE</span>
-            <p>한 자리, 한 마음 — 6인의 전문의가 함께 진료합니다.</p>
+            <p>한 자리, 한 마음으로 의료진이 함께 진료합니다.</p>
           </div>
         </div>
       </section>
@@ -251,7 +251,7 @@ export const DoctorDetailPage = ({ slug, cases = [], isLoggedIn = false }: { slu
               <div class="cinema-overlay" aria-hidden="true"></div>
               <div class="cinema-vignette" aria-hidden="true"></div>
               <div class="cinema-caption">
-                <div class="cinema-caption-eyebrow">INTERVIEW · KIM JAEIN, DDS, Ph.D.</div>
+                <div class="cinema-caption-eyebrow">INTERVIEW · KIM JAEIN, DDS</div>
                 <div class="cinema-caption-title">변하지 않는 진료, 변하지 않는 우리.</div>
               </div>
               <button type="button" class="cinema-yt-play" data-cinema-yt-play aria-label="대표원장 인터뷰 영상 재생">

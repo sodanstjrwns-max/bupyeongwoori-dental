@@ -31,9 +31,9 @@ export const MissionPage = () => {
           </h1>
 
           <p class="hero-sub" data-reveal data-reveal-delay="2" style="max-width:720px;">
-            부평우리치과의 존재 이유는 단 하나입니다. <br/>
-            <strong style="color:#fff;">검색했을 때 충분한 정보를 알 수 있는 치과</strong>,
-            그래서 알음알음이 아닌 <strong style="color:#fff;">정확한 판단</strong>으로 찾아오실 수 있는 치과가 되는 것.
+            부평우리치과가 바라는 것은 하나입니다. <br/>
+            <strong style="color:#fff;">검색했을 때 충분한 정보를 얻을 수 있는 치과</strong>가 되어,
+            알음알음이 아닌 <strong style="color:#fff;">정확한 판단</strong>으로 찾아오실 수 있게 하는 것입니다.
           </p>
         </div>
       </section>
@@ -49,15 +49,14 @@ export const MissionPage = () => {
           <div data-reveal data-reveal-delay="1" style="font-size:1.15rem; line-height:2; color:var(--ink-700);">
             <p style="margin-bottom:28px;">
               인천 인근 부천에서 고등학교를 나온 저에게 <strong>부평은 학창시절 가장 번화했던 거리</strong>였습니다.
-              중심지에서, 교통의 요지에서, 제대로 큰 치과를 해보고 싶다는 마음. 그것이 14년 전의 시작이었습니다.
+              중심지이자 교통의 요지에서 제대로 된 큰 치과를 해 보고 싶었습니다. 그 마음이 14년 전의 시작이었습니다.
             </p>
             <p style="margin-bottom:28px;">
-              부평역 지하상가 26번 출구 바로 앞.
-              인천 도심의 거점에서 많은 분들이 찾아올 수 있는 자리에서,
-              저는 <strong>"새로운 도전"</strong>의 마음으로 부평우리치과를 열었습니다.
+              부평역 지하상가 26번 출구 바로 앞, 인천 도심에서 많은 분이 찾아오실 수 있는 자리입니다.
+              저는 이곳에서 <strong>"새로운 도전"</strong>의 마음으로 부평우리치과를 열었습니다.
             </p>
             <p>
-              14년. 같은 자리에서. 같은 마음으로.
+              그리고 14년, 같은 자리에서 같은 마음으로 진료하고 있습니다.
             </p>
           </div>
         </div>
@@ -70,22 +69,29 @@ export const MissionPage = () => {
             <div class="section-eyebrow" style="padding-left:0;">CHAPTER 01.5 · OUR SPACE</div>
             <h2 class="section-title">14년이 머문 <em class="ph-mint-3">자리.</em></h2>
             <p class="section-lead" style="max-width:680px;">
-              부평역 26번 출구 앞 400평 공간. 진료실·상담실·라운지까지 모든 동선을 직접 설계했습니다.
+              부평역 26번 출구 앞 400평 공간입니다.<br />진료실·상담실·라운지까지 모든 동선을 직접 설계했습니다.
             </p>
           </div>
-          <div class="space-grid" data-reveal data-reveal-delay="1">
+          <div class="space-grid space-grid-3" data-reveal data-reveal-delay="1">
             <figure class="space-item space-item-lg">
               <img src="/media/clinic/operatory-hall.jpg" alt="부평우리치과 진료실 전경 - 다수의 유닛체어와 의료진" loading="lazy" decoding="async" />
               <figcaption>
                 <strong>Treatment Hall · 진료실 전경</strong>
-                <span>분리된 부스마다 1인 1핸드피스 감염관리.</span>
+                <span>분리된 부스마다 1인 1핸드피스로 감염을 관리합니다.</span>
               </figcaption>
             </figure>
             <figure class="space-item">
               <img src="/media/clinic/treatment-scene.jpg" alt="부평우리치과 임플란트 진료 현장 - 모니터로 함께 보는 진단" loading="lazy" decoding="async" />
               <figcaption>
                 <strong>In Practice · 함께 보는 진단</strong>
-                <span>모니터로 같이 짚어가는 설명.</span>
+                <span>모니터를 함께 보며 설명합니다.</span>
+              </figcaption>
+            </figure>
+            <figure class="space-item">
+              <img src="/media/clinic/counseling-corridor.jpg" alt="부평우리치과 독립 상담실 복도 - 1·2·3 상담실" loading="lazy" decoding="async" />
+              <figcaption>
+                <strong>Counseling · 독립 상담실</strong>
+                <span>3개의 상담실에서 따로 상담합니다.</span>
               </figcaption>
             </figure>
           </div>
@@ -110,12 +116,12 @@ export const MissionPage = () => {
                 믿고 문의하고, 믿고 찾을 수 있는 병원
               </h3>
               <p style="margin-top:16px; font-size:1.05rem; line-height:1.9; color:rgba(255,255,255,0.75);">
-                근처 물량공세 치과에서 문제가 생긴 환자분들이 <strong style="color:#fff;">알음알음</strong> 저희를 찾아오실 때,
-                "여기를 몰라서 그동안 고생했다"는 말씀을 들을 때마다 깊이 생각했습니다.
+                치료 후 불편을 겪던 환자분들이 <strong style="color:#fff;">알음알음</strong> 저희를 찾아오셔서
+                "여기를 몰라서 그동안 고생했다"고 말씀하실 때마다 깊이 생각했습니다.
                 <br/><br/>
-                <strong style="color:var(--brand-200);">더 이상 알음알음이 아니어야 한다.</strong>
-                검색했을 때 충분한 정보를 드릴 수 있는 치과가 되어야 한다.
-                그래서 더 많은 지역 주민분들이 양질의 진료를 향유하실 수 있어야 한다.
+                <strong style="color:var(--brand-200);">이제는 알음알음이 아니어야 합니다.</strong>
+                검색했을 때 충분한 정보를 드릴 수 있는 치과가 되어,
+                더 많은 지역 주민분들이 좋은 진료를 받으실 수 있게 하겠습니다.
               </p>
             </div>
 
@@ -125,10 +131,10 @@ export const MissionPage = () => {
                 변하지 않는 퀄리티의 병원
               </h3>
               <p style="margin-top:16px; font-size:1.05rem; line-height:1.9; color:rgba(255,255,255,0.75);">
-                같은 환자가 내일 오시든 5년 뒤 오시든,
-                <strong style="color:#fff;">늘 같은 퀄리티와 같은 무드</strong>로 진료를 받으실 수 있어야 합니다.
+                같은 환자분이 내일 오시든 5년 뒤 오시든
+                <strong style="color:#fff;">늘 같은 퀄리티와 같은 무드</strong>로 진료받으실 수 있어야 합니다.
                 <br/><br/>
-                이것이 14년간 저희가 지켜온, 그리고 앞으로도 지켜갈 약속입니다.
+                14년간 지켜 왔고, 앞으로도 지켜 갈 약속입니다.
               </p>
             </div>
           </div>
@@ -196,17 +202,17 @@ export const MissionPage = () => {
               {
                 title: '정직',
                 en: 'Honesty',
-                desc: '필요하지 않은 진료는 권하지 않습니다. 환자의 경제적·신체적 여건을 고려하여 최적의 답을 제안합니다.',
+                desc: '필요하지 않은 진료는 권하지 않습니다. 환자분의 경제적·신체적 여건을 고려해 맞는 답을 제안합니다.',
               },
               {
                 title: '항상성',
                 en: 'Consistency',
-                desc: '오늘 오시든, 5년 뒤 오시든. 같은 환자에게 같은 퀄리티·같은 무드의 진료를.',
+                desc: '오늘 오시든 5년 뒤 오시든, 같은 환자분께 같은 퀄리티와 같은 무드의 진료를 드립니다.',
               },
               {
                 title: '최선',
                 en: 'Dedication',
-                desc: '받을 수 있는 최고의 진료. 타협 없이.',
+                desc: '할 수 있는 최선을 다해, 타협하지 않고 진료합니다.',
               },
             ].map((v, i) => (
               <div data-reveal data-reveal-delay={String(i + 1)}
@@ -258,8 +264,8 @@ export const MissionPage = () => {
               변하지 않고, 항상성 있게.”
             </div>
             <div style="margin-top:32px;">
-              <div style="font-family:var(--font-display); font-size:1.6rem; color:var(--ink-900);">Jaein Kim, DDS, Ph.D.</div>
-              <div style="margin-top:6px; font-size:0.9rem; color:var(--ink-500); letter-spacing:0.05em;">대표원장 · 고려대 구강외과 의학박사</div>
+              <div style="font-family:var(--font-display); font-size:1.6rem; color:var(--ink-900);">Jaein Kim, DDS</div>
+              <div style="margin-top:6px; font-size:0.9rem; color:var(--ink-500); letter-spacing:0.05em;">대표원장 · 통합치의학과 전문의</div>
             </div>
           </div>
 

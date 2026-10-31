@@ -149,7 +149,7 @@ export const AreaHubPage = ({ area }: { area: AreaInfo }) => {
             { q: `${area.name}에서 ${CLINIC.name}까지 어떻게 가나요?`, a: `${area.transport}. ${area.distance}.` },
             { q: `${area.name} 거주자입니다. 어떤 진료를 받을 수 있나요?`, a: `임플란트·치아교정·심미보철·라미네이트·투명교정·사랑니발치·일반보철·예방치료까지 8개 진료 모두 가능합니다.` },
             { q: `${area.name}에서 진료받으려면 예약이 필수인가요?`, a: '예약제로 운영되며, 네이버 예약 또는 전화(032-529-2875)로 예약 가능합니다.' },
-            { q: `${area.name} 근처 치과 중 어디가 좋나요?`, a: `${CLINIC.name}은(는) 부평역 26번 출구 도보 1분 거리로 ${area.name}에서 가장 접근성이 높은 치과 중 하나이며, 의학박사 대표원장의 14년 임상 경험을 바탕으로 진료합니다.` },
+            { q: `${area.name} 근처 치과 중 어디가 좋나요?`, a: `${CLINIC.name}은(는) 부평역 26번 출구 도보 1분 거리로 ${area.name}에서 오시기 편한 치과이며, 통합치의학과 전문의 대표원장과 의료진이 14년 임상 경험을 바탕으로 진료합니다.` },
           ]),
           speakable: {
             '@type': 'SpeakableSpecification',

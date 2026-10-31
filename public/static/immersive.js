@@ -243,6 +243,13 @@
     });
   }
 
+  // ── 14년 임플란트·감염관리 두 장: 의료진 카드와 같은 결로 차례로 올라오고, 사진은 살짝 시차
+  var pillars = $$('.trust-pillars > .trust-pillar', main);
+  if (pillars.length) {
+    enter(pillars, { y: 50, opacity: 0, duration: 1, ease: 'power3.out', stagger: 0.12 }, pillars[0], 'top 88%');
+    pillars.forEach(function (p) { par($('img', p), -4, 4, 1.1, 1.1, p); });
+  }
+
   // ── 공간: 큰 사진은 액자에서 꽉 차게 펼쳐지고, 작은 사진은 엇갈려 흐름
   var space = $('.space-grid', main);
   if (space) {

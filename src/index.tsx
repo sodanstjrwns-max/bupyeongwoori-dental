@@ -71,8 +71,6 @@ app.use('*', async (c, next) => {
     return c.redirect(`https://${CLINIC.domain}${path}${url.search}`, 301)
   }
   await next()
-  // 몰입 연출 미리보기(immersive-pilot 브랜치 전용): 배포별·브랜치 미리보기 호스트는 noindex
-  if (url.hostname.endsWith('.' + PAGES_DEV_PROD_HOST)) { try { c.res.headers.set('X-Robots-Tag', 'noindex, nofollow') } catch {} }
 })
 
 // ============================================================

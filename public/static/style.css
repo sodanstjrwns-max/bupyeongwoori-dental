@@ -7242,3 +7242,30 @@ h1, h2, h3, h4{ word-break:keep-all; }
 .yt-embed iframe{ position:absolute; inset:0; width:100%; height:100%; border:0; }
 @media (max-width: 960px){ .yt-grid{ grid-template-columns:repeat(2, 1fr); } }
 @media (max-width: 600px){ .yt-grid{ grid-template-columns:1fr; } }
+
+
+/* ============================================================
+   2026-10-31 표준 모드(<!DOCTYPE html>) 전환 보정
+   이전엔 DOCTYPE 이 없어 호환(quirks) 모드로 렌더됐다. 호환 모드의 차이 중
+   이 사이트 모양에 영향을 준 것만 그대로 옮겨 원래 모습을 유지한다.
+   ① 글자 없이 인라인 블록만 있는 줄은 줄 높이(strut)를 생략했다
+   ② 표는 줄 높이·굵기·정렬을 물려받지 않았다(line-height:normal)
+   ③ form 아래 1em 여백
+   ============================================================ */
+/* ① 혼자 한 줄을 차지하던 인라인 블록 → 같은 크기의 블록(왼쪽 정렬 유지) */
+.section-eyebrow:not([style*="display"]), .inline-cta-eyebrow{ display:flex; width:fit-content; }
+.container[style*="text-align:center"] > .section-eyebrow{ margin-inline:auto; }
+.faq-section > .section-eyebrow{ display:inline-flex; width:auto; } /* 위 여백(48px)이 원래처럼 그대로 보이게 */
+/* 의료진 상세 사진(900px 이하): 호환 모드에서 계산되던 폭(가용 폭·420px 중 작은 값의 5/6) 그대로 */
+@media (max-width:900px){ .doctor-hero-photo{ width:calc(min(100%, 420px) * 5 / 6); margin:calc(min(100%, 420px) * 5 / 48) auto; } }
+.doctor-card .role{ display:block; width:fit-content; }
+.cta-block h2 > .cta-line{ display:block; width:fit-content; }
+.cta-block h2 > br{ display:none; }
+.cinema-frame.is-needs-sound .cinema-caption::after{ display:block; width:fit-content; }
+.visit-map iframe{ display:block; }
+/* 아이콘만 든 칸: 아이콘 크기 그대로 */
+.mobile-menu a[aria-label], .faq-q-icon{ line-height:0; }
+/* ② 표 */
+:where(table){ line-height:normal; white-space:normal; font-weight:normal; font-style:normal; font-variant:normal; text-align:start; }
+/* ③ form */
+:where(form){ margin-block-end:1em; }

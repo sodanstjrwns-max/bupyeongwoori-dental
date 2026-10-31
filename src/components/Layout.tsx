@@ -1,4 +1,5 @@
 import type { PropsWithChildren } from 'hono/jsx'
+import { raw } from 'hono/html'
 import { Head, type HeadProps } from './Head'
 import { Nav, type NavUser } from './Nav'
 import { Footer } from './Footer'
@@ -15,7 +16,10 @@ export type LayoutProps = PropsWithChildren<
 >
 
 export const Layout = ({ children, heroDark, hideFooter, hideFloatingCta, user, immersive, ...head }: LayoutProps) => {
+  // 표준 모드(<!DOCTYPE html>) — 2026-10-31부터. 이전엔 호환(quirks) 모드로 렌더됐다
   return (
+    <>
+    {raw('<!DOCTYPE html>')}
     <html lang="ko">
       <head>
         <Head {...head} />
@@ -32,9 +36,10 @@ export const Layout = ({ children, heroDark, hideFooter, hideFloatingCta, user, 
           <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
           <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
           <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js" defer></script>
-          <script src="/static/immersive.js?v=700b16e39b" defer></script>
+          <script src="/static/immersive.js?v=108dd4d037" defer></script>
         </>}
       </body>
     </html>
+    </>
   )
 }

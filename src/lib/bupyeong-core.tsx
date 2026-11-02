@@ -12,6 +12,7 @@ import { TREATMENT_LIST } from '../data/treatments'
 const BASE = `https://${CLINIC.domain}`
 export const BUPYEONG_HUB = 'bupyeong-gu'
 const IMG = '/static/img/cards'
+const V = '?v=20261102'
 
 export type CoreCard = {
   /** 진료 slug (/areas/bupyeong-gu/<slug>) */
@@ -37,7 +38,7 @@ const RAW: Omit<CoreCard, 'line' | 'og' | 'card' | 'cardWebp'>[] = [
     name: '부평 임플란트',
     criterion: 'CBCT 진단·내원 횟수·회복 일정',
     description: `부평구 부평역 26번 출구 앞 ${CLINIC.name} 임플란트 안내. CBCT 3D로 잇몸뼈를 확인한 뒤 통합치의학과 전문의 대표원장과 의료진이 수술 계획을 세웁니다. 수술 뒤 내원 횟수와 상담 방법을 정리했습니다.`,
-    alt: '부평 임플란트 — 부평우리치과 진료실에서 모니터 영상을 보며 진료하는 장면',
+    alt: '부평 임플란트 — 부평우리치과 김재인 대표원장이 진료하는 장면',
   },
   {
     slug: 'ortho',
@@ -82,9 +83,10 @@ export const BUPYEONG_CORE: CoreCard[] = RAW.map((c) => {
   return {
     ...c,
     line: t?.tagline ?? '',
-    og: `${IMG}/${key}-1200x630.jpg`,
-    card: `${IMG}/${key}-600.jpg`,
-    cardWebp: `${IMG}/${key}-600.webp`,
+    // /static 은 immutable 캐시 — 사진을 바꾸면 V 를 올린다 (2026-11-02 임플란트 사진 교체)
+    og: `${IMG}/${key}-1200x630.jpg${V}`,
+    card: `${IMG}/${key}-600.jpg${V}`,
+    cardWebp: `${IMG}/${key}-600.webp${V}`,
   }
 })
 

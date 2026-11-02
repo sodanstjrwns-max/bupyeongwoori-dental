@@ -81,7 +81,7 @@ export const MissionPage = () => {
               </figcaption>
             </figure>
             <figure class="space-item">
-              <img src="/media/clinic/treatment-scene.jpg" alt="부평우리치과 임플란트 진료 현장 - 모니터로 함께 보는 진단" loading="lazy" decoding="async" />
+              <img src="/media/doctors/kim-jaein-consult.jpg" alt="부평우리치과 김재인 대표원장이 모니터로 진단 영상을 보며 설명하는 상담" loading="lazy" decoding="async" />
               <figcaption>
                 <strong>In Practice · 함께 보는 진단</strong>
                 <span>모니터를 함께 보며 설명합니다.</span>

@@ -188,7 +188,7 @@ export const HomePage = () => {
           </h2>
           <div class="trust-pillars" data-reveal data-reveal-delay="2">
             <div class="trust-pillar">
-              <img src="/media/clinic/treatment-scene.jpg" alt="부평우리치과 임플란트 진료 — 모니터로 CBCT 영상을 함께 보며 설명" loading="lazy" decoding="async" />
+              <img src="/media/doctors/kim-jaein-treatment.jpg" alt="부평우리치과 김재인 대표원장 임플란트 진료 장면" loading="lazy" decoding="async" />
               <div class="tp-body">
                 <span class="tp-kicker">Implant · {new Date().getFullYear() - CLINIC.since}년 한 자리</span>
                 <h3><span class="nw">{CLINIC.since}년부터</span> <span class="nw">같은 자리에서</span> <span class="nw">이어 온 임플란트</span></h3>

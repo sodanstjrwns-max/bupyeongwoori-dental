@@ -16,7 +16,7 @@ export const CONTENT_DATES = {
   /** "부평 치과" 핵심 하위 6개(/areas/bupyeong-gu/{implant,ortho,esthetic,laminate,clear-aligner,wisdom-tooth}) — 2026-10-14 제목·대표 사진 */
   bupyeongCore: '2026-10-14',
   /** 의료진 프로필 — src/data/doctors.ts 최종 수정 커밋 */
-  doctors: '2026-04-30',
+  doctors: '2026-11-02',
 } as const
 
 /**
@@ -26,7 +26,7 @@ export const CONTENT_DATES = {
 export const PAGE_DATES: Record<string, string> = {
   '/': '2026-10-14',            // 홈 "부평 치과 진료 안내" 사진 카드 6개 (2026-10-08: title·첫 문단 "부평 치과" + 허브 앵커)
   '/mission': '2026-04-30',
-  '/doctors': '2026-06-11',
+  '/doctors': '2026-11-02',
   '/doctors/kim-jaein': '2026-06-11',
   '/treatments': CONTENT_DATES.treatments,
   '/before-after': '2026-10-03',

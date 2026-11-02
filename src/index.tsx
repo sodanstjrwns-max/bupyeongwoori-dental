@@ -1950,7 +1950,7 @@ app.post('/admin/indexnow/ping-all', async (c) => {
     '/treatments/laminate', '/treatments/clear-aligner', '/treatments/general-prosthesis',
     '/treatments/prevention', '/treatments/wisdom-tooth',
     '/doctors/kim-jaein', '/doctors/lim-sunyoung',
-    '/doctors/jo-heeyoung', '/doctors/oh-youngjun', '/doctors/lim-yongmin',
+    '/doctors/jo-heeyoung', '/doctors/oh-youngjun', '/doctors/lim-yongmin', '/doctors/nam-deokwoo',
   ]
   const result = await pingIndexNow(urls)
   return c.json({ ok: result.ok, status: result.status, count: urls.length, error: result.error })

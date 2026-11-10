@@ -172,6 +172,20 @@ export const articleSchema = (opts: {
   mainEntityOfPage: { '@type': 'WebPage', '@id': opts.url },
 })
 
+/**
+ * 학회 활동 줄에서 소속 학회만 뽑는다 — "대한치과보철학회 정회원" → "대한치과보철학회".
+ * 학회·협회·연구회 이름 뒤에 회원·임원 직함이 붙은 줄만 인정한다(코스 수료·전 근무지 등은 제외).
+ */
+const SOCIETY_MEMBER = /^(.+?(?:학회|협회|연구회)\)?(?:\s*한국지부)?)\s+(?:복지이사|재무이사|이사|우수회원|정회원)$/
+export const societiesFromCareers = (careers: readonly string[] = []): string[] => {
+  const out: string[] = []
+  for (const c of careers) {
+    const m = c.trim().match(SOCIETY_MEMBER)
+    if (m && !out.includes(m[1])) out.push(m[1])
+  }
+  return out
+}
+
 export const doctorSchema = (d: {
   name: string
   title: string
@@ -179,20 +193,63 @@ export const doctorSchema = (d: {
   education?: string[]
   specialties?: string[]
   photo?: string | null
-}) => ({
+  /** 화면 "학회 활동" 목록 — 학회 회원·임원 줄만 memberOf 로 (2026-11-10) */
+  careers?: string[]
+  /** 화면 "자문의 · 인증의" 목록 — 전문의·인정의 자격만 hasCredential 로 (2026-11-10) */
+  certifications?: string[]
+}) => {
+  const societies = societiesFromCareers(d.careers)
+  const credentials = (d.certifications ?? []).filter((c) => /전문의|인정의/.test(c))
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Physician',
+    '@id': `https://${CLINIC.domain}/doctors/${d.slug}#person`,
+    name: d.name,
+    jobTitle: d.title,
+    url: `https://${CLINIC.domain}/doctors/${d.slug}`,
+    ...(d.photo ? { image: d.photo.startsWith('http') ? d.photo : `https://${CLINIC.domain}${d.photo}` } : {}),
+    medicalSpecialty: 'Dentistry',
+    ...(d.specialties && d.specialties.length > 0 ? { knowsAbout: d.specialties } : {}),
+    worksFor: { '@type': 'Dentist', '@id': `https://${CLINIC.domain}/#clinic`, name: CLINIC.name },
+    alumniOf: (d.education ?? []).map((e) => ({
+      '@type': 'EducationalOrganization',
+      name: e,
+    })),
+    ...(societies.length > 0 ? { memberOf: societies.map((name) => ({ '@type': 'Organization', name })) } : {}),
+    ...(credentials.length > 0
+      ? {
+          hasCredential: credentials.map((name) => ({
+            '@type': 'EducationalOccupationalCredential',
+            name,
+            credentialCategory: /전문의/.test(name) ? '전문의' : '인정의',
+          })),
+        }
+      : {}),
+  }
+}
+
+/**
+ * 의료진 목록(/doctors) — 화면 카드에 있는 정보(이름·직함·사진·프로필 주소)만으로 만든 ItemList.
+ * 각 항목은 개별 프로필과 같은 @id(/doctors/:slug#person)를 쓴다. (2026-11-10)
+ */
+export const doctorListSchema = (doctors: { name: string; title: string; slug: string; photo?: string | null }[]) => ({
   '@context': 'https://schema.org',
-  '@type': 'Physician',
-  '@id': `https://${CLINIC.domain}/doctors/${d.slug}#person`,
-  name: d.name,
-  jobTitle: d.title,
-  url: `https://${CLINIC.domain}/doctors/${d.slug}`,
-  ...(d.photo ? { image: d.photo.startsWith('http') ? d.photo : `https://${CLINIC.domain}${d.photo}` } : {}),
-  medicalSpecialty: 'Dentistry',
-  ...(d.specialties && d.specialties.length > 0 ? { knowsAbout: d.specialties } : {}),
-  worksFor: { '@type': 'Dentist', '@id': `https://${CLINIC.domain}/#clinic`, name: CLINIC.name },
-  alumniOf: (d.education ?? []).map((e) => ({
-    '@type': 'EducationalOrganization',
-    name: e,
+  '@type': 'ItemList',
+  name: `${CLINIC.name} 의료진`,
+  numberOfItems: doctors.length,
+  itemListElement: doctors.map((d, idx) => ({
+    '@type': 'ListItem',
+    position: idx + 1,
+    item: {
+      '@type': 'Physician',
+      '@id': `https://${CLINIC.domain}/doctors/${d.slug}#person`,
+      name: d.name,
+      jobTitle: d.title,
+      url: `https://${CLINIC.domain}/doctors/${d.slug}`,
+      ...(d.photo ? { image: d.photo.startsWith('http') ? d.photo : `https://${CLINIC.domain}${d.photo}` } : {}),
+      medicalSpecialty: 'Dentistry',
+      worksFor: { '@type': 'Dentist', '@id': `https://${CLINIC.domain}/#clinic`, name: CLINIC.name },
+    },
   })),
 })
 

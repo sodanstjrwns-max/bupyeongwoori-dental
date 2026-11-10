@@ -6,10 +6,11 @@
 - **Key Features**: 홈 · 병원미션 · 의료진 · 진료과목(8종 상세) · 비포애프터 갤러리(회원 전용) · 블로그 · 공지사항 · 치과 백과사전(500+ 용어) · FAQ · 내원안내 · 회원가입/로그인 · 관리자 CMS (블로그/비포애프터/공지사항 CRUD + R2 업로드)
 
 ## URLs
-- **Local Preview**: https://3000-ih3i86phhlqz7gw0ibzh8-ea026bf9.sandbox.novita.ai (샌드박스 1시간 유효)
-- **Production**: https://bupyeongwoori-dental.pages.dev (Cloudflare Pages, GitHub Actions 자동 배포)
+- **Production**: https://wooridc.kr (Cloudflare Pages 프로젝트 `bupyeongwoori-dental`)
+  - `www.wooridc.kr` 과 `bupyeongwoori-dental.pages.dev` 는 앱 미들웨어에서 `wooridc.kr` 로 301 (`src/index.tsx` 맨 위)
+  - 배포별 미리보기 주소 `https://<해시>.bupyeongwoori-dental.pages.dev` 는 검증용으로 그대로 열린다
+- **Local Preview**: `npm run build && npx wrangler pages dev dist --port <빈 포트>`
 - **Repository**: https://github.com/sodanstjrwns-max/bupyeongwoori-dental
-- **Custom Domain (예정)**: https://bupyeongwoori.com
 
 ## Main Routes
 | Path | Description |
@@ -51,7 +52,7 @@
   - `blog_posts` (slug, title, category, excerpt, body(html), cover_image_key, doctor_slug, views, published)
   - `notices` (title, content, is_major, is_published, views)
   - `glossary_stats` (slug, views) · `contact_logs`
-- **Storage**: Cloudflare D1 (webapp-production, 로컬 개발은 SQLite 자동) + R2 (`webapp-media` 버킷, 이미지 업로드)
+- **Storage**: Cloudflare D1 (`bupyeongwoori-production`, 로컬 개발은 SQLite 자동) + R2 (`bupyeongwoori-media` 버킷, 이미지 업로드) — 바인딩은 `wrangler.jsonc`
 - **Static Data**: `src/data/treatments.ts` (8개 진료 + FAQ 120+), `src/data/doctors.ts`, `src/data/glossary.ts` (**582 용어**)
 
 ## Design System
@@ -94,10 +95,13 @@
 
 ## Deployment
 - **Platform**: Cloudflare Pages + D1 + R2
-- **Status**: 🚧 로컬 개발 동작 확인 완료, 프로덕션 배포 전 (Cloudflare API 키 연결 필요)
+- **Status**: 운영 중 — https://wooridc.kr
+- **Deploy (기본)**: `npm run deploy` — 빌드 뒤 `wrangler pages deploy` 로 직접 배포 (`wrangler.jsonc` 의 name·출력 폴더 사용, 운영 브랜치 `main`)
+- **Deploy (자동)**: `main` 에 push 하면 `.github/workflows/deploy.yml` 이 같은 프로젝트로 다시 빌드·배포한다 (2026-11-10 확인: 동작 중).
+  직접 배포만 하고 커밋을 push 하지 않으면, 다음 push 때 원격 `main` 기준으로 덮어써지므로 직접 배포한 커밋은 반드시 push 까지 한다.
 - **Tech Stack**: Hono + TypeScript + JSX SSR + Pretendard + Vanilla JS(CDN) + Cloudflare D1/R2
 - **Build**: `npm run build` → `dist/_worker.js`
-- **Local Start**: `pm2 start ecosystem.config.cjs` (symlink trick으로 wrangler d1 CLI ↔ pages dev 간 DB 공유)
+- **Local Start**: `npx wrangler pages dev dist --port <빈 포트>` (`ecosystem.config.cjs` 의 pm2 설정은 예전 샌드박스 경로 기준이라 로컬에서는 쓰지 않는다)
 - **Last Updated**: 2026-06-11 (🧠 **SEO/AEO 머신 1·2차 업그레이드** — 아래 상세)
 
 ## 🧠 SEO/AEO 머신 업그레이드 (2026-06-11)

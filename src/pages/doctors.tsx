@@ -2,7 +2,7 @@ import { Layout } from '../components/Layout'
 import { CLINIC, OG_IMAGES } from '../lib/constants'
 import { DOCTORS, getDoctor, doctorPhotoSrc } from '../data/doctors'
 import { TREATMENT_LIST, getTreatment } from '../data/treatments'
-import { breadcrumbSchema, doctorSchema, profilePageSchema } from '../lib/schema'
+import { breadcrumbSchema, doctorSchema, doctorListSchema, profilePageSchema } from '../lib/schema'
 
 // =========================================================
 // 전체 의료진 페이지
@@ -15,10 +15,14 @@ export const DoctorsPage = () => {
       description="부평우리치과 의료진 — 통합치의학과 전문의 김재인 대표원장과 각 분야 원장이 함께 상담·진료합니다."
       canonical={`https://${CLINIC.domain}/doctors`}
       ogImage={OG_IMAGES.doctors}
-      jsonLd={breadcrumbSchema([
-        { name: '홈', url: '/' },
-        { name: '의료진 소개', url: '/doctors' },
-      ])}
+      jsonLd={[
+        breadcrumbSchema([
+          { name: '홈', url: '/' },
+          { name: '의료진 소개', url: '/doctors' },
+        ]),
+        // 화면 카드와 1:1 — 이름·직함·사진·프로필 주소 (개별 프로필과 같은 @id)
+        doctorListSchema(DOCTORS.map((d) => ({ name: d.name, title: d.title, slug: d.slug, photo: doctorPhotoSrc(d.photo) }))),
+      ]}
     >
       {/* Hero */}
       <section class="hero" style="min-height:70vh;">
@@ -126,6 +130,8 @@ export const DoctorDetailPage = ({ slug, cases = [], isLoggedIn = false }: { slu
           title: d.title,
           slug: d.slug,
           education: d.education,
+          careers: d.careers,
+          certifications: d.certifications,
           photo: doctorPhotoSrc(d.photo),
           // knowsAbout: 진료 slug → 한글 진료명으로 변환 (AI 검색엔진의 전문성 매핑용)
           specialties: d.specialties.map((s) => getTreatment(s)?.name ?? s).filter(Boolean),

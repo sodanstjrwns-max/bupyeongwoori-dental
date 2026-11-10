@@ -40,7 +40,7 @@ import {
   normalizePhone,
 } from './lib/auth'
 import { getGlossaryTerm, GLOSSARY, resolveGlossaryAlias } from './data/glossary'
-import { CLINIC, hoursSummary } from './lib/constants'
+import { CLINIC, HOURS, hoursSummary } from './lib/constants'
 import { TREATMENT_LIST, getTreatment } from './data/treatments'
 import { pingIndexNow, INDEXNOW_KEY } from './lib/indexnow'
 import { autoFillBlogSeo, autoFillBaSeo, buildIndexNowUrls } from './lib/auto-seo'
@@ -51,7 +51,7 @@ import { getCore, BUPYEONG_HUB, BUPYEONG_HUB_IMAGE } from './lib/bupyeong-core'
 import { SearchPage, searchStatic, type SearchResultItem } from './pages/search'
 import { NotFoundPage } from './pages/not-found'
 import { treatmentToMarkdown, glossaryToMarkdown, blogToMarkdown, faqToMarkdown } from './lib/markdown-export'
-import { RETIRED_DOCTOR_SLUGS, getDoctor } from './data/doctors'
+import { RETIRED_DOCTOR_SLUGS, DOCTORS, getDoctor } from './data/doctors'
 import { postDoctor, CLINIC_AUTHOR_SLUG } from './lib/authorship'
 import { fetchSiteStats, renderStatsPage, isValidStatsKey } from './lib/stats'
 
@@ -855,6 +855,53 @@ app.get('/robots.txt', (c) => {
   return c.text(lines.join('\n'), 200, { 'Content-Type': 'text/plain; charset=utf-8' })
 })
 
+// ============================================================
+// llms.txt · llms-full.txt 공통 "병원 정보" 사실 블록 (2026-11-10)
+// 값은 전부 기존 상수·데이터에서 파생한다 — CLINIC·HOURS(constants.ts), DOCTORS(doctors.ts),
+// TREATMENT_LIST(treatments.ts), 공개 수가(/visit 화면과 같은 조회·같은 폴백).
+// 여기에 문구를 따로 적지 않는다(레포에 없는 사실 금지). 수가는 관리자에서 비공개로 돌린 항목이 빠진 값만 쓴다.
+// ============================================================
+const FEE_FACT_CATEGORIES = ['임플란트', '크라운', '교정', '틀니', '레진', '인레이']
+async function clinicFactsBlock(db: any): Promise<string> {
+  const base = `https://${CLINIC.domain}`
+  // /visit 화면과 동일: 공개 항목만, DB 가 비었거나 실패하면 시드
+  const cats = await loadFeeCategories(db, true)
+  const fees: FeeCategory[] = cats && cats.length ? cats : FEE_SEED
+  const picked = [
+    ...FEE_FACT_CATEGORIES.map((n) => fees.find((f) => f.cat === n)).filter((f): f is FeeCategory => Boolean(f)),
+    ...fees.filter((f) => !FEE_FACT_CATEGORIES.includes(f.cat)),
+  ].filter((f) => f.items.length > 0).slice(0, 6)
+  const feeLines = picked.map(
+    (f) => `- ${f.cat}: ${f.items.slice(0, 5).map((it) => `${it.name} ${it.price}`).join(' · ')}${f.items.length > 5 ? ' 외' : ''}`
+  )
+  const late = HOURS.filter((h) => h.closes && h.closes > '18:00').map((h) => `${h.day} ${h.closes}까지`)
+  const closed = HOURS.filter((h) => !h.opens).map((h) => h.day)
+  const doctorLine = DOCTORS.map((d) => {
+    const cred = d.certifications.find((x) => /전문의|인정의/.test(x))
+    return `${d.name}(${d.title}${cred ? ` · ${cred}` : ''})`
+  }).join(', ')
+  return [
+    '## 병원 정보',
+    `- 이름: ${CLINIC.name} (${CLINIC.fullName} · ${CLINIC.nameEn})`,
+    `- 진료 분야: ${TREATMENT_LIST.map((t) => t.name).join(' · ')}`,
+    `- 주소: ${CLINIC.address} / 가까운 역·출구: ${CLINIC.directions}`,
+    `- 전화: ${CLINIC.phone}`,
+    `- 진료 시간: ${hoursSummary()} / ${CLINIC.lunch}${late.length ? ` / 야간 진료(18시 이후): ${late.join(' · ')}` : ''}${closed.length ? ` / 휴진: ${closed.join('·')}` : ''}`,
+    `- 의료진: ${doctorLine}`,
+    `- 예약: 네이버 예약 ${CLINIC.socialLinks.naverBooking} / 카카오톡 상담 ${CLINIC.socialLinks.kakao} / 전화 ${CLINIC.phone}`,
+    `- 진료 안내: ${base}/treatments / 비용 안내: ${base}/visit#pricing / 의료진: ${base}/doctors / 지역 안내(허브): ${base}/areas/${BUPYEONG_HUB} / 자주 묻는 질문: ${base}/faq`,
+    `- 최종 확인일: ${CONTENT_DATES.doctors} (의료진 정보 기준)`,
+    ...(feeLines.length
+      ? [
+          '',
+          '### 주요 비급여 진료비',
+          `비용 안내 페이지(${base}/visit#pricing)에 공개된 값 그대로입니다. 부가세 별도이며, 구강 상태·재료·난이도에 따라 달라질 수 있습니다.`,
+          ...feeLines,
+        ]
+      : []),
+  ].join('\n')
+}
+
 // LLMs.txt — AI 친화 사이트 인덱스 (https://llmstxt.org)
 app.get('/llms.txt', async (c) => {
   const base = `https://${CLINIC.domain}`
@@ -870,10 +917,13 @@ app.get('/llms.txt', async (c) => {
     ).all()).results as any[]
     noticeList = notices.map((n) => `- [${n.title}](${base}/notices/${n.id})`).join('\n')
   } catch {}
+  const facts = await clinicFactsBlock(c.env.DB)
 
   const txt = `# ${CLINIC.name}
 
 > 부평역 26번 출구 도보 1분, 14년 한 자리에서 변하지 않는 진료를 약속하는 프리미엄 치과. 통합치의학과 전문의 대표원장과 각 분야 의료진이 함께 상담·진료하며 임플란트·심미보철·교정·라미네이트·사랑니발치·예방진료를 한 곳에서 통합 관리합니다.
+
+${facts}
 
 ## 핵심 정보
 - **공식 사이트**: ${base}
@@ -888,9 +938,9 @@ app.get('/llms.txt', async (c) => {
 ## 주요 페이지
 - [홈 — 부평우리치과 소개](${base}/): 변하지 않는 진료·신뢰·우리 철학과 핵심 진료 안내
 - [미션](${base}/mission): 병원의 진료 철학과 환자 약속
-- [의료진 소개](${base}/doctors): 6명의 전문의 프로필
+- [의료진 소개](${base}/doctors): 의료진 ${DOCTORS.length}명 프로필
 - [김재인 대표원장](${base}/doctors/kim-jaein): 대표원장 학력·경력·전문 분야
-- [전체 진료과목](${base}/treatments): 9개 진료과목 종합 안내
+- [전체 진료과목](${base}/treatments): ${TREATMENT_LIST.length}개 진료과목 종합 안내
 - [오시는 길](${base}/visit): 부평역 26번 출구 도보 1분, 주차·대중교통 안내
 
 ## 진료 과목 (Treatments)
@@ -943,6 +993,8 @@ app.get('/llms-full.txt', async (c) => {
     `# ${CLINIC.name} — 전체 콘텐츠 (llms-full.txt)`,
     '',
     `> 부평역 26번 출구 도보 1분, 14년 한 자리를 지켜온 치과. 이 문서는 ${CLINIC.name}의 주요 의료 정보를 LLM이 읽기 쉬운 형태로 제공합니다.`,
+    '',
+    await clinicFactsBlock(c.env.DB),
     '',
     `주소: ${CLINIC.address} | 전화: ${CLINIC.phone} | 공식 사이트: https://${CLINIC.domain}`,
     `진료시간: ${hoursSummary()} / ${CLINIC.lunch}`,
@@ -1190,6 +1242,10 @@ app.get('/sitemap-pages.xml', (c) => {
     { loc: '/mission', lastmod: pageLastmod('/mission'), changefreq: 'monthly', priority: '0.8' },
     { loc: '/doctors', lastmod: pageLastmod('/doctors'), changefreq: 'monthly', priority: '0.9' },
     { loc: '/doctors/kim-jaein', lastmod: pageLastmod('/doctors/kim-jaein'), changefreq: 'monthly', priority: '0.9' },
+    // 나머지 의료진 프로필(색인 대상·200인데 사이트맵에 빠져 있었음, 2026-11-10) — lastmod 는 의료진 데이터 실제 수정일
+    ...DOCTORS.filter((d) => d.slug !== 'kim-jaein').map((d) => ({
+      loc: `/doctors/${d.slug}`, lastmod: toKstNoonIso(CONTENT_DATES.doctors), changefreq: 'monthly', priority: '0.7',
+    })),
     { loc: '/treatments', lastmod: pageLastmod('/treatments'), changefreq: 'monthly', priority: '0.9' },
     { loc: '/before-after', lastmod: pageLastmod('/before-after'), changefreq: 'weekly', priority: '0.8' },
     { loc: '/blog', lastmod: pageLastmod('/blog'), changefreq: 'daily', priority: '0.9' },

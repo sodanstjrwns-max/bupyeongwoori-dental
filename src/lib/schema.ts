@@ -29,8 +29,8 @@ export const dentistSchema = () => ({
   },
   geo: {
     '@type': 'GeoCoordinates',
-    latitude: 37.4894,
-    longitude: 126.7245,
+    latitude: 37.4926505,
+    longitude: 126.7234394,
   },
   // 진료시간 단일 출처(constants.ts HOURS)에서 파생 — 방문 안내 표·llms.txt 와 항상 동일
   openingHoursSpecification: HOURS.filter((h) => h.opens).map((h) => ({

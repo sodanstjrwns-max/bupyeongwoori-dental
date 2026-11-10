@@ -54,8 +54,23 @@ import { treatmentToMarkdown, glossaryToMarkdown, blogToMarkdown, faqToMarkdown 
 import { RETIRED_DOCTOR_SLUGS, DOCTORS, getDoctor } from './data/doctors'
 import { postDoctor, CLINIC_AUTHOR_SLUG } from './lib/authorship'
 import { fetchSiteStats, renderStatsPage, isValidStatsKey } from './lib/stats'
+import { isGoogleCrawler, isGoogleHiddenPath, GOOGLE_HIDE_HEADER_VALUE } from './lib/google-hide'
 
 const app = new Hono<{ Bindings: Bindings }>()
+
+// ============================================================
+// 구글 전용 검색 제외 — 맨 바깥 미들웨어 (설명·되돌리기: src/lib/google-hide.ts)
+// 구글 크롤러 + 백과 구역 + 200 HTML 응답일 때만 X-Robots-Tag: googlebot: noindex.
+// 그 밖의 요청은 응답이 전혀 달라지지 않는다. (301·404·.md 응답에는 붙이지 않는다)
+// ============================================================
+app.use('*', async (c, next) => {
+  await next()
+  if (!isGoogleCrawler(c.req.header('User-Agent'))) return
+  if (!isGoogleHiddenPath(new URL(c.req.url).pathname)) return
+  if (c.res.status !== 200) return
+  if (!(c.res.headers.get('Content-Type') ?? '').toLowerCase().startsWith('text/html')) return
+  c.header('X-Robots-Tag', GOOGLE_HIDE_HEADER_VALUE)
+})
 
 // ============================================================
 // canonical host 통일 — www.wooridc.kr / bupyeongwoori-dental.pages.dev → wooridc.kr (301)

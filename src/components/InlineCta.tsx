@@ -9,6 +9,8 @@ type InlineCtaProps = {
   /** 카테고리 보조 링크 (백과사전 분야 보기 등) */
   extraLabel?: string
   extraHref?: string
+  /** 측정용 위치 표시. 지정하면 예약·카카오·전화 버튼 링크에 data-cta 로 붙는다 (예: 글 끝 = 'article-end') */
+  cta?: string
 }
 
 /**
@@ -24,6 +26,7 @@ export const InlineCta = ({
   backHref,
   extraLabel,
   extraHref,
+  cta,
 }: InlineCtaProps) => {
   return (
     <div class="inline-cta" data-reveal>
@@ -43,6 +46,7 @@ export const InlineCta = ({
           rel="noopener"
           class="inline-cta-btn inline-cta-btn-naver"
           aria-label="네이버 예약 바로가기"
+          data-cta={cta}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M16.273 12.845 7.376 0H0v24h7.726V11.156L16.624 24H24V0h-7.727z" />
@@ -55,11 +59,12 @@ export const InlineCta = ({
           rel="noopener"
           class="inline-cta-btn inline-cta-btn-kakao"
           aria-label="카카오톡 상담 바로가기"
+          data-cta={cta}
         >
           <i class="fas fa-comment" aria-hidden="true"></i>
           <span>카카오톡 상담</span>
         </a>
-        <a href={`tel:${CLINIC.phone}`} class="inline-cta-btn inline-cta-btn-phone" aria-label="전화 연결">
+        <a href={`tel:${CLINIC.phone}`} class="inline-cta-btn inline-cta-btn-phone" aria-label="전화 연결" data-cta={cta}>
           <i class="fas fa-phone" aria-hidden="true"></i>
           <span>{CLINIC.phone}</span>
         </a>

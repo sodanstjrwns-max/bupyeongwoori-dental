@@ -321,6 +321,7 @@ export const GlossaryDetailPage = ({ term }: { term: GlossaryTerm }) => {
             backHref="/glossary"
             extraLabel={cat ? `${cat.name} 분야 더 보기` : undefined}
             extraHref={cat ? `/glossary?category=${cat.slug}` : undefined}
+            cta="article-end"
           />
         </div>
       </article>

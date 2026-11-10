@@ -335,6 +335,7 @@ export const BlogDetailPage = ({
             backHref="/blog"
             extraLabel={post.category ? `${post.category} 글 더 보기` : undefined}
             extraHref={post.category ? `/blog?category=${encodeURIComponent(post.category)}` : undefined}
+            cta="article-end"
           />
         </div>
       </article>
